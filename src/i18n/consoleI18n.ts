@@ -1,4 +1,4 @@
-import type { OperationType } from "../domain/types";
+import type { OperationType, GitContextSnapshot, GitMode } from "../domain/types";
 import type { RdeLang } from "../rde/rdeI18n";
 import { normalizeRdeLang } from "../rde/rdeI18n";
 
@@ -16,6 +16,10 @@ const MSGS = {
     noActiveNote: "Open an active Markdown note.",
     scopeSelection: "Scope: selection",
     gitMode: "Git: {mode}",
+    gitPassiveSnapshot: "{branch} @ {commit} · {dirty}",
+    gitDirty: "dirty",
+    gitClean: "clean",
+    gitRepoPath: "path: {path}",
     labelOperation: "Operation",
     labelInstruction: "Instruction",
     instructionPlaceholder: "Optional instruction…",
@@ -136,6 +140,10 @@ const MSGS = {
     noActiveNote: "アクティブな Markdown ノートを開いてください。",
     scopeSelection: "範囲: 選択テキスト",
     gitMode: "Git: {mode}",
+    gitPassiveSnapshot: "{branch} @ {commit} · {dirty}",
+    gitDirty: "変更あり",
+    gitClean: "クリーン",
+    gitRepoPath: "パス: {path}",
     labelOperation: "操作",
     labelInstruction: "指示",
     instructionPlaceholder: "任意の指示…",
@@ -256,6 +264,10 @@ const MSGS = {
     noActiveNote: "请打开一个活动的 Markdown 笔记。",
     scopeSelection: "范围: 选区",
     gitMode: "Git: {mode}",
+    gitPassiveSnapshot: "{branch} @ {commit} · {dirty}",
+    gitDirty: "有变更",
+    gitClean: "干净",
+    gitRepoPath: "路径: {path}",
     labelOperation: "操作",
     labelInstruction: "指示",
     instructionPlaceholder: "可选指示…",
@@ -393,4 +405,29 @@ const OP_KEYS: Record<OperationType, ConsoleMsgKey> = {
 
 export function operationLabel(lang: RdeLang | undefined, op: OperationType): string {
   return consoleMsg(lang, OP_KEYS[op]);
+}
+
+export function gitContextLines(
+  lang: RdeLang | undefined,
+  git: GitContextSnapshot,
+  mode: GitMode,
+): string[] {
+  const lines: string[] = [];
+  if (mode === "passive-observing" || mode === "obsidian-git-aware") {
+    if (git.branch && git.commit) {
+      lines.push(
+        consoleMsg(lang, "gitPassiveSnapshot", {
+          branch: git.branch,
+          commit: git.commit,
+          dirty: consoleMsg(lang, git.dirty ? "gitDirty" : "gitClean"),
+        }),
+      );
+    } else {
+      lines.push(consoleMsg(lang, "gitMode", { mode }));
+    }
+  } else if (mode !== "off") {
+    lines.push(consoleMsg(lang, "gitMode", { mode }));
+  }
+  lines.push(consoleMsg(lang, "gitRepoPath", { path: git.repoRelativePath }));
+  return lines;
 }

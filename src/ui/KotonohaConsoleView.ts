@@ -4,7 +4,7 @@ import type { GenerationRequest, OperationType, ApprovalDecision } from "../doma
 import type { ProposalBundle } from "../services/ProposalService";
 import { ProposalView } from "./ProposalView";
 import { RdeAuditView } from "./RdeAuditView";
-import { consoleMsg, operationLabel } from "../i18n/consoleI18n";
+import { consoleMsg, operationLabel, gitContextLines } from "../i18n/consoleI18n";
 import type { RdeLang } from "../rde/rdeI18n";
 import { performRdeAudit } from "../services/RdeAuditService";
 import { localizeBundleForDisplay } from "../services/localizeBundle";
@@ -83,10 +83,9 @@ export class KotonohaConsoleView extends ItemView {
         });
       }
       if (ctx.git) {
-        meta.createEl("div", {
-          cls: "kotonoha-console-meta-line",
-          text: consoleMsg(lang, "gitMode", { mode: this.plugin.settings.gitMode }),
-        });
+        for (const line of gitContextLines(lang, ctx.git, this.plugin.settings.gitMode)) {
+          meta.createEl("div", { cls: "kotonoha-console-meta-line", text: line });
+        }
       }
     } else {
       header.createEl("p", {

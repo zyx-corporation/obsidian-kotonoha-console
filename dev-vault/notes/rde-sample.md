@@ -2,6 +2,7 @@
 title: RDE Sample
 tags:
   - kotonoha/demo
+  - kotonoha
 ---
 
 # Meaning delta draft

@@ -290,6 +290,10 @@ var MSGS2 = {
     noActiveNote: "Open an active Markdown note.",
     scopeSelection: "Scope: selection",
     gitMode: "Git: {mode}",
+    gitPassiveSnapshot: "{branch} @ {commit} \xB7 {dirty}",
+    gitDirty: "dirty",
+    gitClean: "clean",
+    gitRepoPath: "path: {path}",
     labelOperation: "Operation",
     labelInstruction: "Instruction",
     instructionPlaceholder: "Optional instruction\u2026",
@@ -396,6 +400,10 @@ var MSGS2 = {
     noActiveNote: "\u30A2\u30AF\u30C6\u30A3\u30D6\u306A Markdown \u30CE\u30FC\u30C8\u3092\u958B\u3044\u3066\u304F\u3060\u3055\u3044\u3002",
     scopeSelection: "\u7BC4\u56F2: \u9078\u629E\u30C6\u30AD\u30B9\u30C8",
     gitMode: "Git: {mode}",
+    gitPassiveSnapshot: "{branch} @ {commit} \xB7 {dirty}",
+    gitDirty: "\u5909\u66F4\u3042\u308A",
+    gitClean: "\u30AF\u30EA\u30FC\u30F3",
+    gitRepoPath: "\u30D1\u30B9: {path}",
     labelOperation: "\u64CD\u4F5C",
     labelInstruction: "\u6307\u793A",
     instructionPlaceholder: "\u4EFB\u610F\u306E\u6307\u793A\u2026",
@@ -502,6 +510,10 @@ var MSGS2 = {
     noActiveNote: "\u8BF7\u6253\u5F00\u4E00\u4E2A\u6D3B\u52A8\u7684 Markdown \u7B14\u8BB0\u3002",
     scopeSelection: "\u8303\u56F4: \u9009\u533A",
     gitMode: "Git: {mode}",
+    gitPassiveSnapshot: "{branch} @ {commit} \xB7 {dirty}",
+    gitDirty: "\u6709\u53D8\u66F4",
+    gitClean: "\u5E72\u51C0",
+    gitRepoPath: "\u8DEF\u5F84: {path}",
     labelOperation: "\u64CD\u4F5C",
     labelInstruction: "\u6307\u793A",
     instructionPlaceholder: "\u53EF\u9009\u6307\u793A\u2026",
@@ -616,6 +628,26 @@ var OP_KEYS = {
 };
 function operationLabel(lang, op) {
   return consoleMsg(lang, OP_KEYS[op]);
+}
+function gitContextLines(lang, git, mode) {
+  const lines = [];
+  if (mode === "passive-observing" || mode === "obsidian-git-aware") {
+    if (git.branch && git.commit) {
+      lines.push(
+        consoleMsg(lang, "gitPassiveSnapshot", {
+          branch: git.branch,
+          commit: git.commit,
+          dirty: consoleMsg(lang, git.dirty ? "gitDirty" : "gitClean")
+        })
+      );
+    } else {
+      lines.push(consoleMsg(lang, "gitMode", { mode }));
+    }
+  } else if (mode !== "off") {
+    lines.push(consoleMsg(lang, "gitMode", { mode }));
+  }
+  lines.push(consoleMsg(lang, "gitRepoPath", { path: git.repoRelativePath }));
+  return lines;
 }
 
 // src/settings/PluginSettings.ts
@@ -1397,10 +1429,9 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
         });
       }
       if (ctx.git) {
-        meta.createEl("div", {
-          cls: "kotonoha-console-meta-line",
-          text: consoleMsg(lang, "gitMode", { mode: this.plugin.settings.gitMode })
-        });
+        for (const line of gitContextLines(lang, ctx.git, this.plugin.settings.gitMode)) {
+          meta.createEl("div", { cls: "kotonoha-console-meta-line", text: line });
+        }
       }
     } else {
       header.createEl("p", {
@@ -1673,18 +1704,57 @@ async function sha256Hex(text) {
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+// src/util/gitReadonly.ts
+var import_child_process2 = require("child_process");
+var import_util = require("util");
+var import_path = require("path");
+var execFileAsync = (0, import_util.promisify)(import_child_process2.execFile);
+var GIT_TIMEOUT_MS = 5e3;
+async function defaultGitExec(args, cwd) {
+  try {
+    const { stdout } = await execFileAsync("git", args, {
+      cwd,
+      timeout: GIT_TIMEOUT_MS,
+      maxBuffer: 256 * 1024
+    });
+    return stdout.trim() || void 0;
+  } catch {
+    return void 0;
+  }
+}
+async function buildGitContext(vaultPath, filePath, mode, exec = defaultGitExec) {
+  if (mode === "off" || !vaultPath.trim()) return void 0;
+  const root = await exec(["rev-parse", "--show-toplevel"], vaultPath);
+  if (!root) {
+    return {
+      root: vaultPath,
+      repoRelativePath: filePath,
+      dirty: false
+    };
+  }
+  const absFile = (0, import_path.join)(vaultPath, filePath);
+  const repoRelativePath = (0, import_path.relative)(root, absFile).split("\\").join("/") || filePath;
+  if (mode === "external") {
+    return { root, repoRelativePath, dirty: false };
+  }
+  const branch = await exec(["rev-parse", "--abbrev-ref", "HEAD"], root);
+  const commit = await exec(["rev-parse", "--short", "HEAD"], root);
+  const fileStatus = await exec(["status", "--porcelain", "--", repoRelativePath], root);
+  const repoStatus = await exec(["status", "--porcelain"], root);
+  return {
+    root,
+    branch,
+    commit,
+    repoRelativePath,
+    dirty: Boolean(fileStatus?.length || repoStatus?.length)
+  };
+}
+
 // src/obsidian/GitContextReader.ts
 async function readGitContext(app, file, mode) {
-  if (mode === "off") return void 0;
-  const repoRelativePath = file.path;
-  const dirty = app.vault.getAbstractFileByPath(file.path) !== null;
-  return {
-    repoRelativePath,
-    dirty,
-    branch: mode === "passive-observing" ? void 0 : void 0,
-    commit: void 0,
-    root: vaultBasePath(app) || void 0
-  };
+  const vaultPath = vaultBasePath(app);
+  if (!vaultPath) return void 0;
+  return buildGitContext(vaultPath, file.path, mode);
 }
 
 // src/obsidian/ActiveNoteReader.ts

@@ -62,5 +62,5 @@ Headless pre-check: `npm run demo:rde-audit`
 
 ## Next
 
-- Orchestrator **LLM proxy** implementation for `POST /v1/proposals/generate` (server-side)
+- Orchestrator **LLM proxy** — set `OPENAI_API_KEY` for generative rewrite via `POST /v1/proposals/generate`
 - Git passive mode via read-only subprocess
