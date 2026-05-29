@@ -217,4 +217,79 @@ function scanMvpGuardrails(
       categories.add("suspicious_drift");
     }
   }
+
+  scanIntroducedUrlsAndDates(source, proposal, driftRisks, categories);
+  scanApprovalLanguageRemoval(source, proposal, driftRisks, categories);
+  scanFinalDecisionLanguage(source, proposal, driftRisks, categories);
+}
+
+const URL_PATTERN = /https?:\/\/[^\s)\]>]+/gi;
+const ISO_DATE_PATTERN = /\b\d{4}-\d{2}-\d{2}\b/g;
+const HUMAN_APPROVAL_PATTERN =
+  /\b(must be approved|requires? (?:human )?approval|human review required|人工レビュー|承認が必要)\b/giu;
+const PROPOSAL_LANGUAGE_PATTERN =
+  /\b(proposal|suggest(?:ed|ion)?|may recommend|draft|提案|推奨)\b/giu;
+const FINAL_DECISION_PATTERN =
+  /\b(approved|rejected|final decision|must proceed|is (?:the )?correct|確定|承認済|却下済)\b/giu;
+
+function uniqueMatches(text: string, pattern: RegExp): string[] {
+  return [...new Set((text.match(pattern) ?? []).map((m) => m.trim()))];
+}
+
+function scanIntroducedUrlsAndDates(
+  source: string,
+  proposal: string,
+  driftRisks: string[],
+  categories: Set<RdeCategory>,
+): void {
+  const srcUrls = new Set(uniqueMatches(source, URL_PATTERN));
+  for (const url of uniqueMatches(proposal, URL_PATTERN)) {
+    if (!srcUrls.has(url)) {
+      driftRisks.push(`URL introduced in proposal (not in source): ${url}`);
+      categories.add("inferred_extension");
+    }
+  }
+
+  const srcDates = new Set(source.match(ISO_DATE_PATTERN) ?? []);
+  for (const date of proposal.match(ISO_DATE_PATTERN) ?? []) {
+    if (!srcDates.has(date)) {
+      driftRisks.push(`date introduced in proposal (not in source): ${date}`);
+      categories.add("inferred_extension");
+    }
+  }
+}
+
+function scanApprovalLanguageRemoval(
+  source: string,
+  proposal: string,
+  driftRisks: string[],
+  categories: Set<RdeCategory>,
+): void {
+  const srcMarkers = uniqueMatches(source, HUMAN_APPROVAL_PATTERN);
+  if (srcMarkers.length === 0) return;
+  const propMarkers = uniqueMatches(proposal, HUMAN_APPROVAL_PATTERN);
+  const lost = srcMarkers.filter((m) => !propMarkers.includes(m));
+  if (lost.length > 0) {
+    driftRisks.push(`human approval language may be removed: ${lost.join("; ")}`);
+    categories.add("suspicious_drift");
+  }
+}
+
+function scanFinalDecisionLanguage(
+  source: string,
+  proposal: string,
+  driftRisks: string[],
+  categories: Set<RdeCategory>,
+): void {
+  const srcFinal = uniqueMatches(source, FINAL_DECISION_PATTERN);
+  const propFinal = uniqueMatches(proposal, FINAL_DECISION_PATTERN);
+  const introduced = propFinal.filter((m) => !srcFinal.includes(m));
+  if (introduced.length === 0) return;
+  const srcProposalLang = uniqueMatches(source, PROPOSAL_LANGUAGE_PATTERN);
+  if (srcProposalLang.length > 0 || propFinal.length > srcFinal.length) {
+    driftRisks.push(
+      `proposal may convert tentative language to final decision: ${introduced.join("; ")}`,
+    );
+    categories.add("suspicious_drift");
+  }
 }

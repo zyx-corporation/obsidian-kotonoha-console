@@ -1,9 +1,15 @@
 import type { App } from "obsidian";
-import type { GenerationRequest, Proposal, RdeAudit } from "../domain/types";
+import type {
+  ApprovalDecision,
+  GenerationRequest,
+  Proposal,
+  RdeAudit,
+} from "../domain/types";
 
 const ROOT = ".kotonoha";
 const PROPOSALS = `${ROOT}/proposals`;
 const AUDIT = `${ROOT}/audit`;
+const REVIEWS = `${ROOT}/reviews`;
 const PLUGIN_ID = "obsidian-kotonoha-console";
 const SCHEMA_VERSION = "0.1.0";
 
@@ -57,9 +63,65 @@ export class SidecarStore {
     await this.app.vault.adapter.write(path, JSON.stringify(body, null, 2));
   }
 
+  /** git-mode-spec §9.1 step 10 — human review decision sidecar. */
+  async saveReviewRecord(
+    request: GenerationRequest,
+    proposal: Proposal,
+    decision: ApprovalDecision,
+    audit?: RdeAudit,
+  ): Promise<void> {
+    await this.ensureDirs();
+    const path = `${REVIEWS}/${proposal.id}.review.json`;
+    const body = {
+      schemaVersion: SCHEMA_VERSION,
+      plugin: PLUGIN_ID,
+      format: "kotonoha.obsidian.review.v0.1",
+      proposalId: proposal.id,
+      filePath: request.context.filePath,
+      sourceHash: request.context.sourceHash,
+      operation: request.operation,
+      decision: {
+        status: decision.decision,
+        decidedAt: decision.decidedAt,
+        comment: decision.comment,
+      },
+      rdeRecommended: audit?.recommendedDecision,
+      rdeCategories: audit?.categories,
+    };
+    await this.app.vault.adapter.write(path, JSON.stringify(body, null, 2));
+    await this.patchSidecarDecision(proposal.id, decision.decision);
+  }
+
+  private async patchSidecarDecision(
+    proposalId: string,
+    status: ApprovalDecision["decision"],
+  ): Promise<void> {
+    const adapter = this.app.vault.adapter;
+    const sidecarStatus =
+      status === "approved"
+        ? "approved"
+        : status === "partially_applied"
+          ? "partially_applied"
+          : "rejected";
+    for (const path of [
+      `${PROPOSALS}/${proposalId}.proposal.json`,
+      `${AUDIT}/${proposalId}.rde-audit.json`,
+    ]) {
+      if (!(await adapter.exists(path))) continue;
+      try {
+        const raw = await adapter.read(path);
+        const parsed = JSON.parse(raw) as Record<string, unknown>;
+        parsed.decision = { status: sidecarStatus, decidedAt: new Date().toISOString() };
+        await adapter.write(path, JSON.stringify(parsed, null, 2));
+      } catch {
+        /* non-fatal — review file is canonical */
+      }
+    }
+  }
+
   private async ensureDirs(): Promise<void> {
     const adapter = this.app.vault.adapter;
-    for (const dir of [ROOT, PROPOSALS, AUDIT]) {
+    for (const dir of [ROOT, PROPOSALS, AUDIT, REVIEWS]) {
       if (!(await adapter.exists(dir))) {
         await adapter.mkdir(dir);
       }
