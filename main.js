@@ -341,6 +341,128 @@ function formatCategory(lang, cat) {
   return ja[cat] ?? cat;
 }
 
+// src/i18n/consoleI18n.ts
+function fmt2(template, params) {
+  if (!params) return template;
+  return template.replace(/\{(\w+)\}/g, (_, k) => String(params[k] ?? `{${k}}`));
+}
+var MSGS2 = {
+  en: {
+    viewTitle: "Kotonoha Console",
+    tagline: "Proposals are never auto-applied.",
+    noActiveNote: "Open an active Markdown note.",
+    scopeSelection: "Scope: selection",
+    gitMode: "Git: {mode}",
+    labelOperation: "Operation",
+    labelInstruction: "Instruction",
+    instructionPlaceholder: "Optional instruction\u2026",
+    btnRdeAudit: "Run RDE audit",
+    btnGenerate: "Generate proposal",
+    proposalTitle: "Proposal",
+    proposalReviseTitle: "Proposal (editing)",
+    auditReportTitle: "RDE audit report",
+    btnApply: "Apply",
+    btnRevise: "Revise",
+    btnReject: "Reject",
+    btnCopy: "Copy",
+    btnCloseRecord: "Close record",
+    btnApplyRevision: "Apply revision",
+    btnReAudit: "Re-audit",
+    btnCancelRevise: "Cancel revise",
+    opRdeAudit: "RDE audit",
+    opSummarize: "Summarize",
+    opRewrite: "Rewrite",
+    opExpand: "Expand",
+    opCustom: "Custom",
+    noticeNoNote: "No active note",
+    noticeAuditDone: "RDE audit complete{saved}",
+    noticeSavedSidecar: " (saved to .kotonoha/)",
+    noticeSavedUiOnly: " (UI only \u2014 sidecarMode off)",
+    noticeProposalReady: "Proposal ready (not applied)",
+    noticeFailed: "Failed: {msg}",
+    noticeAuditNoApply: "RDE audit report cannot be applied to the note (use Copy)",
+    noticeApplied: "Applied (audit logged)",
+    noticeAppliedRevised: "Applied revised text (partially_applied)",
+    noticeRejected: "Rejected",
+    noticeAuditDismissed: "Audit recorded (dismissed)",
+    noticeCopied: "Copied to clipboard",
+    noticeReviseMode: "Revise mode \u2014 edit, then Apply revision or Re-audit",
+    noticeReAuditDone: "Re-audit complete (local rule-based)",
+    confirmSourceChanged: "Source has changed. Re-audit or explicit override is required. Continue?",
+    confirmApply: "Apply this proposal to the note? Original text will be overwritten.",
+    noticeOpenEditor: "Open the note in the editor to apply selection",
+    mockRdeSummary: "[mock] RDE audit \xB7 {title}",
+    mockOpSummary: "[mock] {operation} \xB7 {title}",
+    mockUncertainty: "Mock backend \u2014 connect HTTP or CLI in settings for real Kotonoha output.",
+    cliRdeSummary: "[cli] RDE audit \xB7 {path}",
+    noInstruction: "(no instruction)"
+  },
+  ja: {
+    viewTitle: "Kotonoha Console",
+    tagline: "\u63D0\u6848\u306F\u81EA\u52D5\u9069\u7528\u3055\u308C\u307E\u305B\u3093\u3002",
+    noActiveNote: "\u30A2\u30AF\u30C6\u30A3\u30D6\u306A Markdown \u30CE\u30FC\u30C8\u3092\u958B\u3044\u3066\u304F\u3060\u3055\u3044\u3002",
+    scopeSelection: "\u7BC4\u56F2: \u9078\u629E\u30C6\u30AD\u30B9\u30C8",
+    gitMode: "Git: {mode}",
+    labelOperation: "\u64CD\u4F5C",
+    labelInstruction: "\u6307\u793A",
+    instructionPlaceholder: "\u4EFB\u610F\u306E\u6307\u793A\u2026",
+    btnRdeAudit: "RDE \u76E3\u67FB\u3092\u5B9F\u65BD",
+    btnGenerate: "\u63D0\u6848\u3092\u751F\u6210",
+    proposalTitle: "\u63D0\u6848",
+    proposalReviseTitle: "\u63D0\u6848\uFF08\u6539\u8A02\u4E2D\uFF09",
+    auditReportTitle: "RDE \u76E3\u67FB\u30EC\u30DD\u30FC\u30C8",
+    btnApply: "\u9069\u7528",
+    btnRevise: "\u6539\u8A02",
+    btnReject: "\u5374\u4E0B",
+    btnCopy: "\u30B3\u30D4\u30FC",
+    btnCloseRecord: "\u8A18\u9332\u3092\u9589\u3058\u308B",
+    btnApplyRevision: "\u6539\u8A02\u3092\u9069\u7528",
+    btnReAudit: "\u518D\u76E3\u67FB",
+    btnCancelRevise: "\u6539\u8A02\u3092\u30AD\u30E3\u30F3\u30BB\u30EB",
+    opRdeAudit: "RDE \u76E3\u67FB",
+    opSummarize: "\u8981\u7D04",
+    opRewrite: "\u66F8\u304D\u63DB\u3048",
+    opExpand: "\u62E1\u5F35",
+    opCustom: "\u30AB\u30B9\u30BF\u30E0",
+    noticeNoNote: "\u30A2\u30AF\u30C6\u30A3\u30D6\u306A\u30CE\u30FC\u30C8\u304C\u3042\u308A\u307E\u305B\u3093",
+    noticeAuditDone: "RDE \u76E3\u67FB\u5B8C\u4E86{saved}",
+    noticeSavedSidecar: "\uFF08.kotonoha/ \u306B\u4FDD\u5B58\uFF09",
+    noticeSavedUiOnly: "\uFF08sidecarMode off \u2014 UI \u306E\u307F\uFF09",
+    noticeProposalReady: "\u63D0\u6848\u306E\u6E96\u5099\u5B8C\u4E86\uFF08\u672A\u9069\u7528\uFF09",
+    noticeFailed: "\u5931\u6557: {msg}",
+    noticeAuditNoApply: "RDE \u76E3\u67FB\u30EC\u30DD\u30FC\u30C8\u306F\u30CE\u30FC\u30C8\u306B\u9069\u7528\u3067\u304D\u307E\u305B\u3093\uFF08\u30B3\u30D4\u30FC\u3092\u4F7F\u7528\uFF09",
+    noticeApplied: "\u9069\u7528\u3057\u307E\u3057\u305F\uFF08\u76E3\u67FB\u30ED\u30B0\u8A18\u9332\u6E08\u307F\uFF09",
+    noticeAppliedRevised: "\u6539\u8A02\u30C6\u30AD\u30B9\u30C8\u3092\u9069\u7528\u3057\u307E\u3057\u305F\uFF08partially_applied\uFF09",
+    noticeRejected: "\u5374\u4E0B\u3057\u307E\u3057\u305F",
+    noticeAuditDismissed: "\u76E3\u67FB\u3092\u8A18\u9332\uFF08\u5374\u4E0B\uFF09",
+    noticeCopied: "\u30AF\u30EA\u30C3\u30D7\u30DC\u30FC\u30C9\u306B\u30B3\u30D4\u30FC\u3057\u307E\u3057\u305F",
+    noticeReviseMode: "\u6539\u8A02\u30E2\u30FC\u30C9 \u2014 \u7DE8\u96C6\u5F8C\u3001\u6539\u8A02\u3092\u9069\u7528\u307E\u305F\u306F\u518D\u76E3\u67FB",
+    noticeReAuditDone: "\u518D\u76E3\u67FB\u5B8C\u4E86\uFF08local rule-based\uFF09",
+    confirmSourceChanged: "\u30BD\u30FC\u30B9\u304C\u5909\u66F4\u3055\u308C\u3066\u3044\u307E\u3059\u3002\u518D\u76E3\u67FB\u307E\u305F\u306F\u660E\u793A\u7684\u306A\u4E0A\u66F8\u304D\u304C\u5FC5\u8981\u3067\u3059\u3002\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F",
+    confirmApply: "\u3053\u306E\u63D0\u6848\u3092\u30CE\u30FC\u30C8\u306B\u9069\u7528\u3057\u307E\u3059\u304B\uFF1F\u5143\u306E\u30C6\u30AD\u30B9\u30C8\u306F\u4E0A\u66F8\u304D\u3055\u308C\u307E\u3059\u3002",
+    noticeOpenEditor: "\u30A8\u30C7\u30A3\u30BF\u3067\u30CE\u30FC\u30C8\u3092\u958B\u3044\u3066\u304B\u3089\u9078\u629E\u7BC4\u56F2\u306B\u9069\u7528\u3057\u3066\u304F\u3060\u3055\u3044",
+    mockRdeSummary: "[mock] RDE \u76E3\u67FB \xB7 {title}",
+    mockOpSummary: "[mock] {operation} \xB7 {title}",
+    mockUncertainty: "Mock \u30D0\u30C3\u30AF\u30A8\u30F3\u30C9 \u2014 \u8A2D\u5B9A\u3067 HTTP \u307E\u305F\u306F CLI \u306B\u63A5\u7D9A\u3057\u3066\u304F\u3060\u3055\u3044\u3002",
+    cliRdeSummary: "[cli] RDE \u76E3\u67FB \xB7 {path}",
+    noInstruction: "\uFF08\u6307\u793A\u306A\u3057\uFF09"
+  }
+};
+function consoleMsg(lang, key, params) {
+  const L = normalizeRdeLang(lang);
+  return fmt2(MSGS2[L][key], params);
+}
+var OP_KEYS = {
+  rde_audit: "opRdeAudit",
+  summarize: "opSummarize",
+  rewrite: "opRewrite",
+  expand: "opExpand",
+  custom: "opCustom"
+};
+function operationLabel(lang, op) {
+  return consoleMsg(lang, OP_KEYS[op]);
+}
+
 // src/ui/rdeAuditPolicyMessages.ts
 var LOW_CONFIDENCE_THRESHOLD = 0.55;
 function rdeAuditUnavailableMessage(lang) {
@@ -356,9 +478,10 @@ function shouldShowLowConfidenceWarning(audit) {
 // src/ui/ProposalView.ts
 var ProposalView = class {
   constructor(host, proposal, actions) {
+    const lang = actions.language;
     host.createEl("h3", {
       cls: "kotonoha-console-section-title",
-      text: actions.auditReportOnly ? "RDE \u76E3\u67FB\u30EC\u30DD\u30FC\u30C8" : actions.reviseMode ? "Proposal\uFF08\u6539\u8A02\u4E2D\uFF09" : "Proposal"
+      text: actions.auditReportOnly ? consoleMsg(lang, "auditReportTitle") : actions.reviseMode ? consoleMsg(lang, "proposalReviseTitle") : consoleMsg(lang, "proposalTitle")
     });
     if (proposal.summary) {
       host.createEl("p", { cls: "kotonoha-console-muted", text: proposal.summary });
@@ -366,7 +489,7 @@ var ProposalView = class {
     if (actions.auditMissing) {
       host.createEl("p", {
         cls: "kotonoha-console-warn",
-        text: rdeAuditUnavailableMessage(actions.language)
+        text: rdeAuditUnavailableMessage(lang)
       });
     }
     if (proposal.uncertaintyNote) {
@@ -392,22 +515,22 @@ var ProposalView = class {
     }
     const bar = host.createDiv({ cls: "kotonoha-console-actions" });
     if (actions.reviseMode) {
-      bar.createEl("button", { text: "Apply revision", cls: "mod-cta" }).addEventListener("click", actions.onApply);
+      bar.createEl("button", { text: consoleMsg(lang, "btnApplyRevision"), cls: "mod-cta" }).addEventListener("click", actions.onApply);
       if (actions.onReAudit) {
-        bar.createEl("button", { text: "Re-audit" }).addEventListener("click", actions.onReAudit);
+        bar.createEl("button", { text: consoleMsg(lang, "btnReAudit") }).addEventListener("click", actions.onReAudit);
       }
-      bar.createEl("button", { text: "Cancel revise" }).addEventListener("click", () => actions.onCancelRevise?.());
-      bar.createEl("button", { text: "Copy" }).addEventListener("click", actions.onCopy);
+      bar.createEl("button", { text: consoleMsg(lang, "btnCancelRevise") }).addEventListener("click", () => actions.onCancelRevise?.());
+      bar.createEl("button", { text: consoleMsg(lang, "btnCopy") }).addEventListener("click", actions.onCopy);
     } else if (!actions.auditReportOnly) {
-      bar.createEl("button", { text: "Apply" }).addEventListener("click", actions.onApply);
+      bar.createEl("button", { text: consoleMsg(lang, "btnApply") }).addEventListener("click", actions.onApply);
       if (actions.onRevise) {
-        bar.createEl("button", { text: "Revise" }).addEventListener("click", actions.onRevise);
+        bar.createEl("button", { text: consoleMsg(lang, "btnRevise") }).addEventListener("click", actions.onRevise);
       }
-      bar.createEl("button", { text: "Reject" }).addEventListener("click", actions.onReject);
-      bar.createEl("button", { text: "Copy" }).addEventListener("click", actions.onCopy);
+      bar.createEl("button", { text: consoleMsg(lang, "btnReject") }).addEventListener("click", actions.onReject);
+      bar.createEl("button", { text: consoleMsg(lang, "btnCopy") }).addEventListener("click", actions.onCopy);
     } else {
-      bar.createEl("button", { text: "\u8A18\u9332\u3092\u9589\u3058\u308B" }).addEventListener("click", actions.onReject);
-      bar.createEl("button", { text: "Copy" }).addEventListener("click", actions.onCopy);
+      bar.createEl("button", { text: consoleMsg(lang, "btnCloseRecord") }).addEventListener("click", actions.onReject);
+      bar.createEl("button", { text: consoleMsg(lang, "btnCopy") }).addEventListener("click", actions.onCopy);
     }
   }
 };
@@ -453,371 +576,6 @@ function appendList(host, lang, sectionKey, items) {
   }
 }
 
-// src/rde/StructuralDiffBuilder.ts
-var REWRITE_LENGTH_SHRINK_RATIO = 0.5;
-var HEDGING = /\b(may|might|could|possibly|perhaps|likely|probably|かもしれない|可能性|推測)\b/giu;
-var STRONG = /\b(must|will|always|never|certainly|clearly|proves?|確実|必ず|明らか|証明)\b/giu;
-function buildSourceReview(source, language) {
-  const preservedElements = [];
-  const unresolvedElements = [];
-  const categories = /* @__PURE__ */ new Set();
-  const hedgeCount = (source.match(HEDGING) ?? []).length;
-  const strongCount = (source.match(STRONG) ?? []).length;
-  const lineCount = source.split(/\n/).filter((l) => l.trim()).length;
-  categories.add("preserved");
-  preservedElements.push(
-    rdeMsg(language, "sourceReviewLines", { count: lineCount })
-  );
-  if (hedgeCount > 0) {
-    categories.add("unresolved");
-    unresolvedElements.push(
-      rdeMsg(language, "hedgingUnresolved", { count: hedgeCount })
-    );
-  }
-  if (strongCount > 0) {
-    preservedElements.push(
-      rdeMsg(language, "strongPreserved", { count: strongCount })
-    );
-  }
-  if (hedgeCount === 0 && strongCount === 0 && source.trim().length > 0) {
-    unresolvedElements.push(rdeMsg(language, "limitedSignals"));
-    categories.add("unresolved");
-  }
-  return {
-    categories: [...categories],
-    preservedElements,
-    transformedElements: [],
-    inferredExtensions: [],
-    unresolvedElements,
-    driftRisks: [],
-    lineAdditions: 0,
-    lineDeletions: 0
-  };
-}
-function buildStructuralDiff(source, proposal, options) {
-  const lang = options?.language;
-  const preservedElements = [];
-  const transformedElements = [];
-  const inferredExtensions = [];
-  const unresolvedElements = [];
-  const driftRisks = [];
-  const categories = /* @__PURE__ */ new Set();
-  const srcLines = source.split(/\n/);
-  const propLines = (proposal ?? source).split(/\n/);
-  const sameText = source.trim() === (proposal ?? source).trim();
-  let lineAdditions = 0;
-  let lineDeletions = 0;
-  if (!sameText && proposal) {
-    const srcSet = new Set(srcLines.map((l) => l.trim()).filter(Boolean));
-    const propSet = new Set(propLines.map((l) => l.trim()).filter(Boolean));
-    for (const l of propSet) {
-      if (!srcSet.has(l)) lineAdditions++;
-    }
-    for (const l of srcSet) {
-      if (!propSet.has(l)) lineDeletions++;
-    }
-    if (lineAdditions > 0 || lineDeletions > 0) {
-      categories.add("authorized_transformation");
-      transformedElements.push(
-        rdeMsg(lang, "linesStructural", { add: lineAdditions, del: lineDeletions })
-      );
-    }
-  } else {
-    categories.add("preserved");
-    preservedElements.push(rdeMsg(lang, "textMatchStructural"));
-  }
-  scanClaimStrength(source, proposal ?? source, lang, driftRisks, categories);
-  scanHedgingLoss(source, proposal ?? source, lang, driftRisks, categories);
-  if (srcLines.length > 3) {
-    preservedElements.push(
-      rdeMsg(lang, "sourceParagraphs", {
-        count: srcLines.filter((l) => l.trim()).length
-      })
-    );
-  }
-  if (driftRisks.length === 0 && !sameText && proposal) {
-    const ratio = proposal.length / Math.max(source.length, 1);
-    if (ratio > 1.4) {
-      inferredExtensions.push(
-        rdeMsg(lang, "lengthInferred", { ratio: ratio.toFixed(2) })
-      );
-      categories.add("inferred_extension");
-    }
-  }
-  if (!sameText && proposal) {
-    scanMvpGuardrails(source, proposal, options, driftRisks, categories);
-  }
-  if (categories.size === 0) {
-    categories.add("unresolved");
-    unresolvedElements.push(rdeMsg(lang, "insufficientSignal"));
-  }
-  return {
-    categories: [...categories],
-    preservedElements,
-    transformedElements,
-    inferredExtensions,
-    unresolvedElements,
-    driftRisks,
-    lineAdditions,
-    lineDeletions
-  };
-}
-function scanClaimStrength(source, proposal, lang, driftRisks, categories) {
-  const srcHedge = (source.match(HEDGING) ?? []).length;
-  const propHedge = (proposal.match(HEDGING) ?? []).length;
-  const srcStrong = (source.match(STRONG) ?? []).length;
-  const propStrong = (proposal.match(STRONG) ?? []).length;
-  if (srcHedge > 0 && propStrong > srcStrong && propHedge < srcHedge) {
-    driftRisks.push(rdeMsg(lang, "claimStrengthDrift"));
-    categories.add("suspicious_drift");
-  }
-  if (propStrong > 0 && srcHedge > 0 && propHedge === 0) {
-    driftRisks.push(rdeMsg(lang, "hedgingRemovedStrong"));
-    categories.add("suspicious_drift");
-  }
-}
-function scanHedgingLoss(source, proposal, lang, driftRisks, categories) {
-  if (source === proposal) return;
-  const lost = ["may", "might", "could", "possibly"].filter(
-    (w) => source.toLowerCase().includes(w) && !proposal.toLowerCase().includes(w)
-  );
-  if (lost.length > 0) {
-    driftRisks.push(rdeMsg(lang, "hedgingDropped", { terms: lost.join(", ") }));
-    categories.add("suspicious_drift");
-  }
-}
-function scanMvpGuardrails(source, proposal, options, driftRisks, categories) {
-  const lang = options?.language;
-  const fm = options?.frontmatter ?? {};
-  for (const key of Object.keys(fm)) {
-    if (!proposal.includes(`${key}:`) && !proposal.includes(`${key} `)) {
-      driftRisks.push(rdeMsg(lang, "frontmatterRemoved", { key }));
-      categories.add("suspicious_drift");
-    }
-  }
-  const linkTargets = new Set(options?.sourceLinks ?? []);
-  for (const m of source.matchAll(/\[\[([^\]|#]+)/g)) {
-    linkTargets.add(m[1]);
-  }
-  for (const m of source.matchAll(/\]\(([^)]+)\)/g)) {
-    linkTargets.add(m[1]);
-  }
-  for (const target of linkTargets) {
-    const needle = target.replace(/^\[\[/, "").replace(/\]\]$/, "");
-    if (needle && !proposal.includes(needle)) {
-      driftRisks.push(rdeMsg(lang, "linkRemoved", { target: needle }));
-      categories.add("suspicious_drift");
-    }
-  }
-  if (options?.operation === "rewrite") {
-    const ratio = proposal.length / Math.max(source.length, 1);
-    if (ratio < REWRITE_LENGTH_SHRINK_RATIO) {
-      driftRisks.push(
-        rdeMsg(lang, "rewriteShortened", {
-          pct: (ratio * 100).toFixed(0),
-          threshold: REWRITE_LENGTH_SHRINK_RATIO * 100
-        })
-      );
-      categories.add("suspicious_drift");
-    }
-  }
-  scanIntroducedUrlsAndDates(source, proposal, lang, driftRisks, categories);
-  scanApprovalLanguageRemoval(source, proposal, lang, driftRisks, categories);
-  scanFinalDecisionLanguage(source, proposal, lang, driftRisks, categories);
-}
-var URL_PATTERN = /https?:\/\/[^\s)\]>]+/gi;
-var ISO_DATE_PATTERN = /\b\d{4}-\d{2}-\d{2}\b/g;
-var HUMAN_APPROVAL_PATTERN = /\b(must be approved|requires? (?:human )?approval|human review required|人工レビュー|承認が必要)\b/giu;
-var PROPOSAL_LANGUAGE_PATTERN = /\b(proposal|suggest(?:ed|ion)?|may recommend|draft|提案|推奨)\b/giu;
-var FINAL_DECISION_PATTERN = /\b(approved|rejected|final decision|must proceed|is (?:the )?correct|確定|承認済|却下済)\b/giu;
-function uniqueMatches(text, pattern) {
-  return [...new Set((text.match(pattern) ?? []).map((m) => m.trim()))];
-}
-function scanIntroducedUrlsAndDates(source, proposal, lang, driftRisks, categories) {
-  const srcUrls = new Set(uniqueMatches(source, URL_PATTERN));
-  for (const url of uniqueMatches(proposal, URL_PATTERN)) {
-    if (!srcUrls.has(url)) {
-      driftRisks.push(rdeMsg(lang, "urlIntroduced", { url }));
-      categories.add("inferred_extension");
-    }
-  }
-  const srcDates = new Set(source.match(ISO_DATE_PATTERN) ?? []);
-  for (const date of proposal.match(ISO_DATE_PATTERN) ?? []) {
-    if (!srcDates.has(date)) {
-      driftRisks.push(rdeMsg(lang, "dateIntroduced", { date }));
-      categories.add("inferred_extension");
-    }
-  }
-}
-function scanApprovalLanguageRemoval(source, proposal, lang, driftRisks, categories) {
-  const srcMarkers = uniqueMatches(source, HUMAN_APPROVAL_PATTERN);
-  if (srcMarkers.length === 0) return;
-  const propMarkers = uniqueMatches(proposal, HUMAN_APPROVAL_PATTERN);
-  const lost = srcMarkers.filter((m) => !propMarkers.includes(m));
-  if (lost.length > 0) {
-    driftRisks.push(rdeMsg(lang, "approvalRemoved", { lost: lost.join("; ") }));
-    categories.add("suspicious_drift");
-  }
-}
-function scanFinalDecisionLanguage(source, proposal, lang, driftRisks, categories) {
-  const srcFinal = uniqueMatches(source, FINAL_DECISION_PATTERN);
-  const propFinal = uniqueMatches(proposal, FINAL_DECISION_PATTERN);
-  const introduced = propFinal.filter((m) => !srcFinal.includes(m));
-  if (introduced.length === 0) return;
-  const srcProposalLang = uniqueMatches(source, PROPOSAL_LANGUAGE_PATTERN);
-  if (srcProposalLang.length > 0 || propFinal.length > srcFinal.length) {
-    driftRisks.push(
-      rdeMsg(lang, "finalDecisionDrift", { introduced: introduced.join("; ") })
-    );
-    categories.add("suspicious_drift");
-  }
-}
-
-// src/rde/mergeRdeAudit.ts
-function mergeUnique(target, more) {
-  for (const item of more) {
-    if (!target.includes(item)) target.push(item);
-  }
-}
-function mergeCategories(a, b) {
-  return [.../* @__PURE__ */ new Set([...a, ...b])];
-}
-function mergeStructuralIntoAudit(base, structural) {
-  const preservedElements = [...base.preservedElements];
-  const transformedElements = [...base.transformedElements];
-  const inferredExtensions = [...base.inferredExtensions];
-  const unresolvedElements = [...base.unresolvedElements];
-  const driftRisks = [...base.driftRisks];
-  mergeUnique(preservedElements, structural.preservedElements);
-  mergeUnique(transformedElements, structural.transformedElements);
-  mergeUnique(inferredExtensions, structural.inferredExtensions);
-  mergeUnique(unresolvedElements, structural.unresolvedElements);
-  mergeUnique(driftRisks, structural.driftRisks);
-  const categories = mergeCategories(base.categories, structural.categories);
-  const recommendedDecision = recommendDecision(categories, driftRisks);
-  return {
-    ...base,
-    categories,
-    preservedElements,
-    transformedElements,
-    inferredExtensions,
-    unresolvedElements,
-    driftRisks,
-    recommendedDecision,
-    confidence: driftRisks.length > 0 ? 0.45 : structural.lineAdditions > 0 ? 0.65 : 0.75
-  };
-}
-function recommendDecision(categories, driftRisks) {
-  if (categories.includes("critical_distortion")) return "reject";
-  if (driftRisks.length >= 2 || categories.includes("suspicious_drift")) {
-    return "revise";
-  }
-  if (categories.includes("unresolved") && categories.length <= 1) {
-    return "human_review";
-  }
-  if (categories.includes("preserved") && driftRisks.length === 0) {
-    return "approve";
-  }
-  return "human_review";
-}
-
-// src/rde/enrichAuditFromSource.ts
-function enrichAuditFromSource(audit, request) {
-  const lang = normalizeRdeLang(request.language);
-  const excerpt2 = request.context.sourceText.slice(0, 200).replace(/\n/g, " ") + (request.context.sourceText.length > 200 ? "\u2026" : "");
-  const unresolvedElements = [...audit.unresolvedElements];
-  if (!request.context.git) {
-    unresolvedElements.push(rdeMsg(lang, "nonGitVault"));
-  }
-  return {
-    ...audit,
-    preservedElements: [
-      `path:${request.context.filePath}`,
-      `source_hash:${request.context.sourceHash.slice(0, 16)}\u2026`,
-      excerpt2,
-      ...audit.preservedElements
-    ],
-    unresolvedElements
-  };
-}
-
-// src/rde/parseRdeEmit.ts
-var CATEGORY_MAP = {
-  preserved: "preserved",
-  complemented: "inferred_extension",
-  transformed: "authorized_transformation",
-  deviation_risk: "suspicious_drift",
-  intentionally_unresolved: "unresolved",
-  lost: "critical_distortion",
-  next_update_policy: "unresolved"
-};
-function rdeAuditFromEmit(stdout, proposalId) {
-  const root = JSON.parse(stdout);
-  const cats = root.rde_review_output?.categories ?? {};
-  const categories = /* @__PURE__ */ new Set();
-  const preservedElements = [];
-  const transformedElements = [];
-  const inferredExtensions = [];
-  const unresolvedElements = [];
-  const driftRisks = [];
-  for (const [key, items] of Object.entries(cats)) {
-    const mapped = CATEGORY_MAP[key];
-    if (mapped) categories.add(mapped);
-    const target = key === "preserved" ? preservedElements : key === "transformed" ? transformedElements : key === "complemented" ? inferredExtensions : key === "deviation_risk" ? driftRisks : unresolvedElements;
-    for (const item of items ?? []) {
-      target.push(String(item));
-    }
-  }
-  if (categories.size === 0) {
-    categories.add("unresolved");
-  }
-  return {
-    proposalId,
-    createdAt: (/* @__PURE__ */ new Date()).toISOString(),
-    categories: [...categories],
-    preservedElements,
-    transformedElements,
-    inferredExtensions,
-    unresolvedElements,
-    driftRisks,
-    recommendedDecision: "human_review",
-    confidence: 0.5
-  };
-}
-
-// src/services/RdeAuditService.ts
-function performRdeAudit(request, proposalId, options) {
-  const structural = options?.sourceReview && !options?.proposalText ? buildSourceReview(request.context.sourceText, request.language) : buildStructuralDiff(
-    request.context.sourceText,
-    options?.proposalText ?? request.context.sourceText,
-    {
-      language: request.language,
-      operation: request.operation,
-      frontmatter: request.context.frontmatter,
-      sourceLinks: request.context.links
-    }
-  );
-  let base;
-  if (options?.cli?.emitStdout) {
-    base = rdeAuditFromEmit(options.cli.emitStdout, proposalId);
-  } else {
-    base = {
-      proposalId,
-      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
-      categories: [],
-      preservedElements: [],
-      transformedElements: [],
-      inferredExtensions: [],
-      unresolvedElements: [],
-      driftRisks: [],
-      recommendedDecision: "human_review",
-      confidence: 0.5
-    };
-  }
-  const merged = mergeStructuralIntoAudit(base, structural);
-  return enrichAuditFromSource(merged, request);
-}
-
 // src/ui/KotonohaConsoleView.ts
 var KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
 var KotonohaConsoleView = class extends import_obsidian2.ItemView {
@@ -839,20 +597,21 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     return KOTONOHA_CONSOLE_VIEW;
   }
   getDisplayText() {
-    return "Kotonoha Console";
+    return consoleMsg(this.plugin.settings.defaultLanguage, "viewTitle");
   }
   getIcon() {
     return "layers";
   }
   async onOpen() {
+    const lang = this.uiLang();
     const { containerEl } = this;
     containerEl.empty();
     containerEl.addClass("kotonoha-console-root");
     const header = containerEl.createDiv({ cls: "kotonoha-console-header" });
-    header.createEl("h2", { text: "Kotonoha Console" });
+    header.createEl("h2", { text: consoleMsg(lang, "viewTitle") });
     header.createEl("p", {
       cls: "kotonoha-console-muted kotonoha-console-tagline",
-      text: "\u63D0\u6848\u306F\u81EA\u52D5\u9069\u7528\u3055\u308C\u307E\u305B\u3093\u3002"
+      text: consoleMsg(lang, "tagline")
     });
     const ctx = await this.plugin.noteContext.capture();
     if (ctx) {
@@ -862,38 +621,41 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
         text: `${ctx.filePath} \xB7 ${ctx.sourceHash.slice(0, 8)}\u2026`
       });
       if (ctx.selectionText) {
-        meta.createEl("div", { cls: "kotonoha-console-meta-line", text: "Scope: selection" });
+        meta.createEl("div", {
+          cls: "kotonoha-console-meta-line",
+          text: consoleMsg(lang, "scopeSelection")
+        });
       }
       if (ctx.git) {
         meta.createEl("div", {
           cls: "kotonoha-console-meta-line",
-          text: `Git: ${this.plugin.settings.gitMode}`
+          text: consoleMsg(lang, "gitMode", { mode: this.plugin.settings.gitMode })
         });
       }
     } else {
       header.createEl("p", {
         cls: "kotonoha-console-warn",
-        text: "\u30A2\u30AF\u30C6\u30A3\u30D6\u306A Markdown \u30CE\u30FC\u30C8\u3092\u958B\u3044\u3066\u304F\u3060\u3055\u3044\u3002"
+        text: consoleMsg(lang, "noActiveNote")
       });
     }
     const form = containerEl.createDiv({ cls: "kotonoha-console-form" });
-    form.createEl("label", { text: "Operation" });
+    form.createEl("label", { text: consoleMsg(lang, "labelOperation") });
     this.operationSelect = form.createEl("select");
     for (const op of ["rde_audit", "summarize", "rewrite", "expand", "custom"]) {
-      const opt = this.operationSelect.createEl("option", { value: op, text: op });
+      const opt = this.operationSelect.createEl("option", {
+        value: op,
+        text: operationLabel(lang, op)
+      });
       opt.value = op;
     }
     this.operationSelect.value = "rde_audit";
-    form.createEl("label", { text: "Instruction" });
+    form.createEl("label", { text: consoleMsg(lang, "labelInstruction") });
     this.instructionInput = form.createEl("textarea", {
-      attr: { rows: "2", placeholder: "\u4EFB\u610F\u306E\u6307\u793A\u2026" }
+      attr: { rows: "2", placeholder: consoleMsg(lang, "instructionPlaceholder") }
     });
     const actions = form.createDiv({ cls: "kotonoha-console-actions" });
-    actions.createEl("button", { text: "RDE \u76E3\u67FB\u3092\u5B9F\u65BD", cls: "mod-cta" }).addEventListener("click", () => void this.runRdeAudit());
-    actions.createEl("button", { text: "Generate proposal" }).addEventListener(
-      "click",
-      () => void this.runGenerate()
-    );
+    actions.createEl("button", { text: consoleMsg(lang, "btnRdeAudit"), cls: "mod-cta" }).addEventListener("click", () => void this.runRdeAudit());
+    actions.createEl("button", { text: consoleMsg(lang, "btnGenerate") }).addEventListener("click", () => void this.runGenerate());
     const results = containerEl.createDiv({ cls: "kotonoha-console-results" });
     this.proposalHost = results.createDiv({ cls: "kotonoha-console-proposal" });
     this.auditHost = results.createDiv({ cls: "kotonoha-console-audit" });
@@ -906,10 +668,17 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     this.operationSelect.value = "rde_audit";
     await this.runGenerate();
   }
+  uiLang() {
+    return this.lastRequest?.language ?? this.plugin.settings.defaultLanguage;
+  }
   async runGenerate() {
+    const lang = this.plugin.settings.defaultLanguage;
     const ctx = await this.plugin.noteContext.capture();
     if (!ctx) {
-      new import_obsidian2.Notice("\u30A2\u30AF\u30C6\u30A3\u30D6\u306A\u30CE\u30FC\u30C8\u304C\u3042\u308A\u307E\u305B\u3093");
+      this.bundle = null;
+      this.proposalHost?.empty();
+      this.auditHost?.empty();
+      new import_obsidian2.Notice(consoleMsg(lang, "noticeNoNote"));
       return;
     }
     const operation = this.operationSelect.value;
@@ -942,11 +711,11 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
         }
       }
       this.renderBundle();
-      const saved = this.plugin.settings.sidecarMode ? "\uFF08.kotonoha/ \u306B\u4FDD\u5B58\uFF09" : "\uFF08sidecarMode off \u2014 UI \u306E\u307F\uFF09";
-      const msg = operation === "rde_audit" ? `RDE \u76E3\u67FB\u5B8C\u4E86${saved}` : "Proposal ready (not applied)";
+      const saved = this.plugin.settings.sidecarMode ? consoleMsg(lang, "noticeSavedSidecar") : consoleMsg(lang, "noticeSavedUiOnly");
+      const msg = operation === "rde_audit" ? consoleMsg(lang, "noticeAuditDone", { saved }) : consoleMsg(lang, "noticeProposalReady");
       new import_obsidian2.Notice(msg);
     } catch (e) {
-      new import_obsidian2.Notice(`\u5931\u6557: ${message(e)}`);
+      new import_obsidian2.Notice(consoleMsg(lang, "noticeFailed", { msg: message(e) }));
     }
   }
   renderBundle() {
@@ -979,26 +748,23 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
   }
   async applyProposal() {
     if (!this.bundle) return;
+    const lang = this.uiLang();
     if (this.lastOperation === "rde_audit") {
-      new import_obsidian2.Notice("RDE \u76E3\u67FB\u30EC\u30DD\u30FC\u30C8\u306F\u30CE\u30FC\u30C8\u306B\u9069\u7528\u3067\u304D\u307E\u305B\u3093\uFF08Copy \u3092\u4F7F\u7528\uFF09");
+      new import_obsidian2.Notice(consoleMsg(lang, "noticeAuditNoApply"));
       return;
     }
     const ctx = await this.plugin.noteContext.capture();
     if (!ctx) {
-      new import_obsidian2.Notice("No active note");
+      new import_obsidian2.Notice(consoleMsg(lang, "noticeNoNote"));
       return;
     }
     const current = await this.plugin.noteContext.capture();
     if (this.sourceHashAtGeneration && current && current.sourceHash !== this.sourceHashAtGeneration) {
-      const ok = confirm(
-        "\u30BD\u30FC\u30B9\u304C\u5909\u66F4\u3055\u308C\u3066\u3044\u307E\u3059\u3002\u518D\u76E3\u67FB\u307E\u305F\u306F\u660E\u793A\u7684\u306A\u4E0A\u66F8\u304D\u304C\u5FC5\u8981\u3067\u3059\u3002\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F"
-      );
+      const ok = confirm(consoleMsg(lang, "confirmSourceChanged"));
       if (!ok) return;
     }
     if (this.plugin.settings.requireHumanApproval) {
-      const ok = confirm(
-        "\u3053\u306E\u63D0\u6848\u3092\u30CE\u30FC\u30C8\u306B\u9069\u7528\u3057\u307E\u3059\u304B\uFF1F\u5143\u306E\u30C6\u30AD\u30B9\u30C8\u306F\u4E0A\u66F8\u304D\u3055\u308C\u307E\u3059\u3002"
-      );
+      const ok = confirm(consoleMsg(lang, "confirmApply"));
       if (!ok) return;
     }
     const file = this.plugin.activeNoteReader.getActiveFile();
@@ -1010,7 +776,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       if (editor) {
         editor.replaceSelection(text);
       } else {
-        new import_obsidian2.Notice("Open note in editor to apply selection");
+        new import_obsidian2.Notice(consoleMsg(lang, "noticeOpenEditor"));
         return;
       }
     } else {
@@ -1024,7 +790,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
     await this.saveReviewSidecar(decision);
     new import_obsidian2.Notice(
-      decision.decision === "partially_applied" ? "Applied revised text (partially_applied)" : "Applied (audit logged)"
+      decision.decision === "partially_applied" ? consoleMsg(lang, "noticeAppliedRevised") : consoleMsg(lang, "noticeApplied")
     );
     this.bundle = null;
     this.lastRequest = null;
@@ -1035,10 +801,13 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
   }
   async rejectProposal() {
     if (!this.bundle) return;
+    const lang = this.uiLang();
     const decision = this.plugin.approval.reject(this.bundle.proposal);
     await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
     await this.saveReviewSidecar(decision);
-    new import_obsidian2.Notice(this.lastOperation === "rde_audit" ? "\u76E3\u67FB\u3092\u8A18\u9332\uFF08\u5374\u4E0B\uFF09" : "Rejected");
+    new import_obsidian2.Notice(
+      this.lastOperation === "rde_audit" ? consoleMsg(lang, "noticeAuditDismissed") : consoleMsg(lang, "noticeRejected")
+    );
     this.bundle = null;
     this.lastRequest = null;
     this.proposalHost.empty();
@@ -1048,10 +817,11 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     if (!this.bundle) return;
     const text = this.reviseMode ? this.editedText : this.bundle.proposal.proposedText;
     await navigator.clipboard.writeText(text);
-    new import_obsidian2.Notice("\u30AF\u30EA\u30C3\u30D7\u30DC\u30FC\u30C9\u306B\u30B3\u30D4\u30FC\u3057\u307E\u3057\u305F");
+    new import_obsidian2.Notice(consoleMsg(this.uiLang(), "noticeCopied"));
   }
   async startRevise() {
     if (!this.bundle || this.lastOperation === "rde_audit") return;
+    const lang = this.uiLang();
     this.reviseMode = true;
     this.editedText = this.bundle.proposal.proposedText;
     const decision = this.plugin.approval.hold(
@@ -1060,7 +830,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     );
     await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
     await this.saveReviewSidecar(decision);
-    new import_obsidian2.Notice("Revise mode \u2014 edit proposal, then Apply revision or Re-audit");
+    new import_obsidian2.Notice(consoleMsg(lang, "noticeReviseMode"));
     this.renderBundle();
   }
   cancelRevise() {
@@ -1081,7 +851,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
         audit
       );
     }
-    new import_obsidian2.Notice("Re-audit complete (local rule-based)");
+    new import_obsidian2.Notice(consoleMsg(this.uiLang(), "noticeReAuditDone"));
     this.renderBundle();
   }
   async saveReviewSidecar(decision) {
@@ -1450,6 +1220,371 @@ function proposalTextFromLocalContext(request) {
   ].join("\n");
 }
 
+// src/rde/StructuralDiffBuilder.ts
+var REWRITE_LENGTH_SHRINK_RATIO = 0.5;
+var HEDGING = /\b(may|might|could|possibly|perhaps|likely|probably|かもしれない|可能性|推測)\b/giu;
+var STRONG = /\b(must|will|always|never|certainly|clearly|proves?|確実|必ず|明らか|証明)\b/giu;
+function buildSourceReview(source, language) {
+  const preservedElements = [];
+  const unresolvedElements = [];
+  const categories = /* @__PURE__ */ new Set();
+  const hedgeCount = (source.match(HEDGING) ?? []).length;
+  const strongCount = (source.match(STRONG) ?? []).length;
+  const lineCount = source.split(/\n/).filter((l) => l.trim()).length;
+  categories.add("preserved");
+  preservedElements.push(
+    rdeMsg(language, "sourceReviewLines", { count: lineCount })
+  );
+  if (hedgeCount > 0) {
+    categories.add("unresolved");
+    unresolvedElements.push(
+      rdeMsg(language, "hedgingUnresolved", { count: hedgeCount })
+    );
+  }
+  if (strongCount > 0) {
+    preservedElements.push(
+      rdeMsg(language, "strongPreserved", { count: strongCount })
+    );
+  }
+  if (hedgeCount === 0 && strongCount === 0 && source.trim().length > 0) {
+    unresolvedElements.push(rdeMsg(language, "limitedSignals"));
+    categories.add("unresolved");
+  }
+  return {
+    categories: [...categories],
+    preservedElements,
+    transformedElements: [],
+    inferredExtensions: [],
+    unresolvedElements,
+    driftRisks: [],
+    lineAdditions: 0,
+    lineDeletions: 0
+  };
+}
+function buildStructuralDiff(source, proposal, options) {
+  const lang = options?.language;
+  const preservedElements = [];
+  const transformedElements = [];
+  const inferredExtensions = [];
+  const unresolvedElements = [];
+  const driftRisks = [];
+  const categories = /* @__PURE__ */ new Set();
+  const srcLines = source.split(/\n/);
+  const propLines = (proposal ?? source).split(/\n/);
+  const sameText = source.trim() === (proposal ?? source).trim();
+  let lineAdditions = 0;
+  let lineDeletions = 0;
+  if (!sameText && proposal) {
+    const srcSet = new Set(srcLines.map((l) => l.trim()).filter(Boolean));
+    const propSet = new Set(propLines.map((l) => l.trim()).filter(Boolean));
+    for (const l of propSet) {
+      if (!srcSet.has(l)) lineAdditions++;
+    }
+    for (const l of srcSet) {
+      if (!propSet.has(l)) lineDeletions++;
+    }
+    if (lineAdditions > 0 || lineDeletions > 0) {
+      categories.add("authorized_transformation");
+      transformedElements.push(
+        rdeMsg(lang, "linesStructural", { add: lineAdditions, del: lineDeletions })
+      );
+    }
+  } else {
+    categories.add("preserved");
+    preservedElements.push(rdeMsg(lang, "textMatchStructural"));
+  }
+  scanClaimStrength(source, proposal ?? source, lang, driftRisks, categories);
+  scanHedgingLoss(source, proposal ?? source, lang, driftRisks, categories);
+  if (srcLines.length > 3) {
+    preservedElements.push(
+      rdeMsg(lang, "sourceParagraphs", {
+        count: srcLines.filter((l) => l.trim()).length
+      })
+    );
+  }
+  if (driftRisks.length === 0 && !sameText && proposal) {
+    const ratio = proposal.length / Math.max(source.length, 1);
+    if (ratio > 1.4) {
+      inferredExtensions.push(
+        rdeMsg(lang, "lengthInferred", { ratio: ratio.toFixed(2) })
+      );
+      categories.add("inferred_extension");
+    }
+  }
+  if (!sameText && proposal) {
+    scanMvpGuardrails(source, proposal, options, driftRisks, categories);
+  }
+  if (categories.size === 0) {
+    categories.add("unresolved");
+    unresolvedElements.push(rdeMsg(lang, "insufficientSignal"));
+  }
+  return {
+    categories: [...categories],
+    preservedElements,
+    transformedElements,
+    inferredExtensions,
+    unresolvedElements,
+    driftRisks,
+    lineAdditions,
+    lineDeletions
+  };
+}
+function scanClaimStrength(source, proposal, lang, driftRisks, categories) {
+  const srcHedge = (source.match(HEDGING) ?? []).length;
+  const propHedge = (proposal.match(HEDGING) ?? []).length;
+  const srcStrong = (source.match(STRONG) ?? []).length;
+  const propStrong = (proposal.match(STRONG) ?? []).length;
+  if (srcHedge > 0 && propStrong > srcStrong && propHedge < srcHedge) {
+    driftRisks.push(rdeMsg(lang, "claimStrengthDrift"));
+    categories.add("suspicious_drift");
+  }
+  if (propStrong > 0 && srcHedge > 0 && propHedge === 0) {
+    driftRisks.push(rdeMsg(lang, "hedgingRemovedStrong"));
+    categories.add("suspicious_drift");
+  }
+}
+function scanHedgingLoss(source, proposal, lang, driftRisks, categories) {
+  if (source === proposal) return;
+  const lost = ["may", "might", "could", "possibly"].filter(
+    (w) => source.toLowerCase().includes(w) && !proposal.toLowerCase().includes(w)
+  );
+  if (lost.length > 0) {
+    driftRisks.push(rdeMsg(lang, "hedgingDropped", { terms: lost.join(", ") }));
+    categories.add("suspicious_drift");
+  }
+}
+function scanMvpGuardrails(source, proposal, options, driftRisks, categories) {
+  const lang = options?.language;
+  const fm = options?.frontmatter ?? {};
+  for (const key of Object.keys(fm)) {
+    if (!proposal.includes(`${key}:`) && !proposal.includes(`${key} `)) {
+      driftRisks.push(rdeMsg(lang, "frontmatterRemoved", { key }));
+      categories.add("suspicious_drift");
+    }
+  }
+  const linkTargets = new Set(options?.sourceLinks ?? []);
+  for (const m of source.matchAll(/\[\[([^\]|#]+)/g)) {
+    linkTargets.add(m[1]);
+  }
+  for (const m of source.matchAll(/\]\(([^)]+)\)/g)) {
+    linkTargets.add(m[1]);
+  }
+  for (const target of linkTargets) {
+    const needle = target.replace(/^\[\[/, "").replace(/\]\]$/, "");
+    if (needle && !proposal.includes(needle)) {
+      driftRisks.push(rdeMsg(lang, "linkRemoved", { target: needle }));
+      categories.add("suspicious_drift");
+    }
+  }
+  if (options?.operation === "rewrite") {
+    const ratio = proposal.length / Math.max(source.length, 1);
+    if (ratio < REWRITE_LENGTH_SHRINK_RATIO) {
+      driftRisks.push(
+        rdeMsg(lang, "rewriteShortened", {
+          pct: (ratio * 100).toFixed(0),
+          threshold: REWRITE_LENGTH_SHRINK_RATIO * 100
+        })
+      );
+      categories.add("suspicious_drift");
+    }
+  }
+  scanIntroducedUrlsAndDates(source, proposal, lang, driftRisks, categories);
+  scanApprovalLanguageRemoval(source, proposal, lang, driftRisks, categories);
+  scanFinalDecisionLanguage(source, proposal, lang, driftRisks, categories);
+}
+var URL_PATTERN = /https?:\/\/[^\s)\]>]+/gi;
+var ISO_DATE_PATTERN = /\b\d{4}-\d{2}-\d{2}\b/g;
+var HUMAN_APPROVAL_PATTERN = /\b(must be approved|requires? (?:human )?approval|human review required|人工レビュー|承認が必要)\b/giu;
+var PROPOSAL_LANGUAGE_PATTERN = /\b(proposal|suggest(?:ed|ion)?|may recommend|draft|提案|推奨)\b/giu;
+var FINAL_DECISION_PATTERN = /\b(approved|rejected|final decision|must proceed|is (?:the )?correct|確定|承認済|却下済)\b/giu;
+function uniqueMatches(text, pattern) {
+  return [...new Set((text.match(pattern) ?? []).map((m) => m.trim()))];
+}
+function scanIntroducedUrlsAndDates(source, proposal, lang, driftRisks, categories) {
+  const srcUrls = new Set(uniqueMatches(source, URL_PATTERN));
+  for (const url of uniqueMatches(proposal, URL_PATTERN)) {
+    if (!srcUrls.has(url)) {
+      driftRisks.push(rdeMsg(lang, "urlIntroduced", { url }));
+      categories.add("inferred_extension");
+    }
+  }
+  const srcDates = new Set(source.match(ISO_DATE_PATTERN) ?? []);
+  for (const date of proposal.match(ISO_DATE_PATTERN) ?? []) {
+    if (!srcDates.has(date)) {
+      driftRisks.push(rdeMsg(lang, "dateIntroduced", { date }));
+      categories.add("inferred_extension");
+    }
+  }
+}
+function scanApprovalLanguageRemoval(source, proposal, lang, driftRisks, categories) {
+  const srcMarkers = uniqueMatches(source, HUMAN_APPROVAL_PATTERN);
+  if (srcMarkers.length === 0) return;
+  const propMarkers = uniqueMatches(proposal, HUMAN_APPROVAL_PATTERN);
+  const lost = srcMarkers.filter((m) => !propMarkers.includes(m));
+  if (lost.length > 0) {
+    driftRisks.push(rdeMsg(lang, "approvalRemoved", { lost: lost.join("; ") }));
+    categories.add("suspicious_drift");
+  }
+}
+function scanFinalDecisionLanguage(source, proposal, lang, driftRisks, categories) {
+  const srcFinal = uniqueMatches(source, FINAL_DECISION_PATTERN);
+  const propFinal = uniqueMatches(proposal, FINAL_DECISION_PATTERN);
+  const introduced = propFinal.filter((m) => !srcFinal.includes(m));
+  if (introduced.length === 0) return;
+  const srcProposalLang = uniqueMatches(source, PROPOSAL_LANGUAGE_PATTERN);
+  if (srcProposalLang.length > 0 || propFinal.length > srcFinal.length) {
+    driftRisks.push(
+      rdeMsg(lang, "finalDecisionDrift", { introduced: introduced.join("; ") })
+    );
+    categories.add("suspicious_drift");
+  }
+}
+
+// src/rde/mergeRdeAudit.ts
+function mergeUnique(target, more) {
+  for (const item of more) {
+    if (!target.includes(item)) target.push(item);
+  }
+}
+function mergeCategories(a, b) {
+  return [.../* @__PURE__ */ new Set([...a, ...b])];
+}
+function mergeStructuralIntoAudit(base, structural) {
+  const preservedElements = [...base.preservedElements];
+  const transformedElements = [...base.transformedElements];
+  const inferredExtensions = [...base.inferredExtensions];
+  const unresolvedElements = [...base.unresolvedElements];
+  const driftRisks = [...base.driftRisks];
+  mergeUnique(preservedElements, structural.preservedElements);
+  mergeUnique(transformedElements, structural.transformedElements);
+  mergeUnique(inferredExtensions, structural.inferredExtensions);
+  mergeUnique(unresolvedElements, structural.unresolvedElements);
+  mergeUnique(driftRisks, structural.driftRisks);
+  const categories = mergeCategories(base.categories, structural.categories);
+  const recommendedDecision = recommendDecision(categories, driftRisks);
+  return {
+    ...base,
+    categories,
+    preservedElements,
+    transformedElements,
+    inferredExtensions,
+    unresolvedElements,
+    driftRisks,
+    recommendedDecision,
+    confidence: driftRisks.length > 0 ? 0.45 : structural.lineAdditions > 0 ? 0.65 : 0.75
+  };
+}
+function recommendDecision(categories, driftRisks) {
+  if (categories.includes("critical_distortion")) return "reject";
+  if (driftRisks.length >= 2 || categories.includes("suspicious_drift")) {
+    return "revise";
+  }
+  if (categories.includes("unresolved") && categories.length <= 1) {
+    return "human_review";
+  }
+  if (categories.includes("preserved") && driftRisks.length === 0) {
+    return "approve";
+  }
+  return "human_review";
+}
+
+// src/rde/enrichAuditFromSource.ts
+function enrichAuditFromSource(audit, request) {
+  const lang = normalizeRdeLang(request.language);
+  const excerpt2 = request.context.sourceText.slice(0, 200).replace(/\n/g, " ") + (request.context.sourceText.length > 200 ? "\u2026" : "");
+  const unresolvedElements = [...audit.unresolvedElements];
+  if (!request.context.git) {
+    unresolvedElements.push(rdeMsg(lang, "nonGitVault"));
+  }
+  return {
+    ...audit,
+    preservedElements: [
+      `path:${request.context.filePath}`,
+      `source_hash:${request.context.sourceHash.slice(0, 16)}\u2026`,
+      excerpt2,
+      ...audit.preservedElements
+    ],
+    unresolvedElements
+  };
+}
+
+// src/rde/parseRdeEmit.ts
+var CATEGORY_MAP = {
+  preserved: "preserved",
+  complemented: "inferred_extension",
+  transformed: "authorized_transformation",
+  deviation_risk: "suspicious_drift",
+  intentionally_unresolved: "unresolved",
+  lost: "critical_distortion",
+  next_update_policy: "unresolved"
+};
+function rdeAuditFromEmit(stdout, proposalId) {
+  const root = JSON.parse(stdout);
+  const cats = root.rde_review_output?.categories ?? {};
+  const categories = /* @__PURE__ */ new Set();
+  const preservedElements = [];
+  const transformedElements = [];
+  const inferredExtensions = [];
+  const unresolvedElements = [];
+  const driftRisks = [];
+  for (const [key, items] of Object.entries(cats)) {
+    const mapped = CATEGORY_MAP[key];
+    if (mapped) categories.add(mapped);
+    const target = key === "preserved" ? preservedElements : key === "transformed" ? transformedElements : key === "complemented" ? inferredExtensions : key === "deviation_risk" ? driftRisks : unresolvedElements;
+    for (const item of items ?? []) {
+      target.push(String(item));
+    }
+  }
+  if (categories.size === 0) {
+    categories.add("unresolved");
+  }
+  return {
+    proposalId,
+    createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+    categories: [...categories],
+    preservedElements,
+    transformedElements,
+    inferredExtensions,
+    unresolvedElements,
+    driftRisks,
+    recommendedDecision: "human_review",
+    confidence: 0.5
+  };
+}
+
+// src/services/RdeAuditService.ts
+function performRdeAudit2(request, proposalId, options) {
+  const structural = options?.sourceReview && !options?.proposalText ? buildSourceReview(request.context.sourceText, request.language) : buildStructuralDiff(
+    request.context.sourceText,
+    options?.proposalText ?? request.context.sourceText,
+    {
+      language: request.language,
+      operation: request.operation,
+      frontmatter: request.context.frontmatter,
+      sourceLinks: request.context.links
+    }
+  );
+  let base;
+  if (options?.cli?.emitStdout) {
+    base = rdeAuditFromEmit(options.cli.emitStdout, proposalId);
+  } else {
+    base = {
+      proposalId,
+      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+      categories: [],
+      preservedElements: [],
+      transformedElements: [],
+      inferredExtensions: [],
+      unresolvedElements: [],
+      driftRisks: [],
+      recommendedDecision: "human_review",
+      confidence: 0.5
+    };
+  }
+  const merged = mergeStructuralIntoAudit(base, structural);
+  return enrichAuditFromSource(merged, request);
+}
+
 // src/rde/rdeAuditReport.ts
 function rdeAuditReportMarkdown(request, audit) {
   const lang = normalizeRdeLang(request.language);
@@ -1532,7 +1667,7 @@ var CliKotonohaClient = class {
     if (validateResult.exitCode !== 0) {
       throw new Error(cliErrorMessage(validateResult));
     }
-    const audit = performRdeAudit(request, proposalId, {
+    const audit = performRdeAudit2(request, proposalId, {
       cli: { emitStdout: emitResult.stdout },
       sourceReview: true
     });
@@ -1543,7 +1678,9 @@ var CliKotonohaClient = class {
         requestId: request.id,
         createdAt: (/* @__PURE__ */ new Date()).toISOString(),
         proposedText,
-        summary: `[cli] RDE audit \xB7 ${request.context.filePath}`,
+        summary: consoleMsg(request.language, "cliRdeSummary", {
+          path: request.context.filePath
+        }),
         uncertaintyNote: "Rule-based source review + CLI `rde emit`/`validate` (interchange skeleton only \u2014 not full RDE). DB attach when DATABASE_URL is configured."
       },
       audit
@@ -1573,7 +1710,7 @@ var CliKotonohaClient = class {
     });
   }
   withLocalAudit(request, proposalId, proposedText, meta) {
-    const audit = performRdeAudit(request, proposalId, { proposalText: proposedText });
+    const audit = performRdeAudit2(request, proposalId, { proposalText: proposedText });
     return {
       proposal: {
         id: proposalId,
@@ -1622,30 +1759,30 @@ function id() {
 var MockKotonohaClient = class {
   async generate(request) {
     const { context, operation, instruction } = request;
-    const excerpt2 = context.sourceText.slice(0, 120).replace(/\n/g, " ") + (context.sourceText.length > 120 ? "\u2026" : "");
+    const lang = request.language;
     const proposedText = [
       `<!-- kotonoha mock ${operation} -->`,
       "",
-      `> ${instruction || "(no instruction)"}`,
+      `> ${instruction || consoleMsg(lang, "noInstruction")}`,
       "",
       context.sourceText
     ].join("\n");
     const proposalId = id();
     if (operation === "rde_audit") {
-      const audit2 = performRdeAudit(request, proposalId, { sourceReview: true });
+      const audit2 = performRdeAudit2(request, proposalId, { sourceReview: true });
       return {
         proposal: {
           id: proposalId,
           requestId: request.id,
           createdAt: (/* @__PURE__ */ new Date()).toISOString(),
           proposedText: rdeAuditReportMarkdown(request, audit2),
-          summary: `[mock] RDE audit \xB7 ${context.title}`
+          summary: consoleMsg(lang, "mockRdeSummary", { title: context.title })
         },
         audit: audit2
       };
     }
     const mockProposal = proposedText;
-    const audit = performRdeAudit(request, proposalId, {
+    const audit = performRdeAudit2(request, proposalId, {
       proposalText: mockProposal
     });
     return {
@@ -1654,8 +1791,11 @@ var MockKotonohaClient = class {
         requestId: request.id,
         createdAt: (/* @__PURE__ */ new Date()).toISOString(),
         proposedText: mockProposal,
-        summary: `[mock] ${operation} on ${context.title}`,
-        uncertaintyNote: "Mock backend \u2014 connect HTTP or CLI in settings for real Kotonoha output."
+        summary: consoleMsg(lang, "mockOpSummary", {
+          operation,
+          title: context.title
+        }),
+        uncertaintyNote: consoleMsg(lang, "mockUncertainty")
       },
       audit
     };

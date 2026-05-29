@@ -1,4 +1,5 @@
 import type { Proposal } from "../domain/types";
+import { consoleMsg } from "../i18n/consoleI18n";
 import type { RdeLang } from "../rde/rdeI18n";
 import { rdeAuditUnavailableMessage } from "./rdeAuditPolicyMessages";
 
@@ -10,11 +11,8 @@ export interface ProposalViewActions {
   onCancelRevise?: () => void;
   onReAudit?: () => void;
   language?: RdeLang;
-  /** RDE audit report — do not offer Apply to note */
   auditReportOnly?: boolean;
-  /** rde-audit-policy §16 — audit expected but missing */
   auditMissing?: boolean;
-  /** User is editing proposal before apply */
   reviseMode?: boolean;
   editedText?: string;
   onEditedTextChange?: (text: string) => void;
@@ -26,13 +24,14 @@ export class ProposalView {
     proposal: Proposal,
     actions: ProposalViewActions,
   ) {
+    const lang = actions.language;
     host.createEl("h3", {
       cls: "kotonoha-console-section-title",
       text: actions.auditReportOnly
-        ? "RDE 監査レポート"
+        ? consoleMsg(lang, "auditReportTitle")
         : actions.reviseMode
-          ? "Proposal（改訂中）"
-          : "Proposal",
+          ? consoleMsg(lang, "proposalReviseTitle")
+          : consoleMsg(lang, "proposalTitle"),
     });
     if (proposal.summary) {
       host.createEl("p", { cls: "kotonoha-console-muted", text: proposal.summary });
@@ -40,7 +39,7 @@ export class ProposalView {
     if (actions.auditMissing) {
       host.createEl("p", {
         cls: "kotonoha-console-warn",
-        text: rdeAuditUnavailableMessage(actions.language),
+        text: rdeAuditUnavailableMessage(lang),
       });
     }
     if (proposal.uncertaintyNote) {
@@ -71,27 +70,41 @@ export class ProposalView {
     const bar = host.createDiv({ cls: "kotonoha-console-actions" });
     if (actions.reviseMode) {
       bar
-        .createEl("button", { text: "Apply revision", cls: "mod-cta" })
+        .createEl("button", { text: consoleMsg(lang, "btnApplyRevision"), cls: "mod-cta" })
         .addEventListener("click", actions.onApply);
       if (actions.onReAudit) {
-        bar.createEl("button", { text: "Re-audit" }).addEventListener("click", actions.onReAudit);
+        bar
+          .createEl("button", { text: consoleMsg(lang, "btnReAudit") })
+          .addEventListener("click", actions.onReAudit);
       }
       bar
-        .createEl("button", { text: "Cancel revise" })
+        .createEl("button", { text: consoleMsg(lang, "btnCancelRevise") })
         .addEventListener("click", () => actions.onCancelRevise?.());
-      bar.createEl("button", { text: "Copy" }).addEventListener("click", actions.onCopy);
+      bar
+        .createEl("button", { text: consoleMsg(lang, "btnCopy") })
+        .addEventListener("click", actions.onCopy);
     } else if (!actions.auditReportOnly) {
-      bar.createEl("button", { text: "Apply" }).addEventListener("click", actions.onApply);
+      bar
+        .createEl("button", { text: consoleMsg(lang, "btnApply") })
+        .addEventListener("click", actions.onApply);
       if (actions.onRevise) {
-        bar.createEl("button", { text: "Revise" }).addEventListener("click", actions.onRevise);
+        bar
+          .createEl("button", { text: consoleMsg(lang, "btnRevise") })
+          .addEventListener("click", actions.onRevise);
       }
-      bar.createEl("button", { text: "Reject" }).addEventListener("click", actions.onReject);
-      bar.createEl("button", { text: "Copy" }).addEventListener("click", actions.onCopy);
+      bar
+        .createEl("button", { text: consoleMsg(lang, "btnReject") })
+        .addEventListener("click", actions.onReject);
+      bar
+        .createEl("button", { text: consoleMsg(lang, "btnCopy") })
+        .addEventListener("click", actions.onCopy);
     } else {
       bar
-        .createEl("button", { text: "記録を閉じる" })
+        .createEl("button", { text: consoleMsg(lang, "btnCloseRecord") })
         .addEventListener("click", actions.onReject);
-      bar.createEl("button", { text: "Copy" }).addEventListener("click", actions.onCopy);
+      bar
+        .createEl("button", { text: consoleMsg(lang, "btnCopy") })
+        .addEventListener("click", actions.onCopy);
     }
   }
 }

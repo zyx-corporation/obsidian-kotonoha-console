@@ -11,6 +11,7 @@ import {
   proposalTextFromContextPack,
 } from "../cli/proposalFromContextPack";
 import { proposalTextFromLocalContext } from "../cli/proposalFromLocal";
+import { consoleMsg } from "../i18n/consoleI18n";
 import { performRdeAudit } from "../services/RdeAuditService";
 import { rdeAuditReportMarkdown } from "../rde/rdeAuditReport";
 
@@ -91,7 +92,9 @@ export class CliKotonohaClient implements KotonohaClient {
         requestId: request.id,
         createdAt: new Date().toISOString(),
         proposedText,
-        summary: `[cli] RDE audit · ${request.context.filePath}`,
+        summary: consoleMsg(request.language, "cliRdeSummary", {
+          path: request.context.filePath,
+        }),
         uncertaintyNote:
           "Rule-based source review + CLI `rde emit`/`validate` (interchange skeleton only — not full RDE). DB attach when DATABASE_URL is configured.",
       },
