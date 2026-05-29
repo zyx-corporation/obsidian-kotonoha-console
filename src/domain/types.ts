@@ -80,7 +80,7 @@ export interface RdeAudit {
 export interface ApprovalDecision {
   proposalId: string;
   decidedAt: string;
-  decision: "approved" | "rejected" | "partially_applied";
+  decision: "approved" | "rejected" | "partially_applied" | "hold";
   appliedText?: string;
   comment?: string;
 }

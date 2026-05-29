@@ -25,9 +25,16 @@
 }
 
 .kotonoha-console-form textarea,
-.kotonoha-console-form select {
+.kotonoha-console-form select,
+.kotonoha-console-revise {
   width: 100%;
   margin-top: 0.25rem;
+}
+
+.kotonoha-console-revise {
+  min-height: 160px;
+  font-family: var(--font-monospace);
+  font-size: var(--font-ui-smaller);
 }
 
 .kotonoha-console-actions {

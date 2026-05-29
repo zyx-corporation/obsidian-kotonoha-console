@@ -102,7 +102,9 @@ export class SidecarStore {
         ? "approved"
         : status === "partially_applied"
           ? "partially_applied"
-          : "rejected";
+          : status === "hold"
+            ? "hold"
+            : "rejected";
     for (const path of [
       `${PROPOSALS}/${proposalId}.proposal.json`,
       `${AUDIT}/${proposalId}.rde-audit.json`,

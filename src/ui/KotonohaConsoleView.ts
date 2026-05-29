@@ -4,6 +4,7 @@ import type { GenerationRequest, OperationType, ApprovalDecision } from "../doma
 import type { ProposalBundle } from "../services/ProposalService";
 import { ProposalView } from "./ProposalView";
 import { RdeAuditView } from "./RdeAuditView";
+import { performRdeAudit } from "../services/RdeAuditService";
 
 export const KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
 
@@ -12,6 +13,8 @@ export class KotonohaConsoleView extends ItemView {
   private lastRequest: GenerationRequest | null = null;
   private lastOperation: OperationType = "rde_audit";
   private sourceHashAtGeneration: string | null = null;
+  private reviseMode = false;
+  private editedText = "";
   private proposalHost!: HTMLElement;
   private auditHost!: HTMLElement;
   private instructionInput!: HTMLTextAreaElement;
@@ -121,6 +124,8 @@ export class KotonohaConsoleView extends ItemView {
     try {
       this.sourceHashAtGeneration = ctx.sourceHash;
       this.lastRequest = request;
+      this.reviseMode = false;
+      this.editedText = "";
       this.bundle = await this.plugin.proposals.generate(request);
       await this.plugin.auditLog.logProposal(
         this.bundle.proposal,
@@ -161,8 +166,16 @@ export class KotonohaConsoleView extends ItemView {
       onApply: () => void this.applyProposal(),
       onReject: () => void this.rejectProposal(),
       onCopy: () => void this.copyProposal(),
+      onRevise: isAuditReport ? undefined : () => void this.startRevise(),
+      onCancelRevise: () => this.cancelRevise(),
+      onReAudit: () => void this.reAuditEditedProposal(),
       auditReportOnly: isAuditReport,
       auditMissing,
+      reviseMode: this.reviseMode,
+      editedText: this.editedText,
+      onEditedTextChange: (text) => {
+        this.editedText = text;
+      },
     });
 
     if (this.bundle.audit && wantsAudit) {
@@ -205,7 +218,9 @@ export class KotonohaConsoleView extends ItemView {
     const file = this.plugin.activeNoteReader.getActiveFile();
     if (!file) return;
 
-    const text = this.bundle.proposal.proposedText;
+    const text = this.reviseMode
+      ? this.editedText
+      : this.bundle.proposal.proposedText;
     if (ctx.selectionText) {
       const view = this.app.workspace.getActiveViewOfType(MarkdownView);
       const editor = view?.editor;
@@ -219,12 +234,24 @@ export class KotonohaConsoleView extends ItemView {
       await this.plugin.markdownWriter.replaceNoteContent(file, text);
     }
 
-    const decision = this.plugin.approval.approve(this.bundle.proposal, text);
+    const decision = this.reviseMode
+      ? this.plugin.approval.approveRevised(
+          this.bundle.proposal,
+          text,
+          this.bundle.proposal.proposedText,
+        )
+      : this.plugin.approval.approve(this.bundle.proposal, text);
     await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
     await this.saveReviewSidecar(decision);
-    new Notice("Applied (audit logged)");
+    new Notice(
+      decision.decision === "partially_applied"
+        ? "Applied revised text (partially_applied)"
+        : "Applied (audit logged)",
+    );
     this.bundle = null;
     this.lastRequest = null;
+    this.reviseMode = false;
+    this.editedText = "";
     this.proposalHost.empty();
     this.auditHost.empty();
   }
@@ -243,8 +270,46 @@ export class KotonohaConsoleView extends ItemView {
 
   private async copyProposal(): Promise<void> {
     if (!this.bundle) return;
-    await navigator.clipboard.writeText(this.bundle.proposal.proposedText);
+    const text = this.reviseMode ? this.editedText : this.bundle.proposal.proposedText;
+    await navigator.clipboard.writeText(text);
     new Notice("クリップボードにコピーしました");
+  }
+
+  private async startRevise(): Promise<void> {
+    if (!this.bundle || this.lastOperation === "rde_audit") return;
+    this.reviseMode = true;
+    this.editedText = this.bundle.proposal.proposedText;
+    const decision = this.plugin.approval.hold(
+      this.bundle.proposal,
+      "user opened revise editor",
+    );
+    await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
+    await this.saveReviewSidecar(decision);
+    new Notice("Revise mode — edit proposal, then Apply revision or Re-audit");
+    this.renderBundle();
+  }
+
+  private cancelRevise(): void {
+    this.reviseMode = false;
+    this.editedText = "";
+    this.renderBundle();
+  }
+
+  private async reAuditEditedProposal(): Promise<void> {
+    if (!this.bundle || !this.lastRequest) return;
+    const audit = performRdeAudit(this.lastRequest, this.bundle.proposal.id, {
+      proposalText: this.editedText,
+    });
+    this.bundle = { ...this.bundle, audit };
+    if (this.plugin.settings.sidecarMode) {
+      await this.plugin.sidecar.saveRdeAuditRecord(
+        this.lastRequest,
+        this.bundle.proposal,
+        audit,
+      );
+    }
+    new Notice("Re-audit complete (local rule-based)");
+    this.renderBundle();
   }
 
   private async saveReviewSidecar(decision: ApprovalDecision): Promise<void> {

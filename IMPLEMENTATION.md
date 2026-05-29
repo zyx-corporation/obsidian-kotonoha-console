@@ -7,9 +7,9 @@ Aligned with [`docs/architecture.ja.md`](docs/architecture.ja.md) phases.
 | 0 Plugin skeleton | **done** | `main.ts`, settings, commands, side panel |
 | 1 Note I/O | **partial** | active note, selection via editor on apply, frontmatter/tags |
 | 2 Kotonoha client | **partial** | `CliKotonohaClient`: RDE audit without Git; `context export` only if `gitMode ≠ off` |
-| 3 Proposal mode | **done** | generate, copy, reject, confirm apply |
+| 3 Proposal mode | **done** | generate, copy, reject, revise, confirm apply |
 | 4 RDE audit | **done** | source review + structural diff + CLI `rde emit`/`validate`; sidecar |
-| 5 Approval workflow | **partial** | audit log + `.kotonoha/reviews/` on approve/reject |
+| 5 Approval workflow | **done** | audit log + `.kotonoha/reviews/` (approve/reject/hold/partial) |
 
 ## Sidecar layout (git-mode-spec §9.1)
 
@@ -39,5 +39,4 @@ Link into a vault: copy or symlink this folder to `Vault/.obsidian/plugins/koton
 
 - `HttpKotonohaClient` · orchestrator LLM for generative rewrite
 - Git passive mode via read-only subprocess
-- Revise action in UI (architecture §15)
-- `.kotonoha/reviews/` hold / partial apply semantics
+- Obsidian manual acceptance checklist
