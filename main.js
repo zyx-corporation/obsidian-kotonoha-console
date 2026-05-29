@@ -294,6 +294,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     this.plugin = plugin;
   }
   bundle = null;
+  lastRequest = null;
   lastOperation = "rde_audit";
   sourceHashAtGeneration = null;
   proposalHost;
@@ -383,18 +384,21 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     );
     try {
       this.sourceHashAtGeneration = ctx.sourceHash;
+      this.lastRequest = request;
       this.bundle = await this.plugin.proposals.generate(request);
       await this.plugin.auditLog.logProposal(
         this.bundle.proposal,
         ctx.sourceText
       );
-      if (this.plugin.settings.sidecarMode && this.bundle.audit) {
+      if (this.plugin.settings.sidecarMode) {
         await this.plugin.sidecar.saveProposalRecord(request, this.bundle.proposal);
-        await this.plugin.sidecar.saveRdeAuditRecord(
-          request,
-          this.bundle.proposal,
-          this.bundle.audit
-        );
+        if (this.bundle.audit) {
+          await this.plugin.sidecar.saveRdeAuditRecord(
+            request,
+            this.bundle.proposal,
+            this.bundle.audit
+          );
+        }
       }
       this.renderBundle();
       const msg = operation === "rde_audit" ? "RDE \u76E3\u67FB\u5B8C\u4E86\uFF08.kotonoha/audit/ \u306B\u4FDD\u5B58\uFF09" : "Proposal ready (not applied)";
@@ -462,8 +466,10 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     }
     const decision = this.plugin.approval.approve(this.bundle.proposal, text);
     await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
+    await this.saveReviewSidecar(decision);
     new import_obsidian2.Notice("Applied (audit logged)");
     this.bundle = null;
+    this.lastRequest = null;
     this.proposalHost.empty();
     this.auditHost.empty();
   }
@@ -471,8 +477,10 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     if (!this.bundle) return;
     const decision = this.plugin.approval.reject(this.bundle.proposal);
     await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
+    await this.saveReviewSidecar(decision);
     new import_obsidian2.Notice(this.lastOperation === "rde_audit" ? "\u76E3\u67FB\u3092\u8A18\u9332\uFF08\u5374\u4E0B\uFF09" : "Rejected");
     this.bundle = null;
+    this.lastRequest = null;
     this.proposalHost.empty();
     this.auditHost.empty();
   }
@@ -480,6 +488,17 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     if (!this.bundle) return;
     await navigator.clipboard.writeText(this.bundle.proposal.proposedText);
     new import_obsidian2.Notice("\u30AF\u30EA\u30C3\u30D7\u30DC\u30FC\u30C9\u306B\u30B3\u30D4\u30FC\u3057\u307E\u3057\u305F");
+  }
+  async saveReviewSidecar(decision) {
+    if (!this.plugin.settings.sidecarMode || !this.lastRequest || !this.bundle) {
+      return;
+    }
+    await this.plugin.sidecar.saveReviewRecord(
+      this.lastRequest,
+      this.bundle.proposal,
+      decision,
+      this.bundle.audit
+    );
   }
 };
 function message(e) {
@@ -661,6 +680,7 @@ function excerpt(text, mode) {
 var ROOT = ".kotonoha";
 var PROPOSALS = `${ROOT}/proposals`;
 var AUDIT = `${ROOT}/audit`;
+var REVIEWS = `${ROOT}/reviews`;
 var PLUGIN_ID = "obsidian-kotonoha-console";
 var SCHEMA_VERSION = "0.1.0";
 var SidecarStore = class {
@@ -705,9 +725,49 @@ var SidecarStore = class {
     };
     await this.app.vault.adapter.write(path, JSON.stringify(body, null, 2));
   }
+  /** git-mode-spec §9.1 step 10 — human review decision sidecar. */
+  async saveReviewRecord(request, proposal, decision, audit) {
+    await this.ensureDirs();
+    const path = `${REVIEWS}/${proposal.id}.review.json`;
+    const body = {
+      schemaVersion: SCHEMA_VERSION,
+      plugin: PLUGIN_ID,
+      format: "kotonoha.obsidian.review.v0.1",
+      proposalId: proposal.id,
+      filePath: request.context.filePath,
+      sourceHash: request.context.sourceHash,
+      operation: request.operation,
+      decision: {
+        status: decision.decision,
+        decidedAt: decision.decidedAt,
+        comment: decision.comment
+      },
+      rdeRecommended: audit?.recommendedDecision,
+      rdeCategories: audit?.categories
+    };
+    await this.app.vault.adapter.write(path, JSON.stringify(body, null, 2));
+    await this.patchSidecarDecision(proposal.id, decision.decision);
+  }
+  async patchSidecarDecision(proposalId, status) {
+    const adapter = this.app.vault.adapter;
+    const sidecarStatus = status === "approved" ? "approved" : status === "partially_applied" ? "partially_applied" : "rejected";
+    for (const path of [
+      `${PROPOSALS}/${proposalId}.proposal.json`,
+      `${AUDIT}/${proposalId}.rde-audit.json`
+    ]) {
+      if (!await adapter.exists(path)) continue;
+      try {
+        const raw = await adapter.read(path);
+        const parsed = JSON.parse(raw);
+        parsed.decision = { status: sidecarStatus, decidedAt: (/* @__PURE__ */ new Date()).toISOString() };
+        await adapter.write(path, JSON.stringify(parsed, null, 2));
+      } catch {
+      }
+    }
+  }
   async ensureDirs() {
     const adapter = this.app.vault.adapter;
-    for (const dir of [ROOT, PROPOSALS, AUDIT]) {
+    for (const dir of [ROOT, PROPOSALS, AUDIT, REVIEWS]) {
       if (!await adapter.exists(dir)) {
         await adapter.mkdir(dir);
       }
@@ -931,6 +991,56 @@ function scanMvpGuardrails(source, proposal, options, driftRisks, categories) {
       );
       categories.add("suspicious_drift");
     }
+  }
+  scanIntroducedUrlsAndDates(source, proposal, driftRisks, categories);
+  scanApprovalLanguageRemoval(source, proposal, driftRisks, categories);
+  scanFinalDecisionLanguage(source, proposal, driftRisks, categories);
+}
+var URL_PATTERN = /https?:\/\/[^\s)\]>]+/gi;
+var ISO_DATE_PATTERN = /\b\d{4}-\d{2}-\d{2}\b/g;
+var HUMAN_APPROVAL_PATTERN = /\b(must be approved|requires? (?:human )?approval|human review required|人工レビュー|承認が必要)\b/giu;
+var PROPOSAL_LANGUAGE_PATTERN = /\b(proposal|suggest(?:ed|ion)?|may recommend|draft|提案|推奨)\b/giu;
+var FINAL_DECISION_PATTERN = /\b(approved|rejected|final decision|must proceed|is (?:the )?correct|確定|承認済|却下済)\b/giu;
+function uniqueMatches(text, pattern) {
+  return [...new Set((text.match(pattern) ?? []).map((m) => m.trim()))];
+}
+function scanIntroducedUrlsAndDates(source, proposal, driftRisks, categories) {
+  const srcUrls = new Set(uniqueMatches(source, URL_PATTERN));
+  for (const url of uniqueMatches(proposal, URL_PATTERN)) {
+    if (!srcUrls.has(url)) {
+      driftRisks.push(`URL introduced in proposal (not in source): ${url}`);
+      categories.add("inferred_extension");
+    }
+  }
+  const srcDates = new Set(source.match(ISO_DATE_PATTERN) ?? []);
+  for (const date of proposal.match(ISO_DATE_PATTERN) ?? []) {
+    if (!srcDates.has(date)) {
+      driftRisks.push(`date introduced in proposal (not in source): ${date}`);
+      categories.add("inferred_extension");
+    }
+  }
+}
+function scanApprovalLanguageRemoval(source, proposal, driftRisks, categories) {
+  const srcMarkers = uniqueMatches(source, HUMAN_APPROVAL_PATTERN);
+  if (srcMarkers.length === 0) return;
+  const propMarkers = uniqueMatches(proposal, HUMAN_APPROVAL_PATTERN);
+  const lost = srcMarkers.filter((m) => !propMarkers.includes(m));
+  if (lost.length > 0) {
+    driftRisks.push(`human approval language may be removed: ${lost.join("; ")}`);
+    categories.add("suspicious_drift");
+  }
+}
+function scanFinalDecisionLanguage(source, proposal, driftRisks, categories) {
+  const srcFinal = uniqueMatches(source, FINAL_DECISION_PATTERN);
+  const propFinal = uniqueMatches(proposal, FINAL_DECISION_PATTERN);
+  const introduced = propFinal.filter((m) => !srcFinal.includes(m));
+  if (introduced.length === 0) return;
+  const srcProposalLang = uniqueMatches(source, PROPOSAL_LANGUAGE_PATTERN);
+  if (srcProposalLang.length > 0 || propFinal.length > srcFinal.length) {
+    driftRisks.push(
+      `proposal may convert tentative language to final decision: ${introduced.join("; ")}`
+    );
+    categories.add("suspicious_drift");
   }
 }
 

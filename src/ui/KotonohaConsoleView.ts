@@ -1,6 +1,6 @@
 import { ItemView, MarkdownView, Notice, WorkspaceLeaf } from "obsidian";
 import type KotonohaConsolePlugin from "../main";
-import type { OperationType } from "../domain/types";
+import type { GenerationRequest, OperationType, ApprovalDecision } from "../domain/types";
 import type { ProposalBundle } from "../services/ProposalService";
 import { ProposalView } from "./ProposalView";
 import { RdeAuditView } from "./RdeAuditView";
@@ -9,6 +9,7 @@ export const KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
 
 export class KotonohaConsoleView extends ItemView {
   private bundle: ProposalBundle | null = null;
+  private lastRequest: GenerationRequest | null = null;
   private lastOperation: OperationType = "rde_audit";
   private sourceHashAtGeneration: string | null = null;
   private proposalHost!: HTMLElement;
@@ -119,18 +120,21 @@ export class KotonohaConsoleView extends ItemView {
 
     try {
       this.sourceHashAtGeneration = ctx.sourceHash;
+      this.lastRequest = request;
       this.bundle = await this.plugin.proposals.generate(request);
       await this.plugin.auditLog.logProposal(
         this.bundle.proposal,
         ctx.sourceText,
       );
-      if (this.plugin.settings.sidecarMode && this.bundle.audit) {
+      if (this.plugin.settings.sidecarMode) {
         await this.plugin.sidecar.saveProposalRecord(request, this.bundle.proposal);
-        await this.plugin.sidecar.saveRdeAuditRecord(
-          request,
-          this.bundle.proposal,
-          this.bundle.audit,
-        );
+        if (this.bundle.audit) {
+          await this.plugin.sidecar.saveRdeAuditRecord(
+            request,
+            this.bundle.proposal,
+            this.bundle.audit,
+          );
+        }
       }
       this.renderBundle();
       const msg =
@@ -217,8 +221,10 @@ export class KotonohaConsoleView extends ItemView {
 
     const decision = this.plugin.approval.approve(this.bundle.proposal, text);
     await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
+    await this.saveReviewSidecar(decision);
     new Notice("Applied (audit logged)");
     this.bundle = null;
+    this.lastRequest = null;
     this.proposalHost.empty();
     this.auditHost.empty();
   }
@@ -227,8 +233,10 @@ export class KotonohaConsoleView extends ItemView {
     if (!this.bundle) return;
     const decision = this.plugin.approval.reject(this.bundle.proposal);
     await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
+    await this.saveReviewSidecar(decision);
     new Notice(this.lastOperation === "rde_audit" ? "監査を記録（却下）" : "Rejected");
     this.bundle = null;
+    this.lastRequest = null;
     this.proposalHost.empty();
     this.auditHost.empty();
   }
@@ -237,6 +245,18 @@ export class KotonohaConsoleView extends ItemView {
     if (!this.bundle) return;
     await navigator.clipboard.writeText(this.bundle.proposal.proposedText);
     new Notice("クリップボードにコピーしました");
+  }
+
+  private async saveReviewSidecar(decision: ApprovalDecision): Promise<void> {
+    if (!this.plugin.settings.sidecarMode || !this.lastRequest || !this.bundle) {
+      return;
+    }
+    await this.plugin.sidecar.saveReviewRecord(
+      this.lastRequest,
+      this.bundle.proposal,
+      decision,
+      this.bundle.audit,
+    );
   }
 }
 
