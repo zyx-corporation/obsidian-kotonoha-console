@@ -1,6 +1,8 @@
 import type { OperationType, RdeCategory } from "../domain/types";
+import { type RdeLang, rdeMsg } from "./rdeI18n";
 
 export interface StructuralDiffOptions {
+  language?: RdeLang;
   operation?: OperationType;
   frontmatter?: Record<string, unknown>;
   sourceLinks?: string[];
@@ -26,7 +28,10 @@ const STRONG =
   /\b(must|will|always|never|certainly|clearly|proves?|確実|必ず|明らか|証明)\b/giu;
 
 /** Source-only review for `rde_audit` (no proposal transform yet). */
-export function buildSourceReview(source: string): StructuralDiffResult {
+export function buildSourceReview(
+  source: string,
+  language?: RdeLang,
+): StructuralDiffResult {
   const preservedElements: string[] = [];
   const unresolvedElements: string[] = [];
   const categories = new Set<RdeCategory>();
@@ -36,21 +41,23 @@ export function buildSourceReview(source: string): StructuralDiffResult {
   const lineCount = source.split(/\n/).filter((l) => l.trim()).length;
 
   categories.add("preserved");
-  preservedElements.push(`source note review (${lineCount} non-empty lines)`);
+  preservedElements.push(
+    rdeMsg(language, "sourceReviewLines", { count: lineCount }),
+  );
 
   if (hedgeCount > 0) {
     categories.add("unresolved");
     unresolvedElements.push(
-      `source contains ${hedgeCount} hedging marker(s) — meaning may remain open`,
+      rdeMsg(language, "hedgingUnresolved", { count: hedgeCount }),
     );
   }
   if (strongCount > 0) {
-    preservedElements.push(`source contains ${strongCount} strong claim marker(s)`);
+    preservedElements.push(
+      rdeMsg(language, "strongPreserved", { count: strongCount }),
+    );
   }
   if (hedgeCount === 0 && strongCount === 0 && source.trim().length > 0) {
-    unresolvedElements.push(
-      "no hedging or strong-claim markers detected — rule-based signals limited",
-    );
+    unresolvedElements.push(rdeMsg(language, "limitedSignals"));
     categories.add("unresolved");
   }
 
@@ -72,6 +79,7 @@ export function buildStructuralDiff(
   proposal?: string,
   options?: StructuralDiffOptions,
 ): StructuralDiffResult {
+  const lang = options?.language;
   const preservedElements: string[] = [];
   const transformedElements: string[] = [];
   const inferredExtensions: string[] = [];
@@ -97,25 +105,31 @@ export function buildStructuralDiff(
     if (lineAdditions > 0 || lineDeletions > 0) {
       categories.add("authorized_transformation");
       transformedElements.push(
-        `lines +${lineAdditions} / -${lineDeletions} (structural)`,
+        rdeMsg(lang, "linesStructural", { add: lineAdditions, del: lineDeletions }),
       );
     }
   } else {
     categories.add("preserved");
-    preservedElements.push("source and proposal text match (structural)");
+    preservedElements.push(rdeMsg(lang, "textMatchStructural"));
   }
 
-  scanClaimStrength(source, proposal ?? source, driftRisks, categories);
-  scanHedgingLoss(source, proposal ?? source, driftRisks, categories);
+  scanClaimStrength(source, proposal ?? source, lang, driftRisks, categories);
+  scanHedgingLoss(source, proposal ?? source, lang, driftRisks, categories);
 
   if (srcLines.length > 3) {
-    preservedElements.push(`source paragraphs: ${srcLines.filter((l) => l.trim()).length}`);
+    preservedElements.push(
+      rdeMsg(lang, "sourceParagraphs", {
+        count: srcLines.filter((l) => l.trim()).length,
+      }),
+    );
   }
 
   if (driftRisks.length === 0 && !sameText && proposal) {
     const ratio = proposal.length / Math.max(source.length, 1);
     if (ratio > 1.4) {
-      inferredExtensions.push(`proposal length ×${ratio.toFixed(2)} vs source`);
+      inferredExtensions.push(
+        rdeMsg(lang, "lengthInferred", { ratio: ratio.toFixed(2) }),
+      );
       categories.add("inferred_extension");
     }
   }
@@ -126,7 +140,7 @@ export function buildStructuralDiff(
 
   if (categories.size === 0) {
     categories.add("unresolved");
-    unresolvedElements.push("insufficient structural signal for classification");
+    unresolvedElements.push(rdeMsg(lang, "insufficientSignal"));
   }
 
   return {
@@ -144,6 +158,7 @@ export function buildStructuralDiff(
 function scanClaimStrength(
   source: string,
   proposal: string,
+  lang: RdeLang | undefined,
   driftRisks: string[],
   categories: Set<RdeCategory>,
 ): void {
@@ -153,11 +168,11 @@ function scanClaimStrength(
   const propStrong = (proposal.match(STRONG) ?? []).length;
 
   if (srcHedge > 0 && propStrong > srcStrong && propHedge < srcHedge) {
-    driftRisks.push("claim strength may have increased (hedging reduced, certainty markers added)");
+    driftRisks.push(rdeMsg(lang, "claimStrengthDrift"));
     categories.add("suspicious_drift");
   }
   if (propStrong > 0 && srcHedge > 0 && propHedge === 0) {
-    driftRisks.push("hedging removed while strong claims present in proposal");
+    driftRisks.push(rdeMsg(lang, "hedgingRemovedStrong"));
     categories.add("suspicious_drift");
   }
 }
@@ -165,6 +180,7 @@ function scanClaimStrength(
 function scanHedgingLoss(
   source: string,
   proposal: string,
+  lang: RdeLang | undefined,
   driftRisks: string[],
   categories: Set<RdeCategory>,
 ): void {
@@ -173,7 +189,7 @@ function scanHedgingLoss(
     (w) => source.toLowerCase().includes(w) && !proposal.toLowerCase().includes(w),
   );
   if (lost.length > 0) {
-    driftRisks.push(`hedging terms dropped: ${lost.join(", ")}`);
+    driftRisks.push(rdeMsg(lang, "hedgingDropped", { terms: lost.join(", ") }));
     categories.add("suspicious_drift");
   }
 }
@@ -185,10 +201,11 @@ function scanMvpGuardrails(
   driftRisks: string[],
   categories: Set<RdeCategory>,
 ): void {
+  const lang = options?.language;
   const fm = options?.frontmatter ?? {};
   for (const key of Object.keys(fm)) {
     if (!proposal.includes(`${key}:`) && !proposal.includes(`${key} `)) {
-      driftRisks.push(`frontmatter key may be removed or altered: ${key}`);
+      driftRisks.push(rdeMsg(lang, "frontmatterRemoved", { key }));
       categories.add("suspicious_drift");
     }
   }
@@ -203,7 +220,7 @@ function scanMvpGuardrails(
   for (const target of linkTargets) {
     const needle = target.replace(/^\[\[/, "").replace(/\]\]$/, "");
     if (needle && !proposal.includes(needle)) {
-      driftRisks.push(`link or wikilink may be removed: ${needle}`);
+      driftRisks.push(rdeMsg(lang, "linkRemoved", { target: needle }));
       categories.add("suspicious_drift");
     }
   }
@@ -212,15 +229,18 @@ function scanMvpGuardrails(
     const ratio = proposal.length / Math.max(source.length, 1);
     if (ratio < REWRITE_LENGTH_SHRINK_RATIO) {
       driftRisks.push(
-        `rewrite shortened text to ${(ratio * 100).toFixed(0)}% of source (threshold ${REWRITE_LENGTH_SHRINK_RATIO * 100}%)`,
+        rdeMsg(lang, "rewriteShortened", {
+          pct: (ratio * 100).toFixed(0),
+          threshold: REWRITE_LENGTH_SHRINK_RATIO * 100,
+        }),
       );
       categories.add("suspicious_drift");
     }
   }
 
-  scanIntroducedUrlsAndDates(source, proposal, driftRisks, categories);
-  scanApprovalLanguageRemoval(source, proposal, driftRisks, categories);
-  scanFinalDecisionLanguage(source, proposal, driftRisks, categories);
+  scanIntroducedUrlsAndDates(source, proposal, lang, driftRisks, categories);
+  scanApprovalLanguageRemoval(source, proposal, lang, driftRisks, categories);
+  scanFinalDecisionLanguage(source, proposal, lang, driftRisks, categories);
 }
 
 const URL_PATTERN = /https?:\/\/[^\s)\]>]+/gi;
@@ -239,13 +259,14 @@ function uniqueMatches(text: string, pattern: RegExp): string[] {
 function scanIntroducedUrlsAndDates(
   source: string,
   proposal: string,
+  lang: RdeLang | undefined,
   driftRisks: string[],
   categories: Set<RdeCategory>,
 ): void {
   const srcUrls = new Set(uniqueMatches(source, URL_PATTERN));
   for (const url of uniqueMatches(proposal, URL_PATTERN)) {
     if (!srcUrls.has(url)) {
-      driftRisks.push(`URL introduced in proposal (not in source): ${url}`);
+      driftRisks.push(rdeMsg(lang, "urlIntroduced", { url }));
       categories.add("inferred_extension");
     }
   }
@@ -253,7 +274,7 @@ function scanIntroducedUrlsAndDates(
   const srcDates = new Set(source.match(ISO_DATE_PATTERN) ?? []);
   for (const date of proposal.match(ISO_DATE_PATTERN) ?? []) {
     if (!srcDates.has(date)) {
-      driftRisks.push(`date introduced in proposal (not in source): ${date}`);
+      driftRisks.push(rdeMsg(lang, "dateIntroduced", { date }));
       categories.add("inferred_extension");
     }
   }
@@ -262,6 +283,7 @@ function scanIntroducedUrlsAndDates(
 function scanApprovalLanguageRemoval(
   source: string,
   proposal: string,
+  lang: RdeLang | undefined,
   driftRisks: string[],
   categories: Set<RdeCategory>,
 ): void {
@@ -270,7 +292,7 @@ function scanApprovalLanguageRemoval(
   const propMarkers = uniqueMatches(proposal, HUMAN_APPROVAL_PATTERN);
   const lost = srcMarkers.filter((m) => !propMarkers.includes(m));
   if (lost.length > 0) {
-    driftRisks.push(`human approval language may be removed: ${lost.join("; ")}`);
+    driftRisks.push(rdeMsg(lang, "approvalRemoved", { lost: lost.join("; ") }));
     categories.add("suspicious_drift");
   }
 }
@@ -278,6 +300,7 @@ function scanApprovalLanguageRemoval(
 function scanFinalDecisionLanguage(
   source: string,
   proposal: string,
+  lang: RdeLang | undefined,
   driftRisks: string[],
   categories: Set<RdeCategory>,
 ): void {
@@ -288,7 +311,7 @@ function scanFinalDecisionLanguage(
   const srcProposalLang = uniqueMatches(source, PROPOSAL_LANGUAGE_PATTERN);
   if (srcProposalLang.length > 0 || propFinal.length > srcFinal.length) {
     driftRisks.push(
-      `proposal may convert tentative language to final decision: ${introduced.join("; ")}`,
+      rdeMsg(lang, "finalDecisionDrift", { introduced: introduced.join("; ") }),
     );
     categories.add("suspicious_drift");
   }

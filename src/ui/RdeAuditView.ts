@@ -1,35 +1,56 @@
 import type { RdeAudit } from "../domain/types";
 import {
-  RDE_AUDIT_LOW_CONFIDENCE,
+  formatCategory,
+  formatDecision,
+  type RdeLang,
+  rdeMsg,
+} from "../rde/rdeI18n";
+import {
+  rdeAuditLowConfidenceMessage,
   shouldShowLowConfidenceWarning,
 } from "./rdeAuditPolicyMessages";
 
-const OPEN_BY_DEFAULT = new Set(["Unresolved", "Drift risks"]);
+const OPEN_BY_DEFAULT_JA = new Set(["未解決", "逸脱リスク"]);
+const OPEN_BY_DEFAULT_EN = new Set(["Unresolved", "Drift risks"]);
 
 export class RdeAuditView {
-  constructor(host: HTMLElement, audit: RdeAudit) {
+  constructor(host: HTMLElement, audit: RdeAudit, language?: RdeLang) {
+    const lang = language ?? "ja";
     host.addClass("kotonoha-console-audit-panel");
-    host.createEl("h3", { cls: "kotonoha-console-section-title", text: "RDE audit" });
+    host.createEl("h3", {
+      cls: "kotonoha-console-section-title",
+      text: rdeMsg(lang, "auditPanelTitle"),
+    });
     if (shouldShowLowConfidenceWarning(audit)) {
-      host.createEl("p", { cls: "kotonoha-console-warn", text: RDE_AUDIT_LOW_CONFIDENCE });
+      host.createEl("p", {
+        cls: "kotonoha-console-warn",
+        text: rdeAuditLowConfidenceMessage(lang),
+      });
     }
     host.createEl("p", {
       cls: "kotonoha-console-audit-summary",
-      text: `${audit.recommendedDecision} · ${(audit.confidence * 100).toFixed(0)}% · ${audit.categories.join(", ") || "(none)"}`,
+      text: `${formatDecision(lang, audit.recommendedDecision)} · ${(audit.confidence * 100).toFixed(0)}% · ${audit.categories.map((c) => formatCategory(lang, c)).join(", ") || rdeMsg(lang, "categoryNone")} ${rdeMsg(lang, "confidenceNote")}`,
     });
 
-    appendList(host, "Preserved", audit.preservedElements);
-    appendList(host, "Transformed", audit.transformedElements);
-    appendList(host, "Inferred", audit.inferredExtensions);
-    appendList(host, "Unresolved", audit.unresolvedElements);
-    appendList(host, "Drift risks", audit.driftRisks);
+    appendList(host, lang, "sectionPreserved", audit.preservedElements);
+    appendList(host, lang, "sectionTransformed", audit.transformedElements);
+    appendList(host, lang, "sectionInferred", audit.inferredExtensions);
+    appendList(host, lang, "sectionUnresolved", audit.unresolvedElements);
+    appendList(host, lang, "sectionDriftRisks", audit.driftRisks);
   }
 }
 
-function appendList(host: HTMLElement, title: string, items: string[]): void {
+function appendList(
+  host: HTMLElement,
+  lang: RdeLang,
+  sectionKey: Parameters<typeof rdeMsg>[1],
+  items: string[],
+): void {
   if (items.length === 0) return;
+  const title = rdeMsg(lang, sectionKey);
   const details = host.createEl("details", { cls: "kotonoha-console-audit-details" });
-  if (OPEN_BY_DEFAULT.has(title)) details.open = true;
+  const openSet = lang === "ja" ? OPEN_BY_DEFAULT_JA : OPEN_BY_DEFAULT_EN;
+  if (openSet.has(title)) details.open = true;
   details.createEl("summary", { text: `${title} (${items.length})` });
   const ul = details.createEl("ul");
   for (const item of items) {
