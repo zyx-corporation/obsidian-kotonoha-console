@@ -1,5 +1,5 @@
 import type { GenerateResult, KotonohaClient } from "./KotonohaClient";
-import type { GenerationRequest } from "../domain/types";
+import type { GenerationRequest, GitMode } from "../domain/types";
 import {
   cliErrorMessage,
   runKotonoha,
@@ -10,15 +10,19 @@ import {
   parseContextPack,
   proposalTextFromContextPack,
 } from "../cli/proposalFromContextPack";
+import { proposalTextFromLocalContext } from "../cli/proposalFromLocal";
 import { rdeAuditFromEmit } from "../rde/parseRdeEmit";
+import { enrichAuditFromSource } from "../rde/enrichAuditFromSource";
+import { rdeAuditReportMarkdown } from "../rde/rdeAuditReport";
 
 export interface CliKotonohaClientOptions {
   bin: string;
-  /** Vault root / Git repo root for `--path`. */
+  /** Vault root for `--path` when Git-aware CLI is allowed. */
   cwd: string;
+  /** When `off`, Git-aware commands (`context export`) are never called. */
+  gitMode: GitMode;
   env?: Record<string, string>;
   runner?: KotonohaRunner;
-  /** Writes observation JSON under vault; returns repo-relative path for `--observation`. */
   writeObservation?: (payload: Record<string, unknown>) => Promise<string | undefined>;
 }
 
@@ -31,15 +35,78 @@ export class CliKotonohaClient implements KotonohaClient {
 
   async generate(request: GenerationRequest): Promise<GenerateResult> {
     await this.assertCliAvailable();
-
     const proposalId = crypto.randomUUID();
+
+    if (request.operation === "rde_audit") {
+      return this.generateRdeAudit(request, proposalId);
+    }
+
+    if (this.mayUseContextExport()) {
+      try {
+        return await this.generateWithContextExport(request, proposalId);
+      } catch (e) {
+        const fallback = this.generateLocal(request, proposalId);
+        fallback.proposal.uncertaintyNote = [
+          "Git-aware context export failed; using path + source_hash anchors.",
+          e instanceof Error ? e.message : String(e),
+        ].join(" ");
+        return fallback;
+      }
+    }
+
+    return this.generateLocal(request, proposalId);
+  }
+
+  /** git-mode-spec §10: non-Git mode must not require Git-aware CLI. */
+  private mayUseContextExport(): boolean {
+    return this.options.gitMode !== "off";
+  }
+
+  private async generateRdeAudit(
+    request: GenerationRequest,
+    proposalId: string,
+  ): Promise<GenerateResult> {
+    const emitResult = await this.run({ args: ["rde", "emit"] });
+    if (emitResult.exitCode !== 0) {
+      throw new Error(cliErrorMessage(emitResult));
+    }
+
+    const validateResult = await this.run({
+      args: ["rde", "validate", "--strict"],
+      stdin: emitResult.stdout,
+    });
+    if (validateResult.exitCode !== 0) {
+      throw new Error(cliErrorMessage(validateResult));
+    }
+
+    const audit = enrichAuditFromSource(
+      rdeAuditFromEmit(emitResult.stdout, proposalId),
+      request,
+    );
+    const proposedText = rdeAuditReportMarkdown(request, audit);
+
+    return {
+      proposal: {
+        id: proposalId,
+        requestId: request.id,
+        createdAt: new Date().toISOString(),
+        proposedText,
+        summary: `[cli] RDE audit · ${request.context.filePath}`,
+        uncertaintyNote:
+          "RDE audit uses `rde emit` + `rde validate` only (no Git). Attach via DB workflow when DATABASE_URL is configured.",
+      },
+      audit,
+    };
+  }
+
+  private async generateWithContextExport(
+    request: GenerationRequest,
+    proposalId: string,
+  ): Promise<GenerateResult> {
     const relFile = request.context.filePath;
     const args = ["context", "export", relFile, "--path", this.options.cwd];
-
     const obsPath = await this.maybeObservationPath(request);
-    if (obsPath) {
-      args.push("--observation", obsPath);
-    }
+    if (obsPath) args.push("--observation", obsPath);
 
     const packResult = await this.run({ args });
     if (packResult.exitCode !== 0) {
@@ -49,30 +116,6 @@ export class CliKotonohaClient implements KotonohaClient {
     const pack = parseContextPack(packResult.stdout);
     const proposedText = proposalTextFromContextPack(request, pack);
 
-    let audit: GenerateResult["audit"];
-    if (request.operation === "rde_audit") {
-      const rdeResult = await this.run({ args: ["rde", "emit"] });
-      if (rdeResult.exitCode === 0) {
-        audit = rdeAuditFromEmit(rdeResult.stdout, proposalId);
-      }
-    } else {
-      const hints = pack.meaning_delta_draft?.observation;
-      if (hints && typeof hints === "object") {
-        audit = {
-          proposalId,
-          createdAt: new Date().toISOString(),
-          categories: ["preserved"],
-          preservedElements: [JSON.stringify(hints).slice(0, 120)],
-          transformedElements: [`cli context export · ${request.operation}`],
-          inferredExtensions: [],
-          unresolvedElements: [],
-          driftRisks: [],
-          recommendedDecision: "human_review",
-          confidence: 0.6,
-        };
-      }
-    }
-
     return {
       proposal: {
         id: proposalId,
@@ -81,9 +124,27 @@ export class CliKotonohaClient implements KotonohaClient {
         proposedText,
         summary: `[cli] context export · ${request.operation} · ${relFile}`,
         uncertaintyNote:
-          "Generative rewrite requires an orchestrator/LLM; this proposal embeds `kotonoha context export` output.",
+          "Generative rewrite requires an orchestrator/LLM; proposal embeds `kotonoha context export`.",
       },
-      audit,
+    };
+  }
+
+  private generateLocal(
+    request: GenerationRequest,
+    proposalId: string,
+  ): GenerateResult {
+    return {
+      proposal: {
+        id: proposalId,
+        requestId: request.id,
+        createdAt: new Date().toISOString(),
+        proposedText: proposalTextFromLocalContext(request),
+        summary: `[cli-local] ${request.operation} · ${request.context.filePath}`,
+        uncertaintyNote:
+          this.options.gitMode === "off"
+            ? "gitMode is off — Git-aware CLI not used (git-mode-spec §4)."
+            : "Local anchors only (path + source_hash).",
+      },
     };
   }
 

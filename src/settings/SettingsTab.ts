@@ -14,7 +14,7 @@ export class KotonohaSettingsTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Backend mode")
-      .setDesc("cli = kotonoha context export (requires Git vault); mock = local stub")
+      .setDesc("cli = kotonoha CLI; RDE audit works without Git; context export only when gitMode ≠ off")
       .addDropdown((d) =>
         d
           .addOptions({ mock: "mock", http: "http", cli: "cli" })
