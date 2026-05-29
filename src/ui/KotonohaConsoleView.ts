@@ -41,27 +41,31 @@ export class KotonohaConsoleView extends ItemView {
     containerEl.empty();
     containerEl.addClass("kotonoha-console-root");
 
-    containerEl.createEl("h2", { text: "Kotonoha Console" });
-    containerEl.createEl("p", {
-      cls: "kotonoha-console-muted",
-      text: "提案は自動適用されません。RDE 監査レポートはノートに書き込みません。",
+    const header = containerEl.createDiv({ cls: "kotonoha-console-header" });
+    header.createEl("h2", { text: "Kotonoha Console" });
+    header.createEl("p", {
+      cls: "kotonoha-console-muted kotonoha-console-tagline",
+      text: "提案は自動適用されません。",
     });
 
     const ctx = await this.plugin.noteContext.capture();
     if (ctx) {
-      const meta = containerEl.createEl("div", { cls: "kotonoha-console-meta" });
-      meta.createEl("div", { text: `Note: ${ctx.filePath}` });
-      meta.createEl("div", { text: `Source hash: ${ctx.sourceHash.slice(0, 16)}…` });
+      const meta = header.createEl("div", { cls: "kotonoha-console-meta" });
+      meta.createEl("div", {
+        cls: "kotonoha-console-meta-line",
+        text: `${ctx.filePath} · ${ctx.sourceHash.slice(0, 8)}…`,
+      });
       if (ctx.selectionText) {
-        meta.createEl("div", { text: "Scope: selection" });
+        meta.createEl("div", { cls: "kotonoha-console-meta-line", text: "Scope: selection" });
       }
       if (ctx.git) {
         meta.createEl("div", {
-          text: `Git mode: ${this.plugin.settings.gitMode} · ${ctx.git.repoRelativePath}`,
+          cls: "kotonoha-console-meta-line",
+          text: `Git: ${this.plugin.settings.gitMode}`,
         });
       }
     } else {
-      containerEl.createEl("p", {
+      header.createEl("p", {
         cls: "kotonoha-console-warn",
         text: "アクティブな Markdown ノートを開いてください。",
       });
@@ -78,7 +82,7 @@ export class KotonohaConsoleView extends ItemView {
 
     form.createEl("label", { text: "Instruction" });
     this.instructionInput = form.createEl("textarea", {
-      attr: { rows: "3", placeholder: "任意の指示（監査の観点など）…" },
+      attr: { rows: "2", placeholder: "任意の指示…" },
     });
 
     const actions = form.createDiv({ cls: "kotonoha-console-actions" });
@@ -90,8 +94,9 @@ export class KotonohaConsoleView extends ItemView {
       () => void this.runGenerate(),
     );
 
-    this.proposalHost = containerEl.createDiv({ cls: "kotonoha-console-proposal" });
-    this.auditHost = containerEl.createDiv({ cls: "kotonoha-console-audit" });
+    const results = containerEl.createDiv({ cls: "kotonoha-console-results" });
+    this.proposalHost = results.createDiv({ cls: "kotonoha-console-proposal" });
+    this.auditHost = results.createDiv({ cls: "kotonoha-console-audit" });
   }
 
   async onClose(): Promise<void> {
