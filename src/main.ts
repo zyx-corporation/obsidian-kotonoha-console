@@ -2,11 +2,13 @@ import { Notice, Plugin } from "obsidian";
 import { cliErrorMessage, runKotonoha } from "./cli/runKotonoha";
 import { buildCliEnv } from "./cli/buildCliEnv";
 import { vaultBasePath } from "./util/vaultPath";
+import { consoleMsg } from "./i18n/consoleI18n";
 import {
   DEFAULT_SETTINGS,
   type KotonohaConsoleSettings,
 } from "./settings/PluginSettings";
 import { KotonohaSettingsTab } from "./settings/SettingsTab";
+import { normalizeRdeLang } from "./rde/rdeI18n";
 import {
   KOTONOHA_CONSOLE_VIEW,
   KotonohaConsoleView,
@@ -35,6 +37,7 @@ export default class KotonohaConsolePlugin extends Plugin {
   sidecar!: SidecarStore;
 
   private client!: KotonohaClient;
+  private settingsTab!: KotonohaSettingsTab;
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -63,7 +66,8 @@ export default class KotonohaConsolePlugin extends Plugin {
       callback: () => void this.runRdeAuditCommand(),
     });
 
-    this.addSettingTab(new KotonohaSettingsTab(this.app, this));
+    this.settingsTab = new KotonohaSettingsTab(this.app, this);
+    this.addSettingTab(this.settingsTab);
   }
 
   refreshNoteReader(): void {
@@ -101,9 +105,11 @@ export default class KotonohaConsolePlugin extends Plugin {
   }
 
   async loadSettings(): Promise<void> {
+    const raw = (await this.loadData()) as Partial<KotonohaConsoleSettings> | undefined;
     this.settings = {
       ...DEFAULT_SETTINGS,
-      ...((await this.loadData()) as Partial<KotonohaConsoleSettings> | undefined),
+      ...raw,
+      defaultLanguage: normalizeRdeLang(raw?.defaultLanguage ?? DEFAULT_SETTINGS.defaultLanguage),
     };
   }
 
@@ -111,7 +117,32 @@ export default class KotonohaConsolePlugin extends Plugin {
     await this.saveData(this.settings);
   }
 
+  /** Refresh open console panels and settings tab after defaultLanguage changes. */
+  async refreshForLanguageChange(): Promise<void> {
+    await this.refreshConsoleForLanguageChange();
+    this.settingsTab?.refreshDisplay();
+  }
+
+  private async refreshConsoleForLanguageChange(): Promise<void> {
+    for (const leaf of this.app.workspace.getLeavesOfType(KOTONOHA_CONSOLE_VIEW)) {
+      const view = leaf.view;
+      if (view instanceof KotonohaConsoleView) {
+        await view.refreshLocalizedUi();
+      }
+    }
+  }
+
+  /** Disable + enable to load updated main.js from disk (dev workflow). */
+  async reloadPlugin(): Promise<void> {
+    const id = this.manifest.id;
+    const version = this.manifest.version;
+    await this.app.plugins.disablePlugin(id);
+    await this.app.plugins.enablePlugin(id);
+    new Notice(consoleMsg(this.settings.defaultLanguage, "noticePluginReloaded", { version }));
+  }
+
   async testCliVersion(): Promise<void> {
+    const lang = this.settings.defaultLanguage;
     const bin = this.settings.cliCommand?.trim() || "kotonoha";
     const cwd =
       this.settings.cliWorkdir?.trim() || vaultBasePath(this.app) || ".";
@@ -123,12 +154,16 @@ export default class KotonohaConsolePlugin extends Plugin {
         env: buildCliEnv(this.settings),
       });
       if (result.exitCode === 0) {
-        new Notice(result.stdout.trim().split("\n")[0] ?? "kotonoha ok");
+        new Notice(result.stdout.trim().split("\n")[0] ?? consoleMsg(lang, "noticeCliOk"));
       } else {
-        new Notice(`CLI error: ${cliErrorMessage(result)}`);
+        new Notice(consoleMsg(lang, "noticeCliError", { msg: cliErrorMessage(result) }));
       }
     } catch (e) {
-      new Notice(`CLI spawn failed: ${e instanceof Error ? e.message : String(e)}`);
+      new Notice(
+        consoleMsg(lang, "noticeCliSpawnFailed", {
+          msg: e instanceof Error ? e.message : String(e),
+        }),
+      );
     }
   }
 }

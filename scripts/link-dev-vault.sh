@@ -20,9 +20,20 @@ for f in main.js manifest.json styles.css; do
   fi
 done
 
+DATA_BACKUP=""
+if [[ -f "$PLUGIN_DST/data.json" ]]; then
+  DATA_BACKUP="$(mktemp)"
+  cp "$PLUGIN_DST/data.json" "$DATA_BACKUP"
+fi
+
 rm -rf "$PLUGIN_DST"
 mkdir -p "$PLUGIN_DST"
 cp "$PLUGIN_SRC/main.js" "$PLUGIN_SRC/manifest.json" "$PLUGIN_SRC/styles.css" "$PLUGIN_DST/"
+
+if [[ -n "$DATA_BACKUP" && -f "$DATA_BACKUP" ]]; then
+  cp "$DATA_BACKUP" "$PLUGIN_DST/data.json"
+  rm -f "$DATA_BACKUP"
+fi
 
 cat <<EOF
 Dev vault ready: $VAULT
@@ -35,4 +46,5 @@ Obsidian:
   4. Cmd+P → "RDE 監査を実施（アクティブノート）"
 
 After code changes: npm run build && npm run link:dev-vault
+  5. Reload plugin: disable + enable Kotonoha Console (version in manifest must change)
 EOF

@@ -39,3 +39,26 @@ describe("RDE i18n (ja)", () => {
     expect(md).toContain("推奨判断");
   });
 });
+
+const requestZh: GenerationRequest = { ...requestJa, language: "zh_CN" };
+
+describe("RDE i18n (zh_CN)", () => {
+  it("source review messages in Simplified Chinese", () => {
+    const result = buildSourceReview(ctx.sourceText, "zh_CN");
+    expect(result.unresolvedElements[0]).toContain("hedging");
+    expect(result.unresolvedElements[0]).toContain("未确定");
+  });
+
+  it("audit report markdown in Simplified Chinese", () => {
+    const audit = performRdeAudit(requestZh, "p1", { sourceReview: true });
+    const md = rdeAuditReportMarkdown(requestZh, audit);
+    expect(md).toContain("# RDE 审计");
+    expect(md).toContain("## 未解决");
+    expect(md).toContain("建议决策");
+  });
+
+  it("normalizes cn_zn alias to zh_CN", () => {
+    const result = buildSourceReview(ctx.sourceText, "cn_zn");
+    expect(result.unresolvedElements[0]).toContain("未确定");
+  });
+});

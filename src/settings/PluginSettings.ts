@@ -9,7 +9,7 @@ export interface KotonohaConsoleSettings {
   backendMode: BackendMode;
   httpEndpoint?: string;
   cliCommand?: string;
-  defaultLanguage: "ja" | "en";
+  defaultLanguage: "ja" | "en" | "zh_CN";
   requireHumanApproval: boolean;
   preserveFrontmatter: boolean;
   auditLogMode: AuditLogMode;

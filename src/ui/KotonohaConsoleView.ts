@@ -6,6 +6,8 @@ import { ProposalView } from "./ProposalView";
 import { RdeAuditView } from "./RdeAuditView";
 import { consoleMsg, operationLabel } from "../i18n/consoleI18n";
 import type { RdeLang } from "../rde/rdeI18n";
+import { performRdeAudit } from "../services/RdeAuditService";
+import { localizeBundleForDisplay } from "../services/localizeBundle";
 
 export const KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
 
@@ -38,7 +40,22 @@ export class KotonohaConsoleView extends ItemView {
   }
 
   async onOpen(): Promise<void> {
-    const lang = this.uiLang();
+    await this.buildUi();
+  }
+
+  /** Rebuild chrome when defaultLanguage changes (keeps proposal/audit state). */
+  async refreshLocalizedUi(): Promise<void> {
+    const op = (this.operationSelect?.value as OperationType | undefined) ?? this.lastOperation;
+    const instruction = this.instructionInput?.value ?? "";
+    await this.buildUi(op, instruction);
+    if (this.bundle) this.renderBundle();
+  }
+
+  private async buildUi(
+    restoreOp?: OperationType,
+    restoreInstruction?: string,
+  ): Promise<void> {
+    const lang = this.plugin.settings.defaultLanguage;
     const { containerEl } = this;
     containerEl.empty();
     containerEl.addClass("kotonoha-console-root");
@@ -86,12 +103,15 @@ export class KotonohaConsoleView extends ItemView {
       });
       opt.value = op;
     }
-    this.operationSelect.value = "rde_audit";
+    this.operationSelect.value = restoreOp ?? "rde_audit";
 
     form.createEl("label", { text: consoleMsg(lang, "labelInstruction") });
     this.instructionInput = form.createEl("textarea", {
       attr: { rows: "2", placeholder: consoleMsg(lang, "instructionPlaceholder") },
     });
+    if (restoreInstruction !== undefined) {
+      this.instructionInput.value = restoreInstruction;
+    }
 
     const actions = form.createDiv({ cls: "kotonoha-console-actions" });
     actions
@@ -117,7 +137,7 @@ export class KotonohaConsoleView extends ItemView {
   }
 
   private uiLang(): RdeLang {
-    return this.lastRequest?.language ?? this.plugin.settings.defaultLanguage;
+    return this.plugin.settings.defaultLanguage;
   }
 
   private async runGenerate(): Promise<void> {
@@ -178,16 +198,22 @@ export class KotonohaConsoleView extends ItemView {
   private renderBundle(): void {
     this.proposalHost.empty();
     this.auditHost.empty();
-    if (!this.bundle) return;
+    if (!this.bundle || !this.lastRequest) return;
 
     const isAuditReport = this.lastOperation === "rde_audit";
 
     const wantsAudit = this.plugin.settings.enableRdeAudit || isAuditReport;
     const auditMissing = wantsAudit && !isAuditReport && !this.bundle.audit;
 
-    const lang = this.lastRequest?.language ?? this.plugin.settings.defaultLanguage;
+    const lang = this.plugin.settings.defaultLanguage;
+    const displayBundle = localizeBundleForDisplay(
+      this.bundle,
+      this.lastRequest,
+      this.lastOperation,
+      lang,
+    );
 
-    new ProposalView(this.proposalHost, this.bundle.proposal, {
+    new ProposalView(this.proposalHost, displayBundle.proposal, {
       onApply: () => void this.applyProposal(),
       onReject: () => void this.rejectProposal(),
       onCopy: () => void this.copyProposal(),
@@ -204,8 +230,8 @@ export class KotonohaConsoleView extends ItemView {
       },
     });
 
-    if (this.bundle.audit && wantsAudit) {
-      new RdeAuditView(this.auditHost, this.bundle.audit, lang);
+    if (displayBundle.audit && wantsAudit) {
+      new RdeAuditView(this.auditHost, displayBundle.audit, lang);
     }
   }
 

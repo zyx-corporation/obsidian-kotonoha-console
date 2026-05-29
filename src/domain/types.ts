@@ -52,7 +52,7 @@ export interface GenerationRequest {
   operation: OperationType;
   instruction: string;
   context: NoteContext;
-  language: "ja" | "en";
+  language: "ja" | "en" | "zh_CN";
 }
 
 export interface Proposal {

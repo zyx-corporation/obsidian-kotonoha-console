@@ -1,8 +1,10 @@
 /** RDE audit UI / guardrail messages (defaultLanguage + request.language). */
-export type RdeLang = "ja" | "en";
+export type RdeLang = "ja" | "en" | "zh_CN";
 
 export function normalizeRdeLang(lang?: string): RdeLang {
-  return lang === "en" ? "en" : "ja";
+  if (lang === "en") return "en";
+  if (lang === "zh_CN" || lang === "zh" || lang === "cn_zn") return "zh_CN";
+  return "ja";
 }
 
 type Params = Record<string, string | number>;
@@ -116,6 +118,56 @@ const MSGS = {
     auditLowConfidence:
       "RDE 監査の信頼度が低いです。人手によるレビューが必要です。",
   },
+  zh_CN: {
+    reportTitle: "RDE 审计",
+    reportFile: "文件",
+    reportSourceHash: "源哈希",
+    reportRecommended: "建议决策",
+    reportCategories: "类别",
+    reportSourceExcerpt: "源摘录",
+    sectionPreserved: "保留元素",
+    sectionTransformed: "已转换元素",
+    sectionInferred: "推断补充",
+    sectionUnresolved: "未解决",
+    sectionDriftRisks: "偏离风险",
+    categoryNone: "（无）",
+    mvpBanner:
+      "基于规则的 MVP 审计（非完整 RDE）。参见 rde-audit-policy §14。",
+    decisionApprove: "批准",
+    decisionRevise: "修订",
+    decisionReject: "拒绝",
+    decisionHumanReview: "人工审核",
+    auditPanelTitle: "RDE 审计",
+    confidenceNote: "（仅供参考 — 非安全评分）",
+    sourceReviewLines: "源笔记审查（非空行 {count} 行）",
+    hedgingUnresolved: "源含 {count} 处 hedging 表述 — 含义可能仍未确定",
+    strongPreserved: "源含 {count} 处强主张表述",
+    limitedSignals: "未检测到 hedging / 强主张标记 — 基于规则的信号有限",
+    linesStructural: "行 +{add} / -{del}（结构差异）",
+    textMatchStructural: "源与提案文本一致（结构上）",
+    sourceParagraphs: "源段落数: {count}",
+    lengthInferred: "提案长度为源的 ×{ratio}",
+    insufficientSignal: "分类所需的结构信号不足",
+    claimStrengthDrift:
+      "主张强度可能上升（hedging 减少、确定性表述增加）",
+    hedgingRemovedStrong: "提案含强主张且 hedging 已被移除",
+    hedgingDropped: "hedging 词缺失: {terms}",
+    frontmatterRemoved: "frontmatter 键可能被删除或修改: {key}",
+    linkRemoved: "链接或 wiki 链接可能被删除: {target}",
+    rewriteShortened:
+      "rewrite 将文本缩短至源的 {pct}%（阈值 {threshold}%）",
+    urlIntroduced: "提案中新增源中不存在的 URL: {url}",
+    dateIntroduced: "提案中新增源中不存在的日期: {date}",
+    approvalRemoved: "人工批准相关表述可能被删除: {lost}",
+    finalDecisionDrift:
+      "提案可能将试探性表述转为最终决策语气: {introduced}",
+    nonGitVault:
+      "非 Git vault：无提交边界；语义锚点仅使用 path + source_hash",
+    auditUnavailable:
+      "此提案无 RDE 审计。应用前请仔细审查。",
+    auditLowConfidence:
+      "RDE 审计置信度较低。需要人工审核。",
+  },
 } as const;
 
 export type RdeMsgKey = keyof (typeof MSGS)["en"];
@@ -139,15 +191,27 @@ export function formatDecision(
   return key ? rdeMsg(lang, key) : decision;
 }
 
-export function formatCategory(lang: RdeLang | undefined, cat: string): string {
-  if (normalizeRdeLang(lang) === "en") return cat;
-  const ja: Record<string, string> = {
+const CATEGORY_LABELS: Record<Exclude<RdeLang, "en">, Record<string, string>> = {
+  ja: {
     preserved: "保存",
     authorized_transformation: "許可された変換",
     inferred_extension: "推論による補完",
     unresolved: "未解決",
     suspicious_drift: "疑わしい逸脱",
     critical_distortion: "重大な歪曲",
-  };
-  return ja[cat] ?? cat;
+  },
+  zh_CN: {
+    preserved: "保留",
+    authorized_transformation: "授权转换",
+    inferred_extension: "推断补充",
+    unresolved: "未解决",
+    suspicious_drift: "可疑偏离",
+    critical_distortion: "严重歪曲",
+  },
+};
+
+export function formatCategory(lang: RdeLang | undefined, cat: string): string {
+  const L = normalizeRdeLang(lang);
+  if (L === "en") return cat;
+  return CATEGORY_LABELS[L][cat] ?? cat;
 }

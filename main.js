@@ -99,128 +99,11 @@ function vaultBasePath(app) {
   return typeof adapter.getBasePath === "function" ? adapter.getBasePath() : "";
 }
 
-// src/settings/PluginSettings.ts
-var DEFAULT_SETTINGS = {
-  backendMode: "mock",
-  defaultLanguage: "ja",
-  requireHumanApproval: true,
-  preserveFrontmatter: true,
-  auditLogMode: "summary",
-  enableRdeAudit: true,
-  gitMode: "off",
-  sidecarMode: true,
-  cliCommand: "kotonoha"
-};
-
-// src/settings/SettingsTab.ts
-var import_obsidian = require("obsidian");
-var KotonohaSettingsTab = class extends import_obsidian.PluginSettingTab {
-  constructor(app, plugin) {
-    super(app, plugin);
-    this.plugin = plugin;
-  }
-  display() {
-    const { containerEl } = this;
-    containerEl.empty();
-    containerEl.createEl("h2", { text: "Kotonoha Console" });
-    new import_obsidian.Setting(containerEl).setName("Backend mode").setDesc("cli = kotonoha CLI; RDE audit works without Git; context export only when gitMode \u2260 off").addDropdown(
-      (d) => d.addOptions({ mock: "mock", http: "http", cli: "cli" }).setValue(this.plugin.settings.backendMode).onChange(async (v) => {
-        this.plugin.settings.backendMode = v;
-        await this.plugin.saveSettings();
-        this.plugin.refreshClient();
-        this.display();
-      })
-    );
-    containerEl.createEl("h3", { text: "CLI (kotonoha \u2265 0.3.1)" });
-    new import_obsidian.Setting(containerEl).setName("CLI command").setDesc("Path to kotonoha binary").addText(
-      (t) => t.setPlaceholder("kotonoha").setValue(this.plugin.settings.cliCommand ?? "kotonoha").onChange(async (v) => {
-        this.plugin.settings.cliCommand = v;
-        await this.plugin.saveSettings();
-        this.plugin.refreshClient();
-      })
-    ).addButton(
-      (b) => b.setButtonText("Test version").onClick(() => {
-        void this.plugin.testCliVersion();
-      })
-    );
-    new import_obsidian.Setting(containerEl).setName("CLI workdir").setDesc("Git repo root for --path (empty = vault folder)").addText(
-      (t) => t.setPlaceholder("(vault path)").setValue(this.plugin.settings.cliWorkdir ?? "").onChange(async (v) => {
-        this.plugin.settings.cliWorkdir = v;
-        await this.plugin.saveSettings();
-        this.plugin.refreshClient();
-      })
-    );
-    new import_obsidian.Setting(containerEl).setName("DATABASE_URL").setDesc("Optional; required for DB-backed CLI commands later").addText(
-      (t) => t.setPlaceholder("postgres://\u2026").setValue(this.plugin.settings.databaseUrl ?? "").onChange(async (v) => {
-        this.plugin.settings.databaseUrl = v;
-        await this.plugin.saveSettings();
-        this.plugin.refreshClient();
-      })
-    );
-    new import_obsidian.Setting(containerEl).setName("KOTONOHA_PRINCIPAL_ID").addText(
-      (t) => t.setPlaceholder("UUID").setValue(this.plugin.settings.principalId ?? "").onChange(async (v) => {
-        this.plugin.settings.principalId = v;
-        await this.plugin.saveSettings();
-        this.plugin.refreshClient();
-      })
-    );
-    new import_obsidian.Setting(containerEl).setName("KOTONOHA_PROJECT_ID").addText(
-      (t) => t.setPlaceholder("UUID").setValue(this.plugin.settings.projectId ?? "").onChange(async (v) => {
-        this.plugin.settings.projectId = v;
-        await this.plugin.saveSettings();
-        this.plugin.refreshClient();
-      })
-    );
-    new import_obsidian.Setting(containerEl).setName("Git mode").setDesc("Git-aware but never mutates the repo (git-mode-spec)").addDropdown(
-      (d) => d.addOptions({
-        off: "off",
-        external: "external",
-        "passive-observing": "passive-observing",
-        "obsidian-git-aware": "obsidian-git-aware"
-      }).setValue(this.plugin.settings.gitMode).onChange(async (v) => {
-        this.plugin.settings.gitMode = v;
-        await this.plugin.saveSettings();
-        this.plugin.refreshNoteReader();
-      })
-    );
-    new import_obsidian.Setting(containerEl).setName("Default language").addDropdown(
-      (d) => d.addOptions({ ja: "ja", en: "en" }).setValue(this.plugin.settings.defaultLanguage).onChange(async (v) => {
-        this.plugin.settings.defaultLanguage = v;
-        await this.plugin.saveSettings();
-      })
-    );
-    new import_obsidian.Setting(containerEl).setName("Require human approval before apply").addToggle(
-      (t) => t.setValue(this.plugin.settings.requireHumanApproval).onChange(async (v) => {
-        this.plugin.settings.requireHumanApproval = v;
-        await this.plugin.saveSettings();
-      })
-    );
-    new import_obsidian.Setting(containerEl).setName("Enable RDE audit panel").addToggle(
-      (t) => t.setValue(this.plugin.settings.enableRdeAudit).onChange(async (v) => {
-        this.plugin.settings.enableRdeAudit = v;
-        await this.plugin.saveSettings();
-      })
-    );
-    new import_obsidian.Setting(containerEl).setName("Audit log mode").addDropdown(
-      (d) => d.addOptions({
-        hash_only: "hash_only",
-        summary: "summary",
-        full_text: "full_text"
-      }).setValue(this.plugin.settings.auditLogMode).onChange(async (v) => {
-        this.plugin.settings.auditLogMode = v;
-        await this.plugin.saveSettings();
-        this.plugin.refreshAuditLog();
-      })
-    );
-  }
-};
-
-// src/ui/KotonohaConsoleView.ts
-var import_obsidian2 = require("obsidian");
-
 // src/rde/rdeI18n.ts
 function normalizeRdeLang(lang) {
-  return lang === "en" ? "en" : "ja";
+  if (lang === "en") return "en";
+  if (lang === "zh_CN" || lang === "zh" || lang === "cn_zn") return "zh_CN";
+  return "ja";
 }
 function fmt(template, params) {
   if (!params) return template;
@@ -312,6 +195,49 @@ var MSGS = {
     nonGitVault: "\u975E Git vault: \u30B3\u30DF\u30C3\u30C8\u5883\u754C\u306A\u3057\u3002path + source_hash \u306E\u307F\u3067\u610F\u5473\u30A2\u30F3\u30AB\u30FC",
     auditUnavailable: "\u3053\u306E\u63D0\u6848\u306B RDE \u76E3\u67FB\u306F\u3042\u308A\u307E\u305B\u3093\u3002\u9069\u7528\u524D\u306B\u614E\u91CD\u306B\u78BA\u8A8D\u3057\u3066\u304F\u3060\u3055\u3044\u3002",
     auditLowConfidence: "RDE \u76E3\u67FB\u306E\u4FE1\u983C\u5EA6\u304C\u4F4E\u3044\u3067\u3059\u3002\u4EBA\u624B\u306B\u3088\u308B\u30EC\u30D3\u30E5\u30FC\u304C\u5FC5\u8981\u3067\u3059\u3002"
+  },
+  zh_CN: {
+    reportTitle: "RDE \u5BA1\u8BA1",
+    reportFile: "\u6587\u4EF6",
+    reportSourceHash: "\u6E90\u54C8\u5E0C",
+    reportRecommended: "\u5EFA\u8BAE\u51B3\u7B56",
+    reportCategories: "\u7C7B\u522B",
+    reportSourceExcerpt: "\u6E90\u6458\u5F55",
+    sectionPreserved: "\u4FDD\u7559\u5143\u7D20",
+    sectionTransformed: "\u5DF2\u8F6C\u6362\u5143\u7D20",
+    sectionInferred: "\u63A8\u65AD\u8865\u5145",
+    sectionUnresolved: "\u672A\u89E3\u51B3",
+    sectionDriftRisks: "\u504F\u79BB\u98CE\u9669",
+    categoryNone: "\uFF08\u65E0\uFF09",
+    mvpBanner: "\u57FA\u4E8E\u89C4\u5219\u7684 MVP \u5BA1\u8BA1\uFF08\u975E\u5B8C\u6574 RDE\uFF09\u3002\u53C2\u89C1 rde-audit-policy \xA714\u3002",
+    decisionApprove: "\u6279\u51C6",
+    decisionRevise: "\u4FEE\u8BA2",
+    decisionReject: "\u62D2\u7EDD",
+    decisionHumanReview: "\u4EBA\u5DE5\u5BA1\u6838",
+    auditPanelTitle: "RDE \u5BA1\u8BA1",
+    confidenceNote: "\uFF08\u4EC5\u4F9B\u53C2\u8003 \u2014 \u975E\u5B89\u5168\u8BC4\u5206\uFF09",
+    sourceReviewLines: "\u6E90\u7B14\u8BB0\u5BA1\u67E5\uFF08\u975E\u7A7A\u884C {count} \u884C\uFF09",
+    hedgingUnresolved: "\u6E90\u542B {count} \u5904 hedging \u8868\u8FF0 \u2014 \u542B\u4E49\u53EF\u80FD\u4ECD\u672A\u786E\u5B9A",
+    strongPreserved: "\u6E90\u542B {count} \u5904\u5F3A\u4E3B\u5F20\u8868\u8FF0",
+    limitedSignals: "\u672A\u68C0\u6D4B\u5230 hedging / \u5F3A\u4E3B\u5F20\u6807\u8BB0 \u2014 \u57FA\u4E8E\u89C4\u5219\u7684\u4FE1\u53F7\u6709\u9650",
+    linesStructural: "\u884C +{add} / -{del}\uFF08\u7ED3\u6784\u5DEE\u5F02\uFF09",
+    textMatchStructural: "\u6E90\u4E0E\u63D0\u6848\u6587\u672C\u4E00\u81F4\uFF08\u7ED3\u6784\u4E0A\uFF09",
+    sourceParagraphs: "\u6E90\u6BB5\u843D\u6570: {count}",
+    lengthInferred: "\u63D0\u6848\u957F\u5EA6\u4E3A\u6E90\u7684 \xD7{ratio}",
+    insufficientSignal: "\u5206\u7C7B\u6240\u9700\u7684\u7ED3\u6784\u4FE1\u53F7\u4E0D\u8DB3",
+    claimStrengthDrift: "\u4E3B\u5F20\u5F3A\u5EA6\u53EF\u80FD\u4E0A\u5347\uFF08hedging \u51CF\u5C11\u3001\u786E\u5B9A\u6027\u8868\u8FF0\u589E\u52A0\uFF09",
+    hedgingRemovedStrong: "\u63D0\u6848\u542B\u5F3A\u4E3B\u5F20\u4E14 hedging \u5DF2\u88AB\u79FB\u9664",
+    hedgingDropped: "hedging \u8BCD\u7F3A\u5931: {terms}",
+    frontmatterRemoved: "frontmatter \u952E\u53EF\u80FD\u88AB\u5220\u9664\u6216\u4FEE\u6539: {key}",
+    linkRemoved: "\u94FE\u63A5\u6216 wiki \u94FE\u63A5\u53EF\u80FD\u88AB\u5220\u9664: {target}",
+    rewriteShortened: "rewrite \u5C06\u6587\u672C\u7F29\u77ED\u81F3\u6E90\u7684 {pct}%\uFF08\u9608\u503C {threshold}%\uFF09",
+    urlIntroduced: "\u63D0\u6848\u4E2D\u65B0\u589E\u6E90\u4E2D\u4E0D\u5B58\u5728\u7684 URL: {url}",
+    dateIntroduced: "\u63D0\u6848\u4E2D\u65B0\u589E\u6E90\u4E2D\u4E0D\u5B58\u5728\u7684\u65E5\u671F: {date}",
+    approvalRemoved: "\u4EBA\u5DE5\u6279\u51C6\u76F8\u5173\u8868\u8FF0\u53EF\u80FD\u88AB\u5220\u9664: {lost}",
+    finalDecisionDrift: "\u63D0\u6848\u53EF\u80FD\u5C06\u8BD5\u63A2\u6027\u8868\u8FF0\u8F6C\u4E3A\u6700\u7EC8\u51B3\u7B56\u8BED\u6C14: {introduced}",
+    nonGitVault: "\u975E Git vault\uFF1A\u65E0\u63D0\u4EA4\u8FB9\u754C\uFF1B\u8BED\u4E49\u951A\u70B9\u4EC5\u4F7F\u7528 path + source_hash",
+    auditUnavailable: "\u6B64\u63D0\u6848\u65E0 RDE \u5BA1\u8BA1\u3002\u5E94\u7528\u524D\u8BF7\u4ED4\u7EC6\u5BA1\u67E5\u3002",
+    auditLowConfidence: "RDE \u5BA1\u8BA1\u7F6E\u4FE1\u5EA6\u8F83\u4F4E\u3002\u9700\u8981\u4EBA\u5DE5\u5BA1\u6838\u3002"
   }
 };
 function rdeMsg(lang, key, params) {
@@ -328,17 +254,28 @@ function formatDecision(lang, decision) {
   const key = map[decision];
   return key ? rdeMsg(lang, key) : decision;
 }
-function formatCategory(lang, cat) {
-  if (normalizeRdeLang(lang) === "en") return cat;
-  const ja = {
+var CATEGORY_LABELS = {
+  ja: {
     preserved: "\u4FDD\u5B58",
     authorized_transformation: "\u8A31\u53EF\u3055\u308C\u305F\u5909\u63DB",
     inferred_extension: "\u63A8\u8AD6\u306B\u3088\u308B\u88DC\u5B8C",
     unresolved: "\u672A\u89E3\u6C7A",
     suspicious_drift: "\u7591\u308F\u3057\u3044\u9038\u8131",
     critical_distortion: "\u91CD\u5927\u306A\u6B6A\u66F2"
-  };
-  return ja[cat] ?? cat;
+  },
+  zh_CN: {
+    preserved: "\u4FDD\u7559",
+    authorized_transformation: "\u6388\u6743\u8F6C\u6362",
+    inferred_extension: "\u63A8\u65AD\u8865\u5145",
+    unresolved: "\u672A\u89E3\u51B3",
+    suspicious_drift: "\u53EF\u7591\u504F\u79BB",
+    critical_distortion: "\u4E25\u91CD\u6B6A\u66F2"
+  }
+};
+function formatCategory(lang, cat) {
+  const L = normalizeRdeLang(lang);
+  if (L === "en") return cat;
+  return CATEGORY_LABELS[L][cat] ?? cat;
 }
 
 // src/i18n/consoleI18n.ts
@@ -395,7 +332,34 @@ var MSGS2 = {
     mockOpSummary: "[mock] {operation} \xB7 {title}",
     mockUncertainty: "Mock backend \u2014 connect HTTP or CLI in settings for real Kotonoha output.",
     cliRdeSummary: "[cli] RDE audit \xB7 {path}",
-    noInstruction: "(no instruction)"
+    noInstruction: "(no instruction)",
+    settingsTitle: "Kotonoha Console",
+    settingsBackendModeName: "Backend mode",
+    settingsBackendModeDesc: "cli = kotonoha CLI; RDE audit works without Git; context export only when gitMode \u2260 off",
+    settingsCliSection: "CLI (kotonoha \u2265 0.3.1)",
+    settingsCliCommandName: "CLI command",
+    settingsCliCommandDesc: "Path to kotonoha binary",
+    settingsBtnTestVersion: "Test version",
+    settingsCliWorkdirName: "CLI workdir",
+    settingsCliWorkdirDesc: "Git repo root for --path (empty = vault folder)",
+    settingsCliWorkdirPlaceholder: "(vault path)",
+    settingsDatabaseUrlDesc: "Optional; required for DB-backed CLI commands later",
+    settingsGitModeName: "Git mode",
+    settingsGitModeDesc: "Git-aware but never mutates the repo (git-mode-spec)",
+    settingsDefaultLanguageName: "Default language",
+    settingsLangJa: "Japanese (ja)",
+    settingsLangEn: "English (en)",
+    settingsLangZhCn: "Simplified Chinese (zh_CN)",
+    settingsRequireApprovalName: "Require human approval before apply",
+    settingsEnableRdeAuditName: "Enable RDE audit panel",
+    settingsAuditLogModeName: "Audit log mode",
+    noticeCliOk: "kotonoha ok",
+    noticeCliError: "CLI error: {msg}",
+    noticeCliSpawnFailed: "CLI spawn failed: {msg}",
+    settingsDiagnostic: "Plugin v{version} \xB7 UI sample: {sample}",
+    settingsBtnReloadPlugin: "Reload plugin (apply code updates)",
+    noticePluginReloaded: "Kotonoha Console reloaded (v{version})",
+    noticeLanguageChanged: "Display language: {lang}"
   },
   ja: {
     viewTitle: "Kotonoha Console",
@@ -445,7 +409,111 @@ var MSGS2 = {
     mockOpSummary: "[mock] {operation} \xB7 {title}",
     mockUncertainty: "Mock \u30D0\u30C3\u30AF\u30A8\u30F3\u30C9 \u2014 \u8A2D\u5B9A\u3067 HTTP \u307E\u305F\u306F CLI \u306B\u63A5\u7D9A\u3057\u3066\u304F\u3060\u3055\u3044\u3002",
     cliRdeSummary: "[cli] RDE \u76E3\u67FB \xB7 {path}",
-    noInstruction: "\uFF08\u6307\u793A\u306A\u3057\uFF09"
+    noInstruction: "\uFF08\u6307\u793A\u306A\u3057\uFF09",
+    settingsTitle: "Kotonoha Console",
+    settingsBackendModeName: "\u30D0\u30C3\u30AF\u30A8\u30F3\u30C9\u30E2\u30FC\u30C9",
+    settingsBackendModeDesc: "cli = kotonoha CLI\u3002RDE \u76E3\u67FB\u306F Git \u306A\u3057\u3067\u52D5\u4F5C\u3002context export \u306F gitMode \u2260 off \u306E\u3068\u304D\u306E\u307F",
+    settingsCliSection: "CLI\uFF08kotonoha \u2265 0.3.1\uFF09",
+    settingsCliCommandName: "CLI \u30B3\u30DE\u30F3\u30C9",
+    settingsCliCommandDesc: "kotonoha \u30D0\u30A4\u30CA\u30EA\u306E\u30D1\u30B9",
+    settingsBtnTestVersion: "\u30D0\u30FC\u30B8\u30E7\u30F3\u78BA\u8A8D",
+    settingsCliWorkdirName: "CLI \u4F5C\u696D\u30C7\u30A3\u30EC\u30AF\u30C8\u30EA",
+    settingsCliWorkdirDesc: "--path \u7528 Git \u30EA\u30DD\u30B8\u30C8\u30EA\u30EB\u30FC\u30C8\uFF08\u7A7A = vault \u30D5\u30A9\u30EB\u30C0\uFF09",
+    settingsCliWorkdirPlaceholder: "\uFF08vault \u30D1\u30B9\uFF09",
+    settingsDatabaseUrlDesc: "\u4EFB\u610F\u3002\u5C06\u6765\u306E DB \u9023\u643A CLI \u30B3\u30DE\u30F3\u30C9\u3067\u5FC5\u8981",
+    settingsGitModeName: "Git \u30E2\u30FC\u30C9",
+    settingsGitModeDesc: "Git \u9023\u643A\uFF08\u30EA\u30DD\u30B8\u30C8\u30EA\u306F\u5909\u66F4\u3057\u307E\u305B\u3093 \u2014 git-mode-spec\uFF09",
+    settingsDefaultLanguageName: "\u8868\u793A\u8A00\u8A9E",
+    settingsLangJa: "\u65E5\u672C\u8A9E (ja)",
+    settingsLangEn: "English (en)",
+    settingsLangZhCn: "\u7B80\u4F53\u4E2D\u6587 (zh_CN)",
+    settingsRequireApprovalName: "\u9069\u7528\u524D\u306B\u4EBA\u624B\u627F\u8A8D\u3092\u5FC5\u9808\u306B\u3059\u308B",
+    settingsEnableRdeAuditName: "RDE \u76E3\u67FB\u30D1\u30CD\u30EB\u3092\u6709\u52B9\u5316",
+    settingsAuditLogModeName: "\u76E3\u67FB\u30ED\u30B0\u30E2\u30FC\u30C9",
+    noticeCliOk: "kotonoha ok",
+    noticeCliError: "CLI \u30A8\u30E9\u30FC: {msg}",
+    noticeCliSpawnFailed: "CLI \u8D77\u52D5\u5931\u6557: {msg}",
+    settingsDiagnostic: "\u30D7\u30E9\u30B0\u30A4\u30F3 v{version} \xB7 UI \u78BA\u8A8D: {sample}",
+    settingsBtnReloadPlugin: "\u30D7\u30E9\u30B0\u30A4\u30F3\u3092\u518D\u8AAD\u307F\u8FBC\u307F\uFF08\u30B3\u30FC\u30C9\u66F4\u65B0\u3092\u53CD\u6620\uFF09",
+    noticePluginReloaded: "Kotonoha Console \u3092\u518D\u8AAD\u307F\u8FBC\u307F\u3057\u307E\u3057\u305F\uFF08v{version}\uFF09",
+    noticeLanguageChanged: "\u8868\u793A\u8A00\u8A9E: {lang}"
+  },
+  zh_CN: {
+    viewTitle: "Kotonoha Console",
+    tagline: "\u63D0\u6848\u4E0D\u4F1A\u81EA\u52A8\u5E94\u7528\u3002",
+    noActiveNote: "\u8BF7\u6253\u5F00\u4E00\u4E2A\u6D3B\u52A8\u7684 Markdown \u7B14\u8BB0\u3002",
+    scopeSelection: "\u8303\u56F4: \u9009\u533A",
+    gitMode: "Git: {mode}",
+    labelOperation: "\u64CD\u4F5C",
+    labelInstruction: "\u6307\u793A",
+    instructionPlaceholder: "\u53EF\u9009\u6307\u793A\u2026",
+    btnRdeAudit: "\u8FD0\u884C RDE \u5BA1\u8BA1",
+    btnGenerate: "\u751F\u6210\u63D0\u6848",
+    proposalTitle: "\u63D0\u6848",
+    proposalReviseTitle: "\u63D0\u6848\uFF08\u7F16\u8F91\u4E2D\uFF09",
+    auditReportTitle: "RDE \u5BA1\u8BA1\u62A5\u544A",
+    btnApply: "\u5E94\u7528",
+    btnRevise: "\u4FEE\u8BA2",
+    btnReject: "\u62D2\u7EDD",
+    btnCopy: "\u590D\u5236",
+    btnCloseRecord: "\u5173\u95ED\u8BB0\u5F55",
+    btnApplyRevision: "\u5E94\u7528\u4FEE\u8BA2",
+    btnReAudit: "\u91CD\u65B0\u5BA1\u8BA1",
+    btnCancelRevise: "\u53D6\u6D88\u4FEE\u8BA2",
+    opRdeAudit: "RDE \u5BA1\u8BA1",
+    opSummarize: "\u6458\u8981",
+    opRewrite: "\u6539\u5199",
+    opExpand: "\u6269\u5C55",
+    opCustom: "\u81EA\u5B9A\u4E49",
+    noticeNoNote: "\u6CA1\u6709\u6D3B\u52A8\u7B14\u8BB0",
+    noticeAuditDone: "RDE \u5BA1\u8BA1\u5B8C\u6210{saved}",
+    noticeSavedSidecar: "\uFF08\u5DF2\u4FDD\u5B58\u81F3 .kotonoha/\uFF09",
+    noticeSavedUiOnly: "\uFF08sidecarMode \u5173\u95ED \u2014 \u4EC5 UI\uFF09",
+    noticeProposalReady: "\u63D0\u6848\u5DF2\u5C31\u7EEA\uFF08\u672A\u5E94\u7528\uFF09",
+    noticeFailed: "\u5931\u8D25: {msg}",
+    noticeAuditNoApply: "RDE \u5BA1\u8BA1\u62A5\u544A\u65E0\u6CD5\u5E94\u7528\u5230\u7B14\u8BB0\uFF08\u8BF7\u4F7F\u7528\u590D\u5236\uFF09",
+    noticeApplied: "\u5DF2\u5E94\u7528\uFF08\u5BA1\u8BA1\u5DF2\u8BB0\u5F55\uFF09",
+    noticeAppliedRevised: "\u5DF2\u5E94\u7528\u4FEE\u8BA2\u6587\u672C\uFF08partially_applied\uFF09",
+    noticeRejected: "\u5DF2\u62D2\u7EDD",
+    noticeAuditDismissed: "\u5BA1\u8BA1\u5DF2\u8BB0\u5F55\uFF08\u5DF2\u5173\u95ED\uFF09",
+    noticeCopied: "\u5DF2\u590D\u5236\u5230\u526A\u8D34\u677F",
+    noticeReviseMode: "\u4FEE\u8BA2\u6A21\u5F0F \u2014 \u7F16\u8F91\u540E\u5E94\u7528\u4FEE\u8BA2\u6216\u91CD\u65B0\u5BA1\u8BA1",
+    noticeReAuditDone: "\u91CD\u65B0\u5BA1\u8BA1\u5B8C\u6210\uFF08local rule-based\uFF09",
+    confirmSourceChanged: "\u6E90\u5DF2\u66F4\u6539\u3002\u9700\u8981\u91CD\u65B0\u5BA1\u8BA1\u6216\u660E\u786E\u8986\u76D6\u3002\u662F\u5426\u7EE7\u7EED\uFF1F",
+    confirmApply: "\u5C06\u6B64\u63D0\u6848\u5E94\u7528\u5230\u7B14\u8BB0\uFF1F\u539F\u59CB\u6587\u672C\u5C06\u88AB\u8986\u76D6\u3002",
+    noticeOpenEditor: "\u8BF7\u5728\u7F16\u8F91\u5668\u4E2D\u6253\u5F00\u7B14\u8BB0\u540E\u518D\u5E94\u7528\u5230\u9009\u533A",
+    mockRdeSummary: "[mock] RDE \u5BA1\u8BA1 \xB7 {title}",
+    mockOpSummary: "[mock] {operation} \xB7 {title}",
+    mockUncertainty: "Mock \u540E\u7AEF \u2014 \u8BF7\u5728\u8BBE\u7F6E\u4E2D\u8FDE\u63A5 HTTP \u6216 CLI \u4EE5\u83B7\u53D6\u771F\u5B9E Kotonoha \u8F93\u51FA\u3002",
+    cliRdeSummary: "[cli] RDE \u5BA1\u8BA1 \xB7 {path}",
+    noInstruction: "\uFF08\u65E0\u6307\u793A\uFF09",
+    settingsTitle: "Kotonoha Console",
+    settingsBackendModeName: "\u540E\u7AEF\u6A21\u5F0F",
+    settingsBackendModeDesc: "cli = kotonoha CLI\uFF1BRDE \u5BA1\u8BA1\u65E0\u9700 Git\uFF1Bcontext export \u4EC5\u5728 gitMode \u2260 off \u65F6\u53EF\u7528",
+    settingsCliSection: "CLI\uFF08kotonoha \u2265 0.3.1\uFF09",
+    settingsCliCommandName: "CLI \u547D\u4EE4",
+    settingsCliCommandDesc: "kotonoha \u53EF\u6267\u884C\u6587\u4EF6\u8DEF\u5F84",
+    settingsBtnTestVersion: "\u6D4B\u8BD5\u7248\u672C",
+    settingsCliWorkdirName: "CLI \u5DE5\u4F5C\u76EE\u5F55",
+    settingsCliWorkdirDesc: "--path \u7684 Git \u4ED3\u5E93\u6839\u76EE\u5F55\uFF08\u7A7A = vault \u6587\u4EF6\u5939\uFF09",
+    settingsCliWorkdirPlaceholder: "\uFF08vault \u8DEF\u5F84\uFF09",
+    settingsDatabaseUrlDesc: "\u53EF\u9009\uFF1B\u540E\u7EED DB \u76F8\u5173 CLI \u547D\u4EE4\u9700\u8981",
+    settingsGitModeName: "Git \u6A21\u5F0F",
+    settingsGitModeDesc: "Git \u611F\u77E5\u4F46\u4E0D\u4FEE\u6539\u4ED3\u5E93\uFF08git-mode-spec\uFF09",
+    settingsDefaultLanguageName: "\u663E\u793A\u8BED\u8A00",
+    settingsLangJa: "\u65E5\u8BED (ja)",
+    settingsLangEn: "English (en)",
+    settingsLangZhCn: "\u7B80\u4F53\u4E2D\u6587 (zh_CN)",
+    settingsRequireApprovalName: "\u5E94\u7528\u524D\u5FC5\u987B\u4EBA\u5DE5\u6279\u51C6",
+    settingsEnableRdeAuditName: "\u542F\u7528 RDE \u5BA1\u8BA1\u9762\u677F",
+    settingsAuditLogModeName: "\u5BA1\u8BA1\u65E5\u5FD7\u6A21\u5F0F",
+    noticeCliOk: "kotonoha ok",
+    noticeCliError: "CLI \u9519\u8BEF: {msg}",
+    noticeCliSpawnFailed: "CLI \u542F\u52A8\u5931\u8D25: {msg}",
+    settingsDiagnostic: "\u63D2\u4EF6 v{version} \xB7 UI \u793A\u4F8B: {sample}",
+    settingsBtnReloadPlugin: "\u91CD\u65B0\u52A0\u8F7D\u63D2\u4EF6\uFF08\u5E94\u7528\u4EE3\u7801\u66F4\u65B0\uFF09",
+    noticePluginReloaded: "Kotonoha Console \u5DF2\u91CD\u65B0\u52A0\u8F7D\uFF08v{version}\uFF09",
+    noticeLanguageChanged: "\u663E\u793A\u8BED\u8A00: {lang}"
   }
 };
 function consoleMsg(lang, key, params) {
@@ -462,6 +530,163 @@ var OP_KEYS = {
 function operationLabel(lang, op) {
   return consoleMsg(lang, OP_KEYS[op]);
 }
+
+// src/settings/PluginSettings.ts
+var DEFAULT_SETTINGS = {
+  backendMode: "mock",
+  defaultLanguage: "ja",
+  requireHumanApproval: true,
+  preserveFrontmatter: true,
+  auditLogMode: "summary",
+  enableRdeAudit: true,
+  gitMode: "off",
+  sidecarMode: true,
+  cliCommand: "kotonoha"
+};
+
+// src/settings/SettingsTab.ts
+var import_obsidian = require("obsidian");
+var LANG_LABEL = {
+  ja: "ja",
+  en: "en",
+  zh_CN: "zh_CN"
+};
+var KotonohaSettingsTab = class extends import_obsidian.PluginSettingTab {
+  constructor(app, plugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
+  /** Called when defaultLanguage changes so labels refresh while tab is open. */
+  refreshDisplay() {
+    this.display();
+  }
+  lang() {
+    return this.plugin.settings.defaultLanguage;
+  }
+  t(key) {
+    return consoleMsg(this.lang(), key);
+  }
+  display() {
+    const { containerEl } = this;
+    containerEl.empty();
+    containerEl.createEl("h2", { text: this.t("settingsTitle") });
+    containerEl.createEl("p", {
+      cls: "kotonoha-console-muted",
+      text: consoleMsg(this.lang(), "settingsDiagnostic", {
+        version: this.plugin.manifest.version,
+        sample: this.t("settingsBackendModeName")
+      })
+    });
+    new import_obsidian.Setting(containerEl).setName(this.t("settingsBackendModeName")).setDesc(this.t("settingsBackendModeDesc")).addDropdown(
+      (d) => d.addOptions({ mock: "mock", http: "http", cli: "cli" }).setValue(this.plugin.settings.backendMode).onChange(async (v) => {
+        this.plugin.settings.backendMode = v;
+        await this.plugin.saveSettings();
+        this.plugin.refreshClient();
+        this.display();
+      })
+    );
+    containerEl.createEl("h3", { text: this.t("settingsCliSection") });
+    new import_obsidian.Setting(containerEl).setName(this.t("settingsCliCommandName")).setDesc(this.t("settingsCliCommandDesc")).addText(
+      (t) => t.setPlaceholder("kotonoha").setValue(this.plugin.settings.cliCommand ?? "kotonoha").onChange(async (v) => {
+        this.plugin.settings.cliCommand = v;
+        await this.plugin.saveSettings();
+        this.plugin.refreshClient();
+      })
+    ).addButton(
+      (b) => b.setButtonText(this.t("settingsBtnTestVersion")).onClick(() => {
+        void this.plugin.testCliVersion();
+      })
+    );
+    new import_obsidian.Setting(containerEl).setName(this.t("settingsCliWorkdirName")).setDesc(this.t("settingsCliWorkdirDesc")).addText(
+      (t) => t.setPlaceholder(this.t("settingsCliWorkdirPlaceholder")).setValue(this.plugin.settings.cliWorkdir ?? "").onChange(async (v) => {
+        this.plugin.settings.cliWorkdir = v;
+        await this.plugin.saveSettings();
+        this.plugin.refreshClient();
+      })
+    );
+    new import_obsidian.Setting(containerEl).setName("DATABASE_URL").setDesc(this.t("settingsDatabaseUrlDesc")).addText(
+      (t) => t.setPlaceholder("postgres://\u2026").setValue(this.plugin.settings.databaseUrl ?? "").onChange(async (v) => {
+        this.plugin.settings.databaseUrl = v;
+        await this.plugin.saveSettings();
+        this.plugin.refreshClient();
+      })
+    );
+    new import_obsidian.Setting(containerEl).setName("KOTONOHA_PRINCIPAL_ID").addText(
+      (t) => t.setPlaceholder("UUID").setValue(this.plugin.settings.principalId ?? "").onChange(async (v) => {
+        this.plugin.settings.principalId = v;
+        await this.plugin.saveSettings();
+        this.plugin.refreshClient();
+      })
+    );
+    new import_obsidian.Setting(containerEl).setName("KOTONOHA_PROJECT_ID").addText(
+      (t) => t.setPlaceholder("UUID").setValue(this.plugin.settings.projectId ?? "").onChange(async (v) => {
+        this.plugin.settings.projectId = v;
+        await this.plugin.saveSettings();
+        this.plugin.refreshClient();
+      })
+    );
+    new import_obsidian.Setting(containerEl).setName(this.t("settingsGitModeName")).setDesc(this.t("settingsGitModeDesc")).addDropdown(
+      (d) => d.addOptions({
+        off: "off",
+        external: "external",
+        "passive-observing": "passive-observing",
+        "obsidian-git-aware": "obsidian-git-aware"
+      }).setValue(this.plugin.settings.gitMode).onChange(async (v) => {
+        this.plugin.settings.gitMode = v;
+        await this.plugin.saveSettings();
+        this.plugin.refreshNoteReader();
+      })
+    );
+    new import_obsidian.Setting(containerEl).setName(this.t("settingsDefaultLanguageName")).addDropdown(
+      (d) => d.addOptions({
+        ja: this.t("settingsLangJa"),
+        en: this.t("settingsLangEn"),
+        zh_CN: this.t("settingsLangZhCn")
+      }).setValue(this.plugin.settings.defaultLanguage).onChange(async (v) => {
+        this.plugin.settings.defaultLanguage = v;
+        await this.plugin.saveSettings();
+        new import_obsidian.Notice(
+          consoleMsg(v, "noticeLanguageChanged", {
+            lang: LANG_LABEL[v]
+          })
+        );
+        await this.plugin.refreshForLanguageChange();
+        this.display();
+      })
+    );
+    new import_obsidian.Setting(containerEl).setName(this.t("settingsRequireApprovalName")).addToggle(
+      (t) => t.setValue(this.plugin.settings.requireHumanApproval).onChange(async (v) => {
+        this.plugin.settings.requireHumanApproval = v;
+        await this.plugin.saveSettings();
+      })
+    );
+    new import_obsidian.Setting(containerEl).setName(this.t("settingsEnableRdeAuditName")).addToggle(
+      (t) => t.setValue(this.plugin.settings.enableRdeAudit).onChange(async (v) => {
+        this.plugin.settings.enableRdeAudit = v;
+        await this.plugin.saveSettings();
+      })
+    );
+    new import_obsidian.Setting(containerEl).setName(this.t("settingsAuditLogModeName")).addDropdown(
+      (d) => d.addOptions({
+        hash_only: "hash_only",
+        summary: "summary",
+        full_text: "full_text"
+      }).setValue(this.plugin.settings.auditLogMode).onChange(async (v) => {
+        this.plugin.settings.auditLogMode = v;
+        await this.plugin.saveSettings();
+        this.plugin.refreshAuditLog();
+      })
+    );
+    new import_obsidian.Setting(containerEl).setName(this.t("settingsBtnReloadPlugin")).addButton(
+      (b) => b.setButtonText(this.t("settingsBtnReloadPlugin")).onClick(() => {
+        void this.plugin.reloadPlugin();
+      })
+    );
+  }
+};
+
+// src/ui/KotonohaConsoleView.ts
+var import_obsidian2 = require("obsidian");
 
 // src/ui/rdeAuditPolicyMessages.ts
 var LOW_CONFIDENCE_THRESHOLD = 0.55;
@@ -536,8 +761,7 @@ var ProposalView = class {
 };
 
 // src/ui/RdeAuditView.ts
-var OPEN_BY_DEFAULT_JA = /* @__PURE__ */ new Set(["\u672A\u89E3\u6C7A", "\u9038\u8131\u30EA\u30B9\u30AF"]);
-var OPEN_BY_DEFAULT_EN = /* @__PURE__ */ new Set(["Unresolved", "Drift risks"]);
+var OPEN_BY_DEFAULT = /* @__PURE__ */ new Set(["sectionUnresolved", "sectionDriftRisks"]);
 var RdeAuditView = class {
   constructor(host, audit, language) {
     const lang = language ?? "ja";
@@ -567,13 +791,445 @@ function appendList(host, lang, sectionKey, items) {
   if (items.length === 0) return;
   const title = rdeMsg(lang, sectionKey);
   const details = host.createEl("details", { cls: "kotonoha-console-audit-details" });
-  const openSet = lang === "ja" ? OPEN_BY_DEFAULT_JA : OPEN_BY_DEFAULT_EN;
-  if (openSet.has(title)) details.open = true;
+  if (OPEN_BY_DEFAULT.has(sectionKey)) details.open = true;
   details.createEl("summary", { text: `${title} (${items.length})` });
   const ul = details.createEl("ul");
   for (const item of items) {
     ul.createEl("li", { text: item });
   }
+}
+
+// src/rde/StructuralDiffBuilder.ts
+var REWRITE_LENGTH_SHRINK_RATIO = 0.5;
+var HEDGING = /\b(may|might|could|possibly|perhaps|likely|probably|かもしれない|可能性|推測)\b/giu;
+var STRONG = /\b(must|will|always|never|certainly|clearly|proves?|確実|必ず|明らか|証明)\b/giu;
+function buildSourceReview(source, language) {
+  const preservedElements = [];
+  const unresolvedElements = [];
+  const categories = /* @__PURE__ */ new Set();
+  const hedgeCount = (source.match(HEDGING) ?? []).length;
+  const strongCount = (source.match(STRONG) ?? []).length;
+  const lineCount = source.split(/\n/).filter((l) => l.trim()).length;
+  categories.add("preserved");
+  preservedElements.push(
+    rdeMsg(language, "sourceReviewLines", { count: lineCount })
+  );
+  if (hedgeCount > 0) {
+    categories.add("unresolved");
+    unresolvedElements.push(
+      rdeMsg(language, "hedgingUnresolved", { count: hedgeCount })
+    );
+  }
+  if (strongCount > 0) {
+    preservedElements.push(
+      rdeMsg(language, "strongPreserved", { count: strongCount })
+    );
+  }
+  if (hedgeCount === 0 && strongCount === 0 && source.trim().length > 0) {
+    unresolvedElements.push(rdeMsg(language, "limitedSignals"));
+    categories.add("unresolved");
+  }
+  return {
+    categories: [...categories],
+    preservedElements,
+    transformedElements: [],
+    inferredExtensions: [],
+    unresolvedElements,
+    driftRisks: [],
+    lineAdditions: 0,
+    lineDeletions: 0
+  };
+}
+function buildStructuralDiff(source, proposal, options) {
+  const lang = options?.language;
+  const preservedElements = [];
+  const transformedElements = [];
+  const inferredExtensions = [];
+  const unresolvedElements = [];
+  const driftRisks = [];
+  const categories = /* @__PURE__ */ new Set();
+  const srcLines = source.split(/\n/);
+  const propLines = (proposal ?? source).split(/\n/);
+  const sameText = source.trim() === (proposal ?? source).trim();
+  let lineAdditions = 0;
+  let lineDeletions = 0;
+  if (!sameText && proposal) {
+    const srcSet = new Set(srcLines.map((l) => l.trim()).filter(Boolean));
+    const propSet = new Set(propLines.map((l) => l.trim()).filter(Boolean));
+    for (const l of propSet) {
+      if (!srcSet.has(l)) lineAdditions++;
+    }
+    for (const l of srcSet) {
+      if (!propSet.has(l)) lineDeletions++;
+    }
+    if (lineAdditions > 0 || lineDeletions > 0) {
+      categories.add("authorized_transformation");
+      transformedElements.push(
+        rdeMsg(lang, "linesStructural", { add: lineAdditions, del: lineDeletions })
+      );
+    }
+  } else {
+    categories.add("preserved");
+    preservedElements.push(rdeMsg(lang, "textMatchStructural"));
+  }
+  scanClaimStrength(source, proposal ?? source, lang, driftRisks, categories);
+  scanHedgingLoss(source, proposal ?? source, lang, driftRisks, categories);
+  if (srcLines.length > 3) {
+    preservedElements.push(
+      rdeMsg(lang, "sourceParagraphs", {
+        count: srcLines.filter((l) => l.trim()).length
+      })
+    );
+  }
+  if (driftRisks.length === 0 && !sameText && proposal) {
+    const ratio = proposal.length / Math.max(source.length, 1);
+    if (ratio > 1.4) {
+      inferredExtensions.push(
+        rdeMsg(lang, "lengthInferred", { ratio: ratio.toFixed(2) })
+      );
+      categories.add("inferred_extension");
+    }
+  }
+  if (!sameText && proposal) {
+    scanMvpGuardrails(source, proposal, options, driftRisks, categories);
+  }
+  if (categories.size === 0) {
+    categories.add("unresolved");
+    unresolvedElements.push(rdeMsg(lang, "insufficientSignal"));
+  }
+  return {
+    categories: [...categories],
+    preservedElements,
+    transformedElements,
+    inferredExtensions,
+    unresolvedElements,
+    driftRisks,
+    lineAdditions,
+    lineDeletions
+  };
+}
+function scanClaimStrength(source, proposal, lang, driftRisks, categories) {
+  const srcHedge = (source.match(HEDGING) ?? []).length;
+  const propHedge = (proposal.match(HEDGING) ?? []).length;
+  const srcStrong = (source.match(STRONG) ?? []).length;
+  const propStrong = (proposal.match(STRONG) ?? []).length;
+  if (srcHedge > 0 && propStrong > srcStrong && propHedge < srcHedge) {
+    driftRisks.push(rdeMsg(lang, "claimStrengthDrift"));
+    categories.add("suspicious_drift");
+  }
+  if (propStrong > 0 && srcHedge > 0 && propHedge === 0) {
+    driftRisks.push(rdeMsg(lang, "hedgingRemovedStrong"));
+    categories.add("suspicious_drift");
+  }
+}
+function scanHedgingLoss(source, proposal, lang, driftRisks, categories) {
+  if (source === proposal) return;
+  const lost = ["may", "might", "could", "possibly"].filter(
+    (w) => source.toLowerCase().includes(w) && !proposal.toLowerCase().includes(w)
+  );
+  if (lost.length > 0) {
+    driftRisks.push(rdeMsg(lang, "hedgingDropped", { terms: lost.join(", ") }));
+    categories.add("suspicious_drift");
+  }
+}
+function scanMvpGuardrails(source, proposal, options, driftRisks, categories) {
+  const lang = options?.language;
+  const fm = options?.frontmatter ?? {};
+  for (const key of Object.keys(fm)) {
+    if (!proposal.includes(`${key}:`) && !proposal.includes(`${key} `)) {
+      driftRisks.push(rdeMsg(lang, "frontmatterRemoved", { key }));
+      categories.add("suspicious_drift");
+    }
+  }
+  const linkTargets = new Set(options?.sourceLinks ?? []);
+  for (const m of source.matchAll(/\[\[([^\]|#]+)/g)) {
+    linkTargets.add(m[1]);
+  }
+  for (const m of source.matchAll(/\]\(([^)]+)\)/g)) {
+    linkTargets.add(m[1]);
+  }
+  for (const target of linkTargets) {
+    const needle = target.replace(/^\[\[/, "").replace(/\]\]$/, "");
+    if (needle && !proposal.includes(needle)) {
+      driftRisks.push(rdeMsg(lang, "linkRemoved", { target: needle }));
+      categories.add("suspicious_drift");
+    }
+  }
+  if (options?.operation === "rewrite") {
+    const ratio = proposal.length / Math.max(source.length, 1);
+    if (ratio < REWRITE_LENGTH_SHRINK_RATIO) {
+      driftRisks.push(
+        rdeMsg(lang, "rewriteShortened", {
+          pct: (ratio * 100).toFixed(0),
+          threshold: REWRITE_LENGTH_SHRINK_RATIO * 100
+        })
+      );
+      categories.add("suspicious_drift");
+    }
+  }
+  scanIntroducedUrlsAndDates(source, proposal, lang, driftRisks, categories);
+  scanApprovalLanguageRemoval(source, proposal, lang, driftRisks, categories);
+  scanFinalDecisionLanguage(source, proposal, lang, driftRisks, categories);
+}
+var URL_PATTERN = /https?:\/\/[^\s)\]>]+/gi;
+var ISO_DATE_PATTERN = /\b\d{4}-\d{2}-\d{2}\b/g;
+var HUMAN_APPROVAL_PATTERN = /\b(must be approved|requires? (?:human )?approval|human review required|人工レビュー|承認が必要)\b/giu;
+var PROPOSAL_LANGUAGE_PATTERN = /\b(proposal|suggest(?:ed|ion)?|may recommend|draft|提案|推奨)\b/giu;
+var FINAL_DECISION_PATTERN = /\b(approved|rejected|final decision|must proceed|is (?:the )?correct|確定|承認済|却下済)\b/giu;
+function uniqueMatches(text, pattern) {
+  return [...new Set((text.match(pattern) ?? []).map((m) => m.trim()))];
+}
+function scanIntroducedUrlsAndDates(source, proposal, lang, driftRisks, categories) {
+  const srcUrls = new Set(uniqueMatches(source, URL_PATTERN));
+  for (const url of uniqueMatches(proposal, URL_PATTERN)) {
+    if (!srcUrls.has(url)) {
+      driftRisks.push(rdeMsg(lang, "urlIntroduced", { url }));
+      categories.add("inferred_extension");
+    }
+  }
+  const srcDates = new Set(source.match(ISO_DATE_PATTERN) ?? []);
+  for (const date of proposal.match(ISO_DATE_PATTERN) ?? []) {
+    if (!srcDates.has(date)) {
+      driftRisks.push(rdeMsg(lang, "dateIntroduced", { date }));
+      categories.add("inferred_extension");
+    }
+  }
+}
+function scanApprovalLanguageRemoval(source, proposal, lang, driftRisks, categories) {
+  const srcMarkers = uniqueMatches(source, HUMAN_APPROVAL_PATTERN);
+  if (srcMarkers.length === 0) return;
+  const propMarkers = uniqueMatches(proposal, HUMAN_APPROVAL_PATTERN);
+  const lost = srcMarkers.filter((m) => !propMarkers.includes(m));
+  if (lost.length > 0) {
+    driftRisks.push(rdeMsg(lang, "approvalRemoved", { lost: lost.join("; ") }));
+    categories.add("suspicious_drift");
+  }
+}
+function scanFinalDecisionLanguage(source, proposal, lang, driftRisks, categories) {
+  const srcFinal = uniqueMatches(source, FINAL_DECISION_PATTERN);
+  const propFinal = uniqueMatches(proposal, FINAL_DECISION_PATTERN);
+  const introduced = propFinal.filter((m) => !srcFinal.includes(m));
+  if (introduced.length === 0) return;
+  const srcProposalLang = uniqueMatches(source, PROPOSAL_LANGUAGE_PATTERN);
+  if (srcProposalLang.length > 0 || propFinal.length > srcFinal.length) {
+    driftRisks.push(
+      rdeMsg(lang, "finalDecisionDrift", { introduced: introduced.join("; ") })
+    );
+    categories.add("suspicious_drift");
+  }
+}
+
+// src/rde/mergeRdeAudit.ts
+function mergeUnique(target, more) {
+  for (const item of more) {
+    if (!target.includes(item)) target.push(item);
+  }
+}
+function mergeCategories(a, b) {
+  return [.../* @__PURE__ */ new Set([...a, ...b])];
+}
+function mergeStructuralIntoAudit(base, structural) {
+  const preservedElements = [...base.preservedElements];
+  const transformedElements = [...base.transformedElements];
+  const inferredExtensions = [...base.inferredExtensions];
+  const unresolvedElements = [...base.unresolvedElements];
+  const driftRisks = [...base.driftRisks];
+  mergeUnique(preservedElements, structural.preservedElements);
+  mergeUnique(transformedElements, structural.transformedElements);
+  mergeUnique(inferredExtensions, structural.inferredExtensions);
+  mergeUnique(unresolvedElements, structural.unresolvedElements);
+  mergeUnique(driftRisks, structural.driftRisks);
+  const categories = mergeCategories(base.categories, structural.categories);
+  const recommendedDecision = recommendDecision(categories, driftRisks);
+  return {
+    ...base,
+    categories,
+    preservedElements,
+    transformedElements,
+    inferredExtensions,
+    unresolvedElements,
+    driftRisks,
+    recommendedDecision,
+    confidence: driftRisks.length > 0 ? 0.45 : structural.lineAdditions > 0 ? 0.65 : 0.75
+  };
+}
+function recommendDecision(categories, driftRisks) {
+  if (categories.includes("critical_distortion")) return "reject";
+  if (driftRisks.length >= 2 || categories.includes("suspicious_drift")) {
+    return "revise";
+  }
+  if (categories.includes("unresolved") && categories.length <= 1) {
+    return "human_review";
+  }
+  if (categories.includes("preserved") && driftRisks.length === 0) {
+    return "approve";
+  }
+  return "human_review";
+}
+
+// src/rde/enrichAuditFromSource.ts
+function enrichAuditFromSource(audit, request) {
+  const lang = normalizeRdeLang(request.language);
+  const excerpt2 = request.context.sourceText.slice(0, 200).replace(/\n/g, " ") + (request.context.sourceText.length > 200 ? "\u2026" : "");
+  const unresolvedElements = [...audit.unresolvedElements];
+  if (!request.context.git) {
+    unresolvedElements.push(rdeMsg(lang, "nonGitVault"));
+  }
+  return {
+    ...audit,
+    preservedElements: [
+      `path:${request.context.filePath}`,
+      `source_hash:${request.context.sourceHash.slice(0, 16)}\u2026`,
+      excerpt2,
+      ...audit.preservedElements
+    ],
+    unresolvedElements
+  };
+}
+
+// src/rde/parseRdeEmit.ts
+var CATEGORY_MAP = {
+  preserved: "preserved",
+  complemented: "inferred_extension",
+  transformed: "authorized_transformation",
+  deviation_risk: "suspicious_drift",
+  intentionally_unresolved: "unresolved",
+  lost: "critical_distortion",
+  next_update_policy: "unresolved"
+};
+function rdeAuditFromEmit(stdout, proposalId) {
+  const root = JSON.parse(stdout);
+  const cats = root.rde_review_output?.categories ?? {};
+  const categories = /* @__PURE__ */ new Set();
+  const preservedElements = [];
+  const transformedElements = [];
+  const inferredExtensions = [];
+  const unresolvedElements = [];
+  const driftRisks = [];
+  for (const [key, items] of Object.entries(cats)) {
+    const mapped = CATEGORY_MAP[key];
+    if (mapped) categories.add(mapped);
+    const target = key === "preserved" ? preservedElements : key === "transformed" ? transformedElements : key === "complemented" ? inferredExtensions : key === "deviation_risk" ? driftRisks : unresolvedElements;
+    for (const item of items ?? []) {
+      target.push(String(item));
+    }
+  }
+  if (categories.size === 0) {
+    categories.add("unresolved");
+  }
+  return {
+    proposalId,
+    createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+    categories: [...categories],
+    preservedElements,
+    transformedElements,
+    inferredExtensions,
+    unresolvedElements,
+    driftRisks,
+    recommendedDecision: "human_review",
+    confidence: 0.5
+  };
+}
+
+// src/services/RdeAuditService.ts
+function performRdeAudit(request, proposalId, options) {
+  const structural = options?.sourceReview && !options?.proposalText ? buildSourceReview(request.context.sourceText, request.language) : buildStructuralDiff(
+    request.context.sourceText,
+    options?.proposalText ?? request.context.sourceText,
+    {
+      language: request.language,
+      operation: request.operation,
+      frontmatter: request.context.frontmatter,
+      sourceLinks: request.context.links
+    }
+  );
+  let base;
+  if (options?.cli?.emitStdout) {
+    base = rdeAuditFromEmit(options.cli.emitStdout, proposalId);
+  } else {
+    base = {
+      proposalId,
+      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+      categories: [],
+      preservedElements: [],
+      transformedElements: [],
+      inferredExtensions: [],
+      unresolvedElements: [],
+      driftRisks: [],
+      recommendedDecision: "human_review",
+      confidence: 0.5
+    };
+  }
+  const merged = mergeStructuralIntoAudit(base, structural);
+  return enrichAuditFromSource(merged, request);
+}
+
+// src/rde/rdeAuditReport.ts
+function rdeAuditReportMarkdown(request, audit) {
+  const lang = normalizeRdeLang(request.language);
+  const lines = [
+    `<!-- kotonoha rde-audit -->`,
+    "",
+    `# ${rdeMsg(lang, "reportTitle")}`,
+    "",
+    `> ${rdeMsg(lang, "mvpBanner")}`,
+    "",
+    `**${rdeMsg(lang, "reportFile")}:** \`${request.context.filePath}\``,
+    `**${rdeMsg(lang, "reportSourceHash")}:** \`${request.context.sourceHash.slice(0, 16)}\u2026\``,
+    `**${rdeMsg(lang, "reportRecommended")}:** ${formatDecision(lang, audit.recommendedDecision)}`,
+    "",
+    `## ${rdeMsg(lang, "reportCategories")}`,
+    audit.categories.map((c) => formatCategory(lang, c)).join(", ") || rdeMsg(lang, "categoryNone"),
+    ""
+  ];
+  appendSection(lines, lang, "sectionPreserved", audit.preservedElements);
+  appendSection(lines, lang, "sectionTransformed", audit.transformedElements);
+  appendSection(lines, lang, "sectionInferred", audit.inferredExtensions);
+  appendSection(lines, lang, "sectionUnresolved", audit.unresolvedElements);
+  appendSection(lines, lang, "sectionDriftRisks", audit.driftRisks);
+  lines.push(`## ${rdeMsg(lang, "reportSourceExcerpt")}`, "", request.context.sourceText.slice(0, 2e3));
+  if (request.context.sourceText.length > 2e3) {
+    lines.push("", "\u2026");
+  }
+  return lines.join("\n");
+}
+function appendSection(lines, lang, sectionKey, items) {
+  if (items.length === 0) return;
+  lines.push(`## ${rdeMsg(lang, sectionKey)}`, "");
+  for (const item of items) {
+    lines.push(`- ${item}`);
+  }
+  lines.push("");
+}
+
+// src/services/localizeBundle.ts
+function localizeBundleForDisplay(bundle, request, operation, lang) {
+  const localizedRequest = { ...request, language: lang };
+  const proposalId = bundle.proposal.id;
+  if (operation === "rde_audit") {
+    const audit2 = performRdeAudit(localizedRequest, proposalId, { sourceReview: true });
+    return {
+      proposal: {
+        ...bundle.proposal,
+        proposedText: rdeAuditReportMarkdown(localizedRequest, audit2),
+        summary: consoleMsg(lang, "mockRdeSummary", { title: request.context.title })
+      },
+      audit: audit2
+    };
+  }
+  const proposalText = bundle.proposal.proposedText;
+  const audit = performRdeAudit(localizedRequest, proposalId, { proposalText });
+  return {
+    proposal: {
+      ...bundle.proposal,
+      summary: consoleMsg(lang, "mockOpSummary", {
+        operation,
+        title: request.context.title
+      }),
+      uncertaintyNote: bundle.proposal.uncertaintyNote ? consoleMsg(lang, "mockUncertainty") : void 0
+    },
+    audit
+  };
 }
 
 // src/ui/KotonohaConsoleView.ts
@@ -603,7 +1259,17 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     return "layers";
   }
   async onOpen() {
-    const lang = this.uiLang();
+    await this.buildUi();
+  }
+  /** Rebuild chrome when defaultLanguage changes (keeps proposal/audit state). */
+  async refreshLocalizedUi() {
+    const op = this.operationSelect?.value ?? this.lastOperation;
+    const instruction = this.instructionInput?.value ?? "";
+    await this.buildUi(op, instruction);
+    if (this.bundle) this.renderBundle();
+  }
+  async buildUi(restoreOp, restoreInstruction) {
+    const lang = this.plugin.settings.defaultLanguage;
     const { containerEl } = this;
     containerEl.empty();
     containerEl.addClass("kotonoha-console-root");
@@ -648,11 +1314,14 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       });
       opt.value = op;
     }
-    this.operationSelect.value = "rde_audit";
+    this.operationSelect.value = restoreOp ?? "rde_audit";
     form.createEl("label", { text: consoleMsg(lang, "labelInstruction") });
     this.instructionInput = form.createEl("textarea", {
       attr: { rows: "2", placeholder: consoleMsg(lang, "instructionPlaceholder") }
     });
+    if (restoreInstruction !== void 0) {
+      this.instructionInput.value = restoreInstruction;
+    }
     const actions = form.createDiv({ cls: "kotonoha-console-actions" });
     actions.createEl("button", { text: consoleMsg(lang, "btnRdeAudit"), cls: "mod-cta" }).addEventListener("click", () => void this.runRdeAudit());
     actions.createEl("button", { text: consoleMsg(lang, "btnGenerate") }).addEventListener("click", () => void this.runGenerate());
@@ -669,7 +1338,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     await this.runGenerate();
   }
   uiLang() {
-    return this.lastRequest?.language ?? this.plugin.settings.defaultLanguage;
+    return this.plugin.settings.defaultLanguage;
   }
   async runGenerate() {
     const lang = this.plugin.settings.defaultLanguage;
@@ -721,12 +1390,18 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
   renderBundle() {
     this.proposalHost.empty();
     this.auditHost.empty();
-    if (!this.bundle) return;
+    if (!this.bundle || !this.lastRequest) return;
     const isAuditReport = this.lastOperation === "rde_audit";
     const wantsAudit = this.plugin.settings.enableRdeAudit || isAuditReport;
     const auditMissing = wantsAudit && !isAuditReport && !this.bundle.audit;
-    const lang = this.lastRequest?.language ?? this.plugin.settings.defaultLanguage;
-    new ProposalView(this.proposalHost, this.bundle.proposal, {
+    const lang = this.plugin.settings.defaultLanguage;
+    const displayBundle = localizeBundleForDisplay(
+      this.bundle,
+      this.lastRequest,
+      this.lastOperation,
+      lang
+    );
+    new ProposalView(this.proposalHost, displayBundle.proposal, {
       onApply: () => void this.applyProposal(),
       onReject: () => void this.rejectProposal(),
       onCopy: () => void this.copyProposal(),
@@ -742,8 +1417,8 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
         this.editedText = text;
       }
     });
-    if (this.bundle.audit && wantsAudit) {
-      new RdeAuditView(this.auditHost, this.bundle.audit, lang);
+    if (displayBundle.audit && wantsAudit) {
+      new RdeAuditView(this.auditHost, displayBundle.audit, lang);
     }
   }
   async applyProposal() {
@@ -1220,409 +1895,6 @@ function proposalTextFromLocalContext(request) {
   ].join("\n");
 }
 
-// src/rde/StructuralDiffBuilder.ts
-var REWRITE_LENGTH_SHRINK_RATIO = 0.5;
-var HEDGING = /\b(may|might|could|possibly|perhaps|likely|probably|かもしれない|可能性|推測)\b/giu;
-var STRONG = /\b(must|will|always|never|certainly|clearly|proves?|確実|必ず|明らか|証明)\b/giu;
-function buildSourceReview(source, language) {
-  const preservedElements = [];
-  const unresolvedElements = [];
-  const categories = /* @__PURE__ */ new Set();
-  const hedgeCount = (source.match(HEDGING) ?? []).length;
-  const strongCount = (source.match(STRONG) ?? []).length;
-  const lineCount = source.split(/\n/).filter((l) => l.trim()).length;
-  categories.add("preserved");
-  preservedElements.push(
-    rdeMsg(language, "sourceReviewLines", { count: lineCount })
-  );
-  if (hedgeCount > 0) {
-    categories.add("unresolved");
-    unresolvedElements.push(
-      rdeMsg(language, "hedgingUnresolved", { count: hedgeCount })
-    );
-  }
-  if (strongCount > 0) {
-    preservedElements.push(
-      rdeMsg(language, "strongPreserved", { count: strongCount })
-    );
-  }
-  if (hedgeCount === 0 && strongCount === 0 && source.trim().length > 0) {
-    unresolvedElements.push(rdeMsg(language, "limitedSignals"));
-    categories.add("unresolved");
-  }
-  return {
-    categories: [...categories],
-    preservedElements,
-    transformedElements: [],
-    inferredExtensions: [],
-    unresolvedElements,
-    driftRisks: [],
-    lineAdditions: 0,
-    lineDeletions: 0
-  };
-}
-function buildStructuralDiff(source, proposal, options) {
-  const lang = options?.language;
-  const preservedElements = [];
-  const transformedElements = [];
-  const inferredExtensions = [];
-  const unresolvedElements = [];
-  const driftRisks = [];
-  const categories = /* @__PURE__ */ new Set();
-  const srcLines = source.split(/\n/);
-  const propLines = (proposal ?? source).split(/\n/);
-  const sameText = source.trim() === (proposal ?? source).trim();
-  let lineAdditions = 0;
-  let lineDeletions = 0;
-  if (!sameText && proposal) {
-    const srcSet = new Set(srcLines.map((l) => l.trim()).filter(Boolean));
-    const propSet = new Set(propLines.map((l) => l.trim()).filter(Boolean));
-    for (const l of propSet) {
-      if (!srcSet.has(l)) lineAdditions++;
-    }
-    for (const l of srcSet) {
-      if (!propSet.has(l)) lineDeletions++;
-    }
-    if (lineAdditions > 0 || lineDeletions > 0) {
-      categories.add("authorized_transformation");
-      transformedElements.push(
-        rdeMsg(lang, "linesStructural", { add: lineAdditions, del: lineDeletions })
-      );
-    }
-  } else {
-    categories.add("preserved");
-    preservedElements.push(rdeMsg(lang, "textMatchStructural"));
-  }
-  scanClaimStrength(source, proposal ?? source, lang, driftRisks, categories);
-  scanHedgingLoss(source, proposal ?? source, lang, driftRisks, categories);
-  if (srcLines.length > 3) {
-    preservedElements.push(
-      rdeMsg(lang, "sourceParagraphs", {
-        count: srcLines.filter((l) => l.trim()).length
-      })
-    );
-  }
-  if (driftRisks.length === 0 && !sameText && proposal) {
-    const ratio = proposal.length / Math.max(source.length, 1);
-    if (ratio > 1.4) {
-      inferredExtensions.push(
-        rdeMsg(lang, "lengthInferred", { ratio: ratio.toFixed(2) })
-      );
-      categories.add("inferred_extension");
-    }
-  }
-  if (!sameText && proposal) {
-    scanMvpGuardrails(source, proposal, options, driftRisks, categories);
-  }
-  if (categories.size === 0) {
-    categories.add("unresolved");
-    unresolvedElements.push(rdeMsg(lang, "insufficientSignal"));
-  }
-  return {
-    categories: [...categories],
-    preservedElements,
-    transformedElements,
-    inferredExtensions,
-    unresolvedElements,
-    driftRisks,
-    lineAdditions,
-    lineDeletions
-  };
-}
-function scanClaimStrength(source, proposal, lang, driftRisks, categories) {
-  const srcHedge = (source.match(HEDGING) ?? []).length;
-  const propHedge = (proposal.match(HEDGING) ?? []).length;
-  const srcStrong = (source.match(STRONG) ?? []).length;
-  const propStrong = (proposal.match(STRONG) ?? []).length;
-  if (srcHedge > 0 && propStrong > srcStrong && propHedge < srcHedge) {
-    driftRisks.push(rdeMsg(lang, "claimStrengthDrift"));
-    categories.add("suspicious_drift");
-  }
-  if (propStrong > 0 && srcHedge > 0 && propHedge === 0) {
-    driftRisks.push(rdeMsg(lang, "hedgingRemovedStrong"));
-    categories.add("suspicious_drift");
-  }
-}
-function scanHedgingLoss(source, proposal, lang, driftRisks, categories) {
-  if (source === proposal) return;
-  const lost = ["may", "might", "could", "possibly"].filter(
-    (w) => source.toLowerCase().includes(w) && !proposal.toLowerCase().includes(w)
-  );
-  if (lost.length > 0) {
-    driftRisks.push(rdeMsg(lang, "hedgingDropped", { terms: lost.join(", ") }));
-    categories.add("suspicious_drift");
-  }
-}
-function scanMvpGuardrails(source, proposal, options, driftRisks, categories) {
-  const lang = options?.language;
-  const fm = options?.frontmatter ?? {};
-  for (const key of Object.keys(fm)) {
-    if (!proposal.includes(`${key}:`) && !proposal.includes(`${key} `)) {
-      driftRisks.push(rdeMsg(lang, "frontmatterRemoved", { key }));
-      categories.add("suspicious_drift");
-    }
-  }
-  const linkTargets = new Set(options?.sourceLinks ?? []);
-  for (const m of source.matchAll(/\[\[([^\]|#]+)/g)) {
-    linkTargets.add(m[1]);
-  }
-  for (const m of source.matchAll(/\]\(([^)]+)\)/g)) {
-    linkTargets.add(m[1]);
-  }
-  for (const target of linkTargets) {
-    const needle = target.replace(/^\[\[/, "").replace(/\]\]$/, "");
-    if (needle && !proposal.includes(needle)) {
-      driftRisks.push(rdeMsg(lang, "linkRemoved", { target: needle }));
-      categories.add("suspicious_drift");
-    }
-  }
-  if (options?.operation === "rewrite") {
-    const ratio = proposal.length / Math.max(source.length, 1);
-    if (ratio < REWRITE_LENGTH_SHRINK_RATIO) {
-      driftRisks.push(
-        rdeMsg(lang, "rewriteShortened", {
-          pct: (ratio * 100).toFixed(0),
-          threshold: REWRITE_LENGTH_SHRINK_RATIO * 100
-        })
-      );
-      categories.add("suspicious_drift");
-    }
-  }
-  scanIntroducedUrlsAndDates(source, proposal, lang, driftRisks, categories);
-  scanApprovalLanguageRemoval(source, proposal, lang, driftRisks, categories);
-  scanFinalDecisionLanguage(source, proposal, lang, driftRisks, categories);
-}
-var URL_PATTERN = /https?:\/\/[^\s)\]>]+/gi;
-var ISO_DATE_PATTERN = /\b\d{4}-\d{2}-\d{2}\b/g;
-var HUMAN_APPROVAL_PATTERN = /\b(must be approved|requires? (?:human )?approval|human review required|人工レビュー|承認が必要)\b/giu;
-var PROPOSAL_LANGUAGE_PATTERN = /\b(proposal|suggest(?:ed|ion)?|may recommend|draft|提案|推奨)\b/giu;
-var FINAL_DECISION_PATTERN = /\b(approved|rejected|final decision|must proceed|is (?:the )?correct|確定|承認済|却下済)\b/giu;
-function uniqueMatches(text, pattern) {
-  return [...new Set((text.match(pattern) ?? []).map((m) => m.trim()))];
-}
-function scanIntroducedUrlsAndDates(source, proposal, lang, driftRisks, categories) {
-  const srcUrls = new Set(uniqueMatches(source, URL_PATTERN));
-  for (const url of uniqueMatches(proposal, URL_PATTERN)) {
-    if (!srcUrls.has(url)) {
-      driftRisks.push(rdeMsg(lang, "urlIntroduced", { url }));
-      categories.add("inferred_extension");
-    }
-  }
-  const srcDates = new Set(source.match(ISO_DATE_PATTERN) ?? []);
-  for (const date of proposal.match(ISO_DATE_PATTERN) ?? []) {
-    if (!srcDates.has(date)) {
-      driftRisks.push(rdeMsg(lang, "dateIntroduced", { date }));
-      categories.add("inferred_extension");
-    }
-  }
-}
-function scanApprovalLanguageRemoval(source, proposal, lang, driftRisks, categories) {
-  const srcMarkers = uniqueMatches(source, HUMAN_APPROVAL_PATTERN);
-  if (srcMarkers.length === 0) return;
-  const propMarkers = uniqueMatches(proposal, HUMAN_APPROVAL_PATTERN);
-  const lost = srcMarkers.filter((m) => !propMarkers.includes(m));
-  if (lost.length > 0) {
-    driftRisks.push(rdeMsg(lang, "approvalRemoved", { lost: lost.join("; ") }));
-    categories.add("suspicious_drift");
-  }
-}
-function scanFinalDecisionLanguage(source, proposal, lang, driftRisks, categories) {
-  const srcFinal = uniqueMatches(source, FINAL_DECISION_PATTERN);
-  const propFinal = uniqueMatches(proposal, FINAL_DECISION_PATTERN);
-  const introduced = propFinal.filter((m) => !srcFinal.includes(m));
-  if (introduced.length === 0) return;
-  const srcProposalLang = uniqueMatches(source, PROPOSAL_LANGUAGE_PATTERN);
-  if (srcProposalLang.length > 0 || propFinal.length > srcFinal.length) {
-    driftRisks.push(
-      rdeMsg(lang, "finalDecisionDrift", { introduced: introduced.join("; ") })
-    );
-    categories.add("suspicious_drift");
-  }
-}
-
-// src/rde/mergeRdeAudit.ts
-function mergeUnique(target, more) {
-  for (const item of more) {
-    if (!target.includes(item)) target.push(item);
-  }
-}
-function mergeCategories(a, b) {
-  return [.../* @__PURE__ */ new Set([...a, ...b])];
-}
-function mergeStructuralIntoAudit(base, structural) {
-  const preservedElements = [...base.preservedElements];
-  const transformedElements = [...base.transformedElements];
-  const inferredExtensions = [...base.inferredExtensions];
-  const unresolvedElements = [...base.unresolvedElements];
-  const driftRisks = [...base.driftRisks];
-  mergeUnique(preservedElements, structural.preservedElements);
-  mergeUnique(transformedElements, structural.transformedElements);
-  mergeUnique(inferredExtensions, structural.inferredExtensions);
-  mergeUnique(unresolvedElements, structural.unresolvedElements);
-  mergeUnique(driftRisks, structural.driftRisks);
-  const categories = mergeCategories(base.categories, structural.categories);
-  const recommendedDecision = recommendDecision(categories, driftRisks);
-  return {
-    ...base,
-    categories,
-    preservedElements,
-    transformedElements,
-    inferredExtensions,
-    unresolvedElements,
-    driftRisks,
-    recommendedDecision,
-    confidence: driftRisks.length > 0 ? 0.45 : structural.lineAdditions > 0 ? 0.65 : 0.75
-  };
-}
-function recommendDecision(categories, driftRisks) {
-  if (categories.includes("critical_distortion")) return "reject";
-  if (driftRisks.length >= 2 || categories.includes("suspicious_drift")) {
-    return "revise";
-  }
-  if (categories.includes("unresolved") && categories.length <= 1) {
-    return "human_review";
-  }
-  if (categories.includes("preserved") && driftRisks.length === 0) {
-    return "approve";
-  }
-  return "human_review";
-}
-
-// src/rde/enrichAuditFromSource.ts
-function enrichAuditFromSource(audit, request) {
-  const lang = normalizeRdeLang(request.language);
-  const excerpt2 = request.context.sourceText.slice(0, 200).replace(/\n/g, " ") + (request.context.sourceText.length > 200 ? "\u2026" : "");
-  const unresolvedElements = [...audit.unresolvedElements];
-  if (!request.context.git) {
-    unresolvedElements.push(rdeMsg(lang, "nonGitVault"));
-  }
-  return {
-    ...audit,
-    preservedElements: [
-      `path:${request.context.filePath}`,
-      `source_hash:${request.context.sourceHash.slice(0, 16)}\u2026`,
-      excerpt2,
-      ...audit.preservedElements
-    ],
-    unresolvedElements
-  };
-}
-
-// src/rde/parseRdeEmit.ts
-var CATEGORY_MAP = {
-  preserved: "preserved",
-  complemented: "inferred_extension",
-  transformed: "authorized_transformation",
-  deviation_risk: "suspicious_drift",
-  intentionally_unresolved: "unresolved",
-  lost: "critical_distortion",
-  next_update_policy: "unresolved"
-};
-function rdeAuditFromEmit(stdout, proposalId) {
-  const root = JSON.parse(stdout);
-  const cats = root.rde_review_output?.categories ?? {};
-  const categories = /* @__PURE__ */ new Set();
-  const preservedElements = [];
-  const transformedElements = [];
-  const inferredExtensions = [];
-  const unresolvedElements = [];
-  const driftRisks = [];
-  for (const [key, items] of Object.entries(cats)) {
-    const mapped = CATEGORY_MAP[key];
-    if (mapped) categories.add(mapped);
-    const target = key === "preserved" ? preservedElements : key === "transformed" ? transformedElements : key === "complemented" ? inferredExtensions : key === "deviation_risk" ? driftRisks : unresolvedElements;
-    for (const item of items ?? []) {
-      target.push(String(item));
-    }
-  }
-  if (categories.size === 0) {
-    categories.add("unresolved");
-  }
-  return {
-    proposalId,
-    createdAt: (/* @__PURE__ */ new Date()).toISOString(),
-    categories: [...categories],
-    preservedElements,
-    transformedElements,
-    inferredExtensions,
-    unresolvedElements,
-    driftRisks,
-    recommendedDecision: "human_review",
-    confidence: 0.5
-  };
-}
-
-// src/services/RdeAuditService.ts
-function performRdeAudit2(request, proposalId, options) {
-  const structural = options?.sourceReview && !options?.proposalText ? buildSourceReview(request.context.sourceText, request.language) : buildStructuralDiff(
-    request.context.sourceText,
-    options?.proposalText ?? request.context.sourceText,
-    {
-      language: request.language,
-      operation: request.operation,
-      frontmatter: request.context.frontmatter,
-      sourceLinks: request.context.links
-    }
-  );
-  let base;
-  if (options?.cli?.emitStdout) {
-    base = rdeAuditFromEmit(options.cli.emitStdout, proposalId);
-  } else {
-    base = {
-      proposalId,
-      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
-      categories: [],
-      preservedElements: [],
-      transformedElements: [],
-      inferredExtensions: [],
-      unresolvedElements: [],
-      driftRisks: [],
-      recommendedDecision: "human_review",
-      confidence: 0.5
-    };
-  }
-  const merged = mergeStructuralIntoAudit(base, structural);
-  return enrichAuditFromSource(merged, request);
-}
-
-// src/rde/rdeAuditReport.ts
-function rdeAuditReportMarkdown(request, audit) {
-  const lang = normalizeRdeLang(request.language);
-  const lines = [
-    `<!-- kotonoha rde-audit -->`,
-    "",
-    `# ${rdeMsg(lang, "reportTitle")}`,
-    "",
-    `> ${rdeMsg(lang, "mvpBanner")}`,
-    "",
-    `**${rdeMsg(lang, "reportFile")}:** \`${request.context.filePath}\``,
-    `**${rdeMsg(lang, "reportSourceHash")}:** \`${request.context.sourceHash.slice(0, 16)}\u2026\``,
-    `**${rdeMsg(lang, "reportRecommended")}:** ${formatDecision(lang, audit.recommendedDecision)}`,
-    "",
-    `## ${rdeMsg(lang, "reportCategories")}`,
-    audit.categories.map((c) => formatCategory(lang, c)).join(", ") || rdeMsg(lang, "categoryNone"),
-    ""
-  ];
-  appendSection(lines, lang, "sectionPreserved", audit.preservedElements);
-  appendSection(lines, lang, "sectionTransformed", audit.transformedElements);
-  appendSection(lines, lang, "sectionInferred", audit.inferredExtensions);
-  appendSection(lines, lang, "sectionUnresolved", audit.unresolvedElements);
-  appendSection(lines, lang, "sectionDriftRisks", audit.driftRisks);
-  lines.push(`## ${rdeMsg(lang, "reportSourceExcerpt")}`, "", request.context.sourceText.slice(0, 2e3));
-  if (request.context.sourceText.length > 2e3) {
-    lines.push("", "\u2026");
-  }
-  return lines.join("\n");
-}
-function appendSection(lines, lang, sectionKey, items) {
-  if (items.length === 0) return;
-  lines.push(`## ${rdeMsg(lang, sectionKey)}`, "");
-  for (const item of items) {
-    lines.push(`- ${item}`);
-  }
-  lines.push("");
-}
-
 // src/client/CliKotonohaClient.ts
 var CliKotonohaClient = class {
   constructor(options) {
@@ -1667,7 +1939,7 @@ var CliKotonohaClient = class {
     if (validateResult.exitCode !== 0) {
       throw new Error(cliErrorMessage(validateResult));
     }
-    const audit = performRdeAudit2(request, proposalId, {
+    const audit = performRdeAudit(request, proposalId, {
       cli: { emitStdout: emitResult.stdout },
       sourceReview: true
     });
@@ -1710,7 +1982,7 @@ var CliKotonohaClient = class {
     });
   }
   withLocalAudit(request, proposalId, proposedText, meta) {
-    const audit = performRdeAudit2(request, proposalId, { proposalText: proposedText });
+    const audit = performRdeAudit(request, proposalId, { proposalText: proposedText });
     return {
       proposal: {
         id: proposalId,
@@ -1769,7 +2041,7 @@ var MockKotonohaClient = class {
     ].join("\n");
     const proposalId = id();
     if (operation === "rde_audit") {
-      const audit2 = performRdeAudit2(request, proposalId, { sourceReview: true });
+      const audit2 = performRdeAudit(request, proposalId, { sourceReview: true });
       return {
         proposal: {
           id: proposalId,
@@ -1782,7 +2054,7 @@ var MockKotonohaClient = class {
       };
     }
     const mockProposal = proposedText;
-    const audit = performRdeAudit2(request, proposalId, {
+    const audit = performRdeAudit(request, proposalId, {
       proposalText: mockProposal
     });
     return {
@@ -1848,6 +2120,7 @@ var KotonohaConsolePlugin = class extends import_obsidian3.Plugin {
   auditLog;
   sidecar;
   client;
+  settingsTab;
   async onload() {
     await this.loadSettings();
     this.refreshNoteReader();
@@ -1870,7 +2143,8 @@ var KotonohaConsolePlugin = class extends import_obsidian3.Plugin {
       name: "RDE \u76E3\u67FB\u3092\u5B9F\u65BD\uFF08\u30A2\u30AF\u30C6\u30A3\u30D6\u30CE\u30FC\u30C8\uFF09",
       callback: () => void this.runRdeAuditCommand()
     });
-    this.addSettingTab(new KotonohaSettingsTab(this.app, this));
+    this.settingsTab = new KotonohaSettingsTab(this.app, this);
+    this.addSettingTab(this.settingsTab);
   }
   refreshNoteReader() {
     this.activeNoteReader = new ActiveNoteReader(this.app, this.settings.gitMode);
@@ -1902,15 +2176,39 @@ var KotonohaConsolePlugin = class extends import_obsidian3.Plugin {
     workspace.revealLeaf(leaf);
   }
   async loadSettings() {
+    const raw = await this.loadData();
     this.settings = {
       ...DEFAULT_SETTINGS,
-      ...await this.loadData()
+      ...raw,
+      defaultLanguage: normalizeRdeLang(raw?.defaultLanguage ?? DEFAULT_SETTINGS.defaultLanguage)
     };
   }
   async saveSettings() {
     await this.saveData(this.settings);
   }
+  /** Refresh open console panels and settings tab after defaultLanguage changes. */
+  async refreshForLanguageChange() {
+    await this.refreshConsoleForLanguageChange();
+    this.settingsTab?.refreshDisplay();
+  }
+  async refreshConsoleForLanguageChange() {
+    for (const leaf of this.app.workspace.getLeavesOfType(KOTONOHA_CONSOLE_VIEW)) {
+      const view = leaf.view;
+      if (view instanceof KotonohaConsoleView) {
+        await view.refreshLocalizedUi();
+      }
+    }
+  }
+  /** Disable + enable to load updated main.js from disk (dev workflow). */
+  async reloadPlugin() {
+    const id2 = this.manifest.id;
+    const version = this.manifest.version;
+    await this.app.plugins.disablePlugin(id2);
+    await this.app.plugins.enablePlugin(id2);
+    new import_obsidian3.Notice(consoleMsg(this.settings.defaultLanguage, "noticePluginReloaded", { version }));
+  }
   async testCliVersion() {
+    const lang = this.settings.defaultLanguage;
     const bin = this.settings.cliCommand?.trim() || "kotonoha";
     const cwd = this.settings.cliWorkdir?.trim() || vaultBasePath(this.app) || ".";
     try {
@@ -1921,12 +2219,16 @@ var KotonohaConsolePlugin = class extends import_obsidian3.Plugin {
         env: buildCliEnv(this.settings)
       });
       if (result.exitCode === 0) {
-        new import_obsidian3.Notice(result.stdout.trim().split("\n")[0] ?? "kotonoha ok");
+        new import_obsidian3.Notice(result.stdout.trim().split("\n")[0] ?? consoleMsg(lang, "noticeCliOk"));
       } else {
-        new import_obsidian3.Notice(`CLI error: ${cliErrorMessage(result)}`);
+        new import_obsidian3.Notice(consoleMsg(lang, "noticeCliError", { msg: cliErrorMessage(result) }));
       }
     } catch (e) {
-      new import_obsidian3.Notice(`CLI spawn failed: ${e instanceof Error ? e.message : String(e)}`);
+      new import_obsidian3.Notice(
+        consoleMsg(lang, "noticeCliSpawnFailed", {
+          msg: e instanceof Error ? e.message : String(e)
+        })
+      );
     }
   }
 };

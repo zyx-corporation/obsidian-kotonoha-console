@@ -5,7 +5,7 @@ export class GenerationRequestService {
     context: NoteContext,
     operation: OperationType,
     instruction: string,
-    language: "ja" | "en",
+    language: "ja" | "en" | "zh_CN",
   ): GenerationRequest {
     return {
       id: crypto.randomUUID(),

@@ -10,8 +10,7 @@ import {
   shouldShowLowConfidenceWarning,
 } from "./rdeAuditPolicyMessages";
 
-const OPEN_BY_DEFAULT_JA = new Set(["未解決", "逸脱リスク"]);
-const OPEN_BY_DEFAULT_EN = new Set(["Unresolved", "Drift risks"]);
+const OPEN_BY_DEFAULT = new Set(["sectionUnresolved", "sectionDriftRisks"]);
 
 export class RdeAuditView {
   constructor(host: HTMLElement, audit: RdeAudit, language?: RdeLang) {
@@ -49,8 +48,7 @@ function appendList(
   if (items.length === 0) return;
   const title = rdeMsg(lang, sectionKey);
   const details = host.createEl("details", { cls: "kotonoha-console-audit-details" });
-  const openSet = lang === "ja" ? OPEN_BY_DEFAULT_JA : OPEN_BY_DEFAULT_EN;
-  if (openSet.has(title)) details.open = true;
+  if (OPEN_BY_DEFAULT.has(sectionKey)) details.open = true;
   details.createEl("summary", { text: `${title} (${items.length})` });
   const ul = details.createEl("ul");
   for (const item of items) {
