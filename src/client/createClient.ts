@@ -19,6 +19,7 @@ export function createKotonohaClient(
       return new CliKotonohaClient({
         bin: settings.cliCommand?.trim() || "kotonoha",
         cwd,
+        gitMode: settings.gitMode,
         env: buildCliEnv(settings),
         writeObservation: async (payload) => {
           const dir = ".kotonoha";

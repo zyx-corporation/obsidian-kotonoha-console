@@ -6,7 +6,7 @@ Kotonoha UI plugin for Obsidian (proposal · RDE audit · human approval).
 
 **Build:** see [`IMPLEMENTATION.md`](IMPLEMENTATION.md).
 
-**CLI mode:** Settings → Backend **cli** → requires [`kotonoha`](https://github.com/zyx-corporation/kotonoha-cli) ≥ v0.3.1 and a **Git** vault (`kotonoha context export`).
+**CLI mode:** Settings → Backend **cli** → [`kotonoha`](https://github.com/zyx-corporation/kotonoha-cli) ≥ v0.3.1. **Git は必須ではない**（既定 `gitMode: off`）。**RDE 監査**は `rde emit` / `rde validate` のみ。`context export` は `gitMode` が `off` 以外のときのみ。
 
 This plugin is intended to provide a personal writing and knowledge-work UI for Kotonoha / SLS workflows: MeaningDelta creation, RDE validation, RDE attachment, review decisions, and note-centered semantic lineage.
 
