@@ -359,7 +359,14 @@ var MSGS2 = {
     settingsDiagnostic: "Plugin v{version} \xB7 UI sample: {sample}",
     settingsBtnReloadPlugin: "Reload plugin (apply code updates)",
     noticePluginReloaded: "Kotonoha Console reloaded (v{version})",
-    noticeLanguageChanged: "Display language: {lang}"
+    noticeLanguageChanged: "Display language: {lang}",
+    cmdOpenConsole: "Open Kotonoha Console",
+    cmdRunRdeAudit: "Run RDE audit (active note)",
+    cliUncertaintyRdeAudit: "Rule-based source review + CLI `rde emit`/`validate` (interchange skeleton only \u2014 not full RDE). DB attach when DATABASE_URL is configured.",
+    cliUncertaintyContextExport: "Generative rewrite requires an orchestrator/LLM; proposal embeds `kotonoha context export`. Local rule-based RDE audit attached.",
+    cliUncertaintyGitOff: "gitMode is off \u2014 Git-aware CLI not used (git-mode-spec \xA74). Local rule-based RDE audit attached.",
+    cliUncertaintyLocalOnly: "Local anchors only (path + source_hash). Local rule-based RDE audit attached.",
+    cliUncertaintyExportFailed: "Git-aware context export failed; using path + source_hash anchors."
   },
   ja: {
     viewTitle: "Kotonoha Console",
@@ -436,7 +443,14 @@ var MSGS2 = {
     settingsDiagnostic: "\u30D7\u30E9\u30B0\u30A4\u30F3 v{version} \xB7 UI \u78BA\u8A8D: {sample}",
     settingsBtnReloadPlugin: "\u30D7\u30E9\u30B0\u30A4\u30F3\u3092\u518D\u8AAD\u307F\u8FBC\u307F\uFF08\u30B3\u30FC\u30C9\u66F4\u65B0\u3092\u53CD\u6620\uFF09",
     noticePluginReloaded: "Kotonoha Console \u3092\u518D\u8AAD\u307F\u8FBC\u307F\u3057\u307E\u3057\u305F\uFF08v{version}\uFF09",
-    noticeLanguageChanged: "\u8868\u793A\u8A00\u8A9E: {lang}"
+    noticeLanguageChanged: "\u8868\u793A\u8A00\u8A9E: {lang}",
+    cmdOpenConsole: "Kotonoha Console \u3092\u958B\u304F",
+    cmdRunRdeAudit: "RDE \u76E3\u67FB\u3092\u5B9F\u65BD\uFF08\u30A2\u30AF\u30C6\u30A3\u30D6\u30CE\u30FC\u30C8\uFF09",
+    cliUncertaintyRdeAudit: "\u30EB\u30FC\u30EB\u30D9\u30FC\u30B9 source review + CLI `rde emit`/`validate`\uFF08interchange \u30B9\u30B1\u30EB\u30C8\u30F3\u306E\u307F \u2014 full RDE \u3067\u306F\u306A\u3044\uFF09\u3002DATABASE_URL \u8A2D\u5B9A\u6642\u306F DB \u9023\u643A\u53EF\u3002",
+    cliUncertaintyContextExport: "\u751F\u6210\u7CFB rewrite \u306B\u306F orchestrator/LLM \u304C\u5FC5\u8981\u3002\u63D0\u6848\u306B `kotonoha context export` \u3092\u57CB\u3081\u8FBC\u307F\u3002local rule-based RDE \u76E3\u67FB\u4ED8\u304D\u3002",
+    cliUncertaintyGitOff: "gitMode off \u2014 Git \u9023\u643A CLI \u672A\u4F7F\u7528\uFF08git-mode-spec \xA74\uFF09\u3002local rule-based RDE \u76E3\u67FB\u4ED8\u304D\u3002",
+    cliUncertaintyLocalOnly: "\u30ED\u30FC\u30AB\u30EB\u30A2\u30F3\u30AB\u30FC\u306E\u307F\uFF08path + source_hash\uFF09\u3002local rule-based RDE \u76E3\u67FB\u4ED8\u304D\u3002",
+    cliUncertaintyExportFailed: "Git \u9023\u643A context export \u5931\u6557\u3002path + source_hash \u30A2\u30F3\u30AB\u30FC\u3092\u4F7F\u7528\u3002"
   },
   zh_CN: {
     viewTitle: "Kotonoha Console",
@@ -513,7 +527,14 @@ var MSGS2 = {
     settingsDiagnostic: "\u63D2\u4EF6 v{version} \xB7 UI \u793A\u4F8B: {sample}",
     settingsBtnReloadPlugin: "\u91CD\u65B0\u52A0\u8F7D\u63D2\u4EF6\uFF08\u5E94\u7528\u4EE3\u7801\u66F4\u65B0\uFF09",
     noticePluginReloaded: "Kotonoha Console \u5DF2\u91CD\u65B0\u52A0\u8F7D\uFF08v{version}\uFF09",
-    noticeLanguageChanged: "\u663E\u793A\u8BED\u8A00: {lang}"
+    noticeLanguageChanged: "\u663E\u793A\u8BED\u8A00: {lang}",
+    cmdOpenConsole: "\u6253\u5F00 Kotonoha Console",
+    cmdRunRdeAudit: "\u8FD0\u884C RDE \u5BA1\u8BA1\uFF08\u6D3B\u52A8\u7B14\u8BB0\uFF09",
+    cliUncertaintyRdeAudit: "\u57FA\u4E8E\u89C4\u5219\u7684 source review + CLI `rde emit`/`validate`\uFF08\u4EC5 interchange \u9AA8\u67B6 \u2014 \u975E\u5B8C\u6574 RDE\uFF09\u3002\u914D\u7F6E DATABASE_URL \u540E\u53EF\u8FDE\u63A5 DB\u3002",
+    cliUncertaintyContextExport: "\u751F\u6210\u5F0F rewrite \u9700\u8981 orchestrator/LLM\uFF1B\u63D0\u6848\u5D4C\u5165 `kotonoha context export`\u3002\u9644\u5E26 local rule-based RDE \u5BA1\u8BA1\u3002",
+    cliUncertaintyGitOff: "gitMode \u5173\u95ED \u2014 \u672A\u4F7F\u7528 Git \u611F\u77E5 CLI\uFF08git-mode-spec \xA74\uFF09\u3002\u9644\u5E26 local rule-based RDE \u5BA1\u8BA1\u3002",
+    cliUncertaintyLocalOnly: "\u4EC5\u672C\u5730\u951A\u70B9\uFF08path + source_hash\uFF09\u3002\u9644\u5E26 local rule-based RDE \u5BA1\u8BA1\u3002",
+    cliUncertaintyExportFailed: "Git \u611F\u77E5 context export \u5931\u8D25\uFF1B\u4F7F\u7528 path + source_hash \u951A\u70B9\u3002"
   }
 };
 function consoleMsg(lang, key, params) {
@@ -1915,7 +1936,7 @@ var CliKotonohaClient = class {
         const fallback = this.generateLocal(request, proposalId);
         fallback.proposal.uncertaintyNote = [
           fallback.proposal.uncertaintyNote,
-          "Git-aware context export failed; using path + source_hash anchors.",
+          consoleMsg(request.language, "cliUncertaintyExportFailed"),
           e instanceof Error ? e.message : String(e)
         ].join(" ");
         return fallback;
@@ -1953,7 +1974,7 @@ var CliKotonohaClient = class {
         summary: consoleMsg(request.language, "cliRdeSummary", {
           path: request.context.filePath
         }),
-        uncertaintyNote: "Rule-based source review + CLI `rde emit`/`validate` (interchange skeleton only \u2014 not full RDE). DB attach when DATABASE_URL is configured."
+        uncertaintyNote: consoleMsg(request.language, "cliUncertaintyRdeAudit")
       },
       audit
     };
@@ -1971,14 +1992,14 @@ var CliKotonohaClient = class {
     const proposedText = proposalTextFromContextPack(request, pack);
     return this.withLocalAudit(request, proposalId, proposedText, {
       summary: `[cli] context export \xB7 ${request.operation} \xB7 ${relFile}`,
-      uncertaintyNote: "Generative rewrite requires an orchestrator/LLM; proposal embeds `kotonoha context export`. Local rule-based RDE audit attached."
+      uncertaintyNote: consoleMsg(request.language, "cliUncertaintyContextExport")
     });
   }
   generateLocal(request, proposalId) {
     const proposedText = proposalTextFromLocalContext(request);
     return this.withLocalAudit(request, proposalId, proposedText, {
       summary: `[cli-local] ${request.operation} \xB7 ${request.context.filePath}`,
-      uncertaintyNote: this.options.gitMode === "off" ? "gitMode is off \u2014 Git-aware CLI not used (git-mode-spec \xA74). Local rule-based RDE audit attached." : "Local anchors only (path + source_hash). Local rule-based RDE audit attached."
+      uncertaintyNote: this.options.gitMode === "off" ? consoleMsg(request.language, "cliUncertaintyGitOff") : consoleMsg(request.language, "cliUncertaintyLocalOnly")
     });
   }
   withLocalAudit(request, proposalId, proposedText, meta) {
@@ -2121,6 +2142,7 @@ var KotonohaConsolePlugin = class extends import_obsidian3.Plugin {
   sidecar;
   client;
   settingsTab;
+  ribbonEl;
   async onload() {
     await this.loadSettings();
     this.refreshNoteReader();
@@ -2130,21 +2152,29 @@ var KotonohaConsolePlugin = class extends import_obsidian3.Plugin {
     this.refreshAuditLog();
     this.sidecar = new SidecarStore(this.app);
     this.registerView(KOTONOHA_CONSOLE_VIEW, (leaf) => new KotonohaConsoleView(leaf, this));
-    this.addRibbonIcon("layers", "Kotonoha Console", () => {
+    this.ribbonEl = this.addRibbonIcon("layers", consoleMsg(this.settings.defaultLanguage, "viewTitle"), () => {
       void this.activateConsole();
     });
+    this.registerLocalizedCommands();
+    this.settingsTab = new KotonohaSettingsTab(this.app, this);
+    this.addSettingTab(this.settingsTab);
+  }
+  /** Command palette + ribbon labels follow defaultLanguage. */
+  registerLocalizedCommands() {
+    const lang = this.settings.defaultLanguage;
+    if (this.ribbonEl) {
+      this.ribbonEl.setAttribute("aria-label", consoleMsg(lang, "viewTitle"));
+    }
     this.addCommand({
       id: "open-console",
-      name: "Open Kotonoha Console",
+      name: consoleMsg(lang, "cmdOpenConsole"),
       callback: () => void this.activateConsole()
     });
     this.addCommand({
       id: "run-rde-audit",
-      name: "RDE \u76E3\u67FB\u3092\u5B9F\u65BD\uFF08\u30A2\u30AF\u30C6\u30A3\u30D6\u30CE\u30FC\u30C8\uFF09",
+      name: consoleMsg(lang, "cmdRunRdeAudit"),
       callback: () => void this.runRdeAuditCommand()
     });
-    this.settingsTab = new KotonohaSettingsTab(this.app, this);
-    this.addSettingTab(this.settingsTab);
   }
   refreshNoteReader() {
     this.activeNoteReader = new ActiveNoteReader(this.app, this.settings.gitMode);
@@ -2188,6 +2218,7 @@ var KotonohaConsolePlugin = class extends import_obsidian3.Plugin {
   }
   /** Refresh open console panels and settings tab after defaultLanguage changes. */
   async refreshForLanguageChange() {
+    this.registerLocalizedCommands();
     await this.refreshConsoleForLanguageChange();
     this.settingsTab?.refreshDisplay();
   }
