@@ -1,6 +1,10 @@
-# kotonoha-console
+# obsidian-kotonoha-console
 
-Kotonoha UI plugin for Obsidian.
+Kotonoha UI plugin for Obsidian (proposal · RDE audit · human approval).
+
+**Docs:** [`docs/architecture.ja.md`](docs/architecture.ja.md) · [`docs/git-mode-spec.ja.md`](docs/git-mode-spec.ja.md)
+
+**Build:** see [`IMPLEMENTATION.md`](IMPLEMENTATION.md).
 
 This plugin is intended to provide a personal writing and knowledge-work UI for Kotonoha / SLS workflows: MeaningDelta creation, RDE validation, RDE attachment, review decisions, and note-centered semantic lineage.
 
