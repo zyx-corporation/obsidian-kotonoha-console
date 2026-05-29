@@ -6,7 +6,7 @@ Aligned with [`docs/architecture.ja.md`](docs/architecture.ja.md) phases.
 | --- | --- | --- |
 | 0 Plugin skeleton | **done** | `main.ts`, settings, commands, side panel |
 | 1 Note I/O | **partial** | active note, selection via editor on apply, frontmatter/tags |
-| 2 Kotonoha client | **partial** | `MockKotonohaClient`; http/cli stub |
+| 2 Kotonoha client | **partial** | `MockKotonohaClient`, `CliKotonohaClient` (`context export`, `rde emit`); http stub |
 | 3 Proposal mode | **done** | generate, copy, reject, confirm apply |
 | 4 RDE audit | **partial** | mock categories in panel |
 | 5 Approval workflow | **partial** | audit log to `.kotonoha/audit/` |
@@ -24,6 +24,7 @@ Link into a vault: copy or symlink this folder to `Vault/.obsidian/plugins/koton
 
 ## Next
 
-- `CliKotonohaClient` → `kotonoha context export` / future orchestrator
+- `HttpKotonohaClient` · orchestrator LLM for generative rewrite
+- Git passive mode via read-only subprocess
 - Git passive mode via read-only `git` subprocess
 - Proposal sidecar under `.kotonoha/proposals/`

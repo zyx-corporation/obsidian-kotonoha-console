@@ -16,6 +16,11 @@ export interface KotonohaConsoleSettings {
   enableRdeAudit: boolean;
   gitMode: GitMode;
   sidecarMode: boolean;
+  /** Vault / Git repo root for `kotonoha --path` (cli mode). Empty = detected vault path. */
+  cliWorkdir?: string;
+  databaseUrl?: string;
+  principalId?: string;
+  projectId?: string;
 }
 
 export const DEFAULT_SETTINGS: KotonohaConsoleSettings = {

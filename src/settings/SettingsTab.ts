@@ -14,7 +14,7 @@ export class KotonohaSettingsTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Backend mode")
-      .setDesc("mock = local stub; http/cli reserved for Phase 2")
+      .setDesc("cli = kotonoha context export (requires Git vault); mock = local stub")
       .addDropdown((d) =>
         d
           .addOptions({ mock: "mock", http: "http", cli: "cli" })
@@ -23,12 +23,15 @@ export class KotonohaSettingsTab extends PluginSettingTab {
             this.plugin.settings.backendMode = v as BackendMode;
             await this.plugin.saveSettings();
             this.plugin.refreshClient();
+            this.display();
           }),
       );
 
+    containerEl.createEl("h3", { text: "CLI (kotonoha ≥ 0.3.1)" });
+
     new Setting(containerEl)
       .setName("CLI command")
-      .setDesc("Path to kotonoha binary (cli mode, Phase 2)")
+      .setDesc("Path to kotonoha binary")
       .addText((t) =>
         t
           .setPlaceholder("kotonoha")
@@ -36,6 +39,66 @@ export class KotonohaSettingsTab extends PluginSettingTab {
           .onChange(async (v) => {
             this.plugin.settings.cliCommand = v;
             await this.plugin.saveSettings();
+            this.plugin.refreshClient();
+          }),
+      )
+      .addButton((b) =>
+        b.setButtonText("Test version").onClick(() => {
+          void this.plugin.testCliVersion();
+        }),
+      );
+
+    new Setting(containerEl)
+      .setName("CLI workdir")
+      .setDesc("Git repo root for --path (empty = vault folder)")
+      .addText((t) =>
+        t
+          .setPlaceholder("(vault path)")
+          .setValue(this.plugin.settings.cliWorkdir ?? "")
+          .onChange(async (v) => {
+            this.plugin.settings.cliWorkdir = v;
+            await this.plugin.saveSettings();
+            this.plugin.refreshClient();
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName("DATABASE_URL")
+      .setDesc("Optional; required for DB-backed CLI commands later")
+      .addText((t) =>
+        t
+          .setPlaceholder("postgres://…")
+          .setValue(this.plugin.settings.databaseUrl ?? "")
+          .onChange(async (v) => {
+            this.plugin.settings.databaseUrl = v;
+            await this.plugin.saveSettings();
+            this.plugin.refreshClient();
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName("KOTONOHA_PRINCIPAL_ID")
+      .addText((t) =>
+        t
+          .setPlaceholder("UUID")
+          .setValue(this.plugin.settings.principalId ?? "")
+          .onChange(async (v) => {
+            this.plugin.settings.principalId = v;
+            await this.plugin.saveSettings();
+            this.plugin.refreshClient();
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName("KOTONOHA_PROJECT_ID")
+      .addText((t) =>
+        t
+          .setPlaceholder("UUID")
+          .setValue(this.plugin.settings.projectId ?? "")
+          .onChange(async (v) => {
+            this.plugin.settings.projectId = v;
+            await this.plugin.saveSettings();
+            this.plugin.refreshClient();
           }),
       );
 
