@@ -142,9 +142,13 @@ export class KotonohaConsoleView extends ItemView {
         }
       }
       this.renderBundle();
+      const saved =
+        this.plugin.settings.sidecarMode
+          ? "（.kotonoha/ に保存）"
+          : "（sidecarMode off — UI のみ）";
       const msg =
         operation === "rde_audit"
-          ? "RDE 監査完了（.kotonoha/audit/ に保存）"
+          ? `RDE 監査完了${saved}`
           : "Proposal ready (not applied)";
       new Notice(msg);
     } catch (e) {

@@ -781,7 +781,8 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
         }
       }
       this.renderBundle();
-      const msg = operation === "rde_audit" ? "RDE \u76E3\u67FB\u5B8C\u4E86\uFF08.kotonoha/audit/ \u306B\u4FDD\u5B58\uFF09" : "Proposal ready (not applied)";
+      const saved = this.plugin.settings.sidecarMode ? "\uFF08.kotonoha/ \u306B\u4FDD\u5B58\uFF09" : "\uFF08sidecarMode off \u2014 UI \u306E\u307F\uFF09";
+      const msg = operation === "rde_audit" ? `RDE \u76E3\u67FB\u5B8C\u4E86${saved}` : "Proposal ready (not applied)";
       new import_obsidian2.Notice(msg);
     } catch (e) {
       new import_obsidian2.Notice(`\u5931\u6557: ${message(e)}`);
