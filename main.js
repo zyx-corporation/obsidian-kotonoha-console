@@ -230,7 +230,7 @@ function shouldShowLowConfidenceWarning(audit) {
 var ProposalView = class {
   constructor(host, proposal, actions) {
     host.createEl("h3", {
-      text: actions.auditReportOnly ? "RDE \u76E3\u67FB\u30EC\u30DD\u30FC\u30C8" : "Proposal"
+      text: actions.auditReportOnly ? "RDE \u76E3\u67FB\u30EC\u30DD\u30FC\u30C8" : actions.reviseMode ? "Proposal\uFF08\u6539\u8A02\u4E2D\uFF09" : "Proposal"
     });
     if (proposal.summary) {
       host.createEl("p", { cls: "kotonoha-console-muted", text: proposal.summary });
@@ -244,14 +244,38 @@ var ProposalView = class {
         text: proposal.uncertaintyNote
       });
     }
-    const pre = host.createEl("pre", { cls: "kotonoha-console-pre" });
-    pre.setText(proposal.proposedText);
-    const bar = host.createDiv({ cls: "kotonoha-console-actions" });
-    if (!actions.auditReportOnly) {
-      bar.createEl("button", { text: "Apply" }).addEventListener("click", actions.onApply);
+    if (actions.reviseMode) {
+      const textarea = host.createEl("textarea", {
+        cls: "kotonoha-console-revise",
+        attr: { rows: "12" }
+      });
+      textarea.value = actions.editedText ?? proposal.proposedText;
+      textarea.addEventListener("input", () => {
+        actions.onEditedTextChange?.(textarea.value);
+      });
+    } else {
+      const pre = host.createEl("pre", { cls: "kotonoha-console-pre" });
+      pre.setText(proposal.proposedText);
     }
-    bar.createEl("button", { text: actions.auditReportOnly ? "\u8A18\u9332\u3092\u9589\u3058\u308B" : "Reject" }).addEventListener("click", actions.onReject);
-    bar.createEl("button", { text: "Copy" }).addEventListener("click", actions.onCopy);
+    const bar = host.createDiv({ cls: "kotonoha-console-actions" });
+    if (actions.reviseMode) {
+      bar.createEl("button", { text: "Apply revision", cls: "mod-cta" }).addEventListener("click", actions.onApply);
+      if (actions.onReAudit) {
+        bar.createEl("button", { text: "Re-audit" }).addEventListener("click", actions.onReAudit);
+      }
+      bar.createEl("button", { text: "Cancel revise" }).addEventListener("click", () => actions.onCancelRevise?.());
+      bar.createEl("button", { text: "Copy" }).addEventListener("click", actions.onCopy);
+    } else if (!actions.auditReportOnly) {
+      bar.createEl("button", { text: "Apply" }).addEventListener("click", actions.onApply);
+      if (actions.onRevise) {
+        bar.createEl("button", { text: "Revise" }).addEventListener("click", actions.onRevise);
+      }
+      bar.createEl("button", { text: "Reject" }).addEventListener("click", actions.onReject);
+      bar.createEl("button", { text: "Copy" }).addEventListener("click", actions.onCopy);
+    } else {
+      bar.createEl("button", { text: "\u8A18\u9332\u3092\u9589\u3058\u308B" }).addEventListener("click", actions.onReject);
+      bar.createEl("button", { text: "Copy" }).addEventListener("click", actions.onCopy);
+    }
   }
 };
 
@@ -284,557 +308,6 @@ function appendList(host, title, items) {
   for (const item of items) {
     ul.createEl("li", { text: item });
   }
-}
-
-// src/ui/KotonohaConsoleView.ts
-var KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
-var KotonohaConsoleView = class extends import_obsidian2.ItemView {
-  constructor(leaf, plugin) {
-    super(leaf);
-    this.plugin = plugin;
-  }
-  bundle = null;
-  lastRequest = null;
-  lastOperation = "rde_audit";
-  sourceHashAtGeneration = null;
-  proposalHost;
-  auditHost;
-  instructionInput;
-  operationSelect;
-  getViewType() {
-    return KOTONOHA_CONSOLE_VIEW;
-  }
-  getDisplayText() {
-    return "Kotonoha Console";
-  }
-  getIcon() {
-    return "layers";
-  }
-  async onOpen() {
-    const { containerEl } = this;
-    containerEl.empty();
-    containerEl.addClass("kotonoha-console-root");
-    containerEl.createEl("h2", { text: "Kotonoha Console" });
-    containerEl.createEl("p", {
-      cls: "kotonoha-console-muted",
-      text: "\u63D0\u6848\u306F\u81EA\u52D5\u9069\u7528\u3055\u308C\u307E\u305B\u3093\u3002RDE \u76E3\u67FB\u30EC\u30DD\u30FC\u30C8\u306F\u30CE\u30FC\u30C8\u306B\u66F8\u304D\u8FBC\u307F\u307E\u305B\u3093\u3002"
-    });
-    const ctx = await this.plugin.noteContext.capture();
-    if (ctx) {
-      const meta = containerEl.createEl("div", { cls: "kotonoha-console-meta" });
-      meta.createEl("div", { text: `Note: ${ctx.filePath}` });
-      meta.createEl("div", { text: `Source hash: ${ctx.sourceHash.slice(0, 16)}\u2026` });
-      if (ctx.selectionText) {
-        meta.createEl("div", { text: "Scope: selection" });
-      }
-      if (ctx.git) {
-        meta.createEl("div", {
-          text: `Git mode: ${this.plugin.settings.gitMode} \xB7 ${ctx.git.repoRelativePath}`
-        });
-      }
-    } else {
-      containerEl.createEl("p", {
-        cls: "kotonoha-console-warn",
-        text: "\u30A2\u30AF\u30C6\u30A3\u30D6\u306A Markdown \u30CE\u30FC\u30C8\u3092\u958B\u3044\u3066\u304F\u3060\u3055\u3044\u3002"
-      });
-    }
-    const form = containerEl.createDiv({ cls: "kotonoha-console-form" });
-    form.createEl("label", { text: "Operation" });
-    this.operationSelect = form.createEl("select");
-    for (const op of ["rde_audit", "summarize", "rewrite", "expand", "custom"]) {
-      const opt = this.operationSelect.createEl("option", { value: op, text: op });
-      opt.value = op;
-    }
-    this.operationSelect.value = "rde_audit";
-    form.createEl("label", { text: "Instruction" });
-    this.instructionInput = form.createEl("textarea", {
-      attr: { rows: "3", placeholder: "\u4EFB\u610F\u306E\u6307\u793A\uFF08\u76E3\u67FB\u306E\u89B3\u70B9\u306A\u3069\uFF09\u2026" }
-    });
-    const actions = form.createDiv({ cls: "kotonoha-console-actions" });
-    actions.createEl("button", { text: "RDE \u76E3\u67FB\u3092\u5B9F\u65BD", cls: "mod-cta" }).addEventListener("click", () => void this.runRdeAudit());
-    actions.createEl("button", { text: "Generate proposal" }).addEventListener(
-      "click",
-      () => void this.runGenerate()
-    );
-    this.proposalHost = containerEl.createDiv({ cls: "kotonoha-console-proposal" });
-    this.auditHost = containerEl.createDiv({ cls: "kotonoha-console-audit" });
-  }
-  async onClose() {
-    this.containerEl.empty();
-  }
-  /** Command palette: RDE 監査を実施 */
-  async runRdeAudit() {
-    this.operationSelect.value = "rde_audit";
-    await this.runGenerate();
-  }
-  async runGenerate() {
-    const ctx = await this.plugin.noteContext.capture();
-    if (!ctx) {
-      new import_obsidian2.Notice("\u30A2\u30AF\u30C6\u30A3\u30D6\u306A\u30CE\u30FC\u30C8\u304C\u3042\u308A\u307E\u305B\u3093");
-      return;
-    }
-    const operation = this.operationSelect.value;
-    this.lastOperation = operation;
-    const instruction = this.instructionInput.value.trim();
-    const request = this.plugin.generationRequests.create(
-      ctx,
-      operation,
-      instruction,
-      this.plugin.settings.defaultLanguage
-    );
-    try {
-      this.sourceHashAtGeneration = ctx.sourceHash;
-      this.lastRequest = request;
-      this.bundle = await this.plugin.proposals.generate(request);
-      await this.plugin.auditLog.logProposal(
-        this.bundle.proposal,
-        ctx.sourceText
-      );
-      if (this.plugin.settings.sidecarMode) {
-        await this.plugin.sidecar.saveProposalRecord(request, this.bundle.proposal);
-        if (this.bundle.audit) {
-          await this.plugin.sidecar.saveRdeAuditRecord(
-            request,
-            this.bundle.proposal,
-            this.bundle.audit
-          );
-        }
-      }
-      this.renderBundle();
-      const msg = operation === "rde_audit" ? "RDE \u76E3\u67FB\u5B8C\u4E86\uFF08.kotonoha/audit/ \u306B\u4FDD\u5B58\uFF09" : "Proposal ready (not applied)";
-      new import_obsidian2.Notice(msg);
-    } catch (e) {
-      new import_obsidian2.Notice(`\u5931\u6557: ${message(e)}`);
-    }
-  }
-  renderBundle() {
-    this.proposalHost.empty();
-    this.auditHost.empty();
-    if (!this.bundle) return;
-    const isAuditReport = this.lastOperation === "rde_audit";
-    const wantsAudit = this.plugin.settings.enableRdeAudit || isAuditReport;
-    const auditMissing = wantsAudit && !isAuditReport && !this.bundle.audit;
-    new ProposalView(this.proposalHost, this.bundle.proposal, {
-      onApply: () => void this.applyProposal(),
-      onReject: () => void this.rejectProposal(),
-      onCopy: () => void this.copyProposal(),
-      auditReportOnly: isAuditReport,
-      auditMissing
-    });
-    if (this.bundle.audit && wantsAudit) {
-      new RdeAuditView(this.auditHost, this.bundle.audit);
-    }
-  }
-  async applyProposal() {
-    if (!this.bundle) return;
-    if (this.lastOperation === "rde_audit") {
-      new import_obsidian2.Notice("RDE \u76E3\u67FB\u30EC\u30DD\u30FC\u30C8\u306F\u30CE\u30FC\u30C8\u306B\u9069\u7528\u3067\u304D\u307E\u305B\u3093\uFF08Copy \u3092\u4F7F\u7528\uFF09");
-      return;
-    }
-    const ctx = await this.plugin.noteContext.capture();
-    if (!ctx) {
-      new import_obsidian2.Notice("No active note");
-      return;
-    }
-    const current = await this.plugin.noteContext.capture();
-    if (this.sourceHashAtGeneration && current && current.sourceHash !== this.sourceHashAtGeneration) {
-      const ok = confirm(
-        "\u30BD\u30FC\u30B9\u304C\u5909\u66F4\u3055\u308C\u3066\u3044\u307E\u3059\u3002\u518D\u76E3\u67FB\u307E\u305F\u306F\u660E\u793A\u7684\u306A\u4E0A\u66F8\u304D\u304C\u5FC5\u8981\u3067\u3059\u3002\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F"
-      );
-      if (!ok) return;
-    }
-    if (this.plugin.settings.requireHumanApproval) {
-      const ok = confirm(
-        "\u3053\u306E\u63D0\u6848\u3092\u30CE\u30FC\u30C8\u306B\u9069\u7528\u3057\u307E\u3059\u304B\uFF1F\u5143\u306E\u30C6\u30AD\u30B9\u30C8\u306F\u4E0A\u66F8\u304D\u3055\u308C\u307E\u3059\u3002"
-      );
-      if (!ok) return;
-    }
-    const file = this.plugin.activeNoteReader.getActiveFile();
-    if (!file) return;
-    const text = this.bundle.proposal.proposedText;
-    if (ctx.selectionText) {
-      const view = this.app.workspace.getActiveViewOfType(import_obsidian2.MarkdownView);
-      const editor = view?.editor;
-      if (editor) {
-        editor.replaceSelection(text);
-      } else {
-        new import_obsidian2.Notice("Open note in editor to apply selection");
-        return;
-      }
-    } else {
-      await this.plugin.markdownWriter.replaceNoteContent(file, text);
-    }
-    const decision = this.plugin.approval.approve(this.bundle.proposal, text);
-    await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
-    await this.saveReviewSidecar(decision);
-    new import_obsidian2.Notice("Applied (audit logged)");
-    this.bundle = null;
-    this.lastRequest = null;
-    this.proposalHost.empty();
-    this.auditHost.empty();
-  }
-  async rejectProposal() {
-    if (!this.bundle) return;
-    const decision = this.plugin.approval.reject(this.bundle.proposal);
-    await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
-    await this.saveReviewSidecar(decision);
-    new import_obsidian2.Notice(this.lastOperation === "rde_audit" ? "\u76E3\u67FB\u3092\u8A18\u9332\uFF08\u5374\u4E0B\uFF09" : "Rejected");
-    this.bundle = null;
-    this.lastRequest = null;
-    this.proposalHost.empty();
-    this.auditHost.empty();
-  }
-  async copyProposal() {
-    if (!this.bundle) return;
-    await navigator.clipboard.writeText(this.bundle.proposal.proposedText);
-    new import_obsidian2.Notice("\u30AF\u30EA\u30C3\u30D7\u30DC\u30FC\u30C9\u306B\u30B3\u30D4\u30FC\u3057\u307E\u3057\u305F");
-  }
-  async saveReviewSidecar(decision) {
-    if (!this.plugin.settings.sidecarMode || !this.lastRequest || !this.bundle) {
-      return;
-    }
-    await this.plugin.sidecar.saveReviewRecord(
-      this.lastRequest,
-      this.bundle.proposal,
-      decision,
-      this.bundle.audit
-    );
-  }
-};
-function message(e) {
-  return e instanceof Error ? e.message : String(e);
-}
-
-// src/util/hash.ts
-async function sha256Hex(text) {
-  const data = new TextEncoder().encode(text);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-// src/obsidian/GitContextReader.ts
-async function readGitContext(app, file, mode) {
-  if (mode === "off") return void 0;
-  const repoRelativePath = file.path;
-  const dirty = app.vault.getAbstractFileByPath(file.path) !== null;
-  return {
-    repoRelativePath,
-    dirty,
-    branch: mode === "passive-observing" ? void 0 : void 0,
-    commit: void 0,
-    root: vaultBasePath(app) || void 0
-  };
-}
-
-// src/obsidian/ActiveNoteReader.ts
-var ActiveNoteReader = class {
-  constructor(app, gitMode) {
-    this.app = app;
-    this.gitMode = gitMode;
-  }
-  getActiveFile() {
-    const file = this.app.workspace.getActiveFile();
-    return file ?? null;
-  }
-  async readNoteContext(selectionText) {
-    const file = this.getActiveFile();
-    if (!file) return null;
-    const sourceText = await this.app.vault.read(file);
-    const targetText = selectionText !== void 0 && selectionText.length > 0 ? selectionText : sourceText;
-    const cache = this.app.metadataCache.getFileCache(file);
-    const frontmatter = cache?.frontmatter ?? {};
-    const tags = (cache?.tags ?? []).map((t) => t.tag);
-    const links = (cache?.links ?? []).map((l) => l.link);
-    const git = this.gitMode === "off" ? void 0 : await readGitContext(this.app, file, this.gitMode);
-    return {
-      vaultPath: vaultBasePath(this.app),
-      filePath: file.path,
-      title: file.basename,
-      sourceText: targetText,
-      selectionText: selectionText && selectionText.length > 0 ? selectionText : void 0,
-      sourceHash: await sha256Hex(targetText),
-      tags,
-      links,
-      frontmatter,
-      git
-    };
-  }
-};
-
-// src/obsidian/MarkdownWriter.ts
-var MarkdownWriter = class {
-  constructor(app) {
-    this.app = app;
-  }
-  async replaceNoteContent(file, newContent) {
-    await this.app.vault.modify(file, newContent);
-  }
-};
-
-// src/services/NoteContextService.ts
-var NoteContextService = class {
-  constructor(reader) {
-    this.reader = reader;
-  }
-  async capture(selectionText) {
-    return this.reader.readNoteContext(selectionText);
-  }
-};
-
-// src/services/GenerationRequestService.ts
-var GenerationRequestService = class {
-  create(context, operation, instruction, language) {
-    return {
-      id: crypto.randomUUID(),
-      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
-      operation,
-      instruction,
-      context,
-      language
-    };
-  }
-};
-
-// src/services/ProposalService.ts
-var ProposalService = class {
-  constructor(client) {
-    this.client = client;
-  }
-  async generate(request) {
-    const result = await this.client.generate(request);
-    return { proposal: result.proposal, audit: result.audit };
-  }
-};
-
-// src/services/ApprovalService.ts
-var ApprovalService = class {
-  approve(proposal, appliedText, comment) {
-    return {
-      proposalId: proposal.id,
-      decidedAt: (/* @__PURE__ */ new Date()).toISOString(),
-      decision: "approved",
-      appliedText,
-      comment
-    };
-  }
-  reject(proposal, comment) {
-    return {
-      proposalId: proposal.id,
-      decidedAt: (/* @__PURE__ */ new Date()).toISOString(),
-      decision: "rejected",
-      comment
-    };
-  }
-};
-
-// src/services/AuditLogService.ts
-var KOTONOHA_DIR = ".kotonoha/audit";
-var AuditLogService = class {
-  constructor(app, mode) {
-    this.app = app;
-    this.mode = mode;
-  }
-  async logProposal(proposal, sourceExcerpt) {
-    const entry = {
-      kind: "proposal",
-      proposalId: proposal.id,
-      createdAt: proposal.createdAt,
-      proposalHash: await sha256Hex(proposal.proposedText),
-      sourceExcerpt: excerpt(sourceExcerpt, this.mode),
-      summary: proposal.summary
-    };
-    await this.append(entry);
-  }
-  async logDecision(decision, audit) {
-    const entry = {
-      kind: "decision",
-      ...decision,
-      rdeCategories: audit?.categories
-    };
-    await this.append(entry);
-  }
-  async append(entry) {
-    const name = `${isoFileStamp()}.json`;
-    const path = `${KOTONOHA_DIR}/${name}`;
-    await this.ensureDir();
-    const line = JSON.stringify(entry, null, 2);
-    await this.app.vault.adapter.write(path, line);
-  }
-  async ensureDir() {
-    const adapter = this.app.vault.adapter;
-    if (!await adapter.exists(KOTONOHA_DIR)) {
-      await adapter.mkdir(KOTONOHA_DIR);
-    }
-  }
-};
-function isoFileStamp() {
-  return (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
-}
-function excerpt(text, mode) {
-  if (mode === "hash_only") return "";
-  const max = mode === "summary" ? 200 : 4e3;
-  return text.length <= max ? text : `${text.slice(0, max)}\u2026`;
-}
-
-// src/services/SidecarStore.ts
-var ROOT = ".kotonoha";
-var PROPOSALS = `${ROOT}/proposals`;
-var AUDIT = `${ROOT}/audit`;
-var REVIEWS = `${ROOT}/reviews`;
-var PLUGIN_ID = "obsidian-kotonoha-console";
-var SCHEMA_VERSION = "0.1.0";
-var SidecarStore = class {
-  constructor(app) {
-    this.app = app;
-  }
-  async saveProposalRecord(request, proposal) {
-    await this.ensureDirs();
-    const path = `${PROPOSALS}/${proposal.id}.proposal.json`;
-    const body = {
-      schemaVersion: SCHEMA_VERSION,
-      plugin: PLUGIN_ID,
-      format: "kotonoha.obsidian.proposal.v0.1",
-      proposalId: proposal.id,
-      requestId: request.id,
-      operation: request.operation,
-      filePath: request.context.filePath,
-      sourceHash: request.context.sourceHash,
-      proposalHash: await hash(proposal.proposedText),
-      createdAt: proposal.createdAt,
-      summary: proposal.summary,
-      decision: { status: "pending" }
-    };
-    await this.app.vault.adapter.write(path, JSON.stringify(body, null, 2));
-  }
-  async saveRdeAuditRecord(request, proposal, audit) {
-    await this.ensureDirs();
-    const path = `${AUDIT}/${proposal.id}.rde-audit.json`;
-    const proposalHash = await hash(proposal.proposedText);
-    const body = {
-      schemaVersion: SCHEMA_VERSION,
-      plugin: PLUGIN_ID,
-      format: "kotonoha.obsidian.rde_audit.v0.1",
-      proposalId: proposal.id,
-      filePath: request.context.filePath,
-      sourceHash: request.context.sourceHash,
-      proposalHash,
-      operation: request.operation,
-      createdAt: audit.createdAt,
-      rde: audit,
-      decision: { status: "pending" }
-    };
-    await this.app.vault.adapter.write(path, JSON.stringify(body, null, 2));
-  }
-  /** git-mode-spec §9.1 step 10 — human review decision sidecar. */
-  async saveReviewRecord(request, proposal, decision, audit) {
-    await this.ensureDirs();
-    const path = `${REVIEWS}/${proposal.id}.review.json`;
-    const body = {
-      schemaVersion: SCHEMA_VERSION,
-      plugin: PLUGIN_ID,
-      format: "kotonoha.obsidian.review.v0.1",
-      proposalId: proposal.id,
-      filePath: request.context.filePath,
-      sourceHash: request.context.sourceHash,
-      operation: request.operation,
-      decision: {
-        status: decision.decision,
-        decidedAt: decision.decidedAt,
-        comment: decision.comment
-      },
-      rdeRecommended: audit?.recommendedDecision,
-      rdeCategories: audit?.categories
-    };
-    await this.app.vault.adapter.write(path, JSON.stringify(body, null, 2));
-    await this.patchSidecarDecision(proposal.id, decision.decision);
-  }
-  async patchSidecarDecision(proposalId, status) {
-    const adapter = this.app.vault.adapter;
-    const sidecarStatus = status === "approved" ? "approved" : status === "partially_applied" ? "partially_applied" : "rejected";
-    for (const path of [
-      `${PROPOSALS}/${proposalId}.proposal.json`,
-      `${AUDIT}/${proposalId}.rde-audit.json`
-    ]) {
-      if (!await adapter.exists(path)) continue;
-      try {
-        const raw = await adapter.read(path);
-        const parsed = JSON.parse(raw);
-        parsed.decision = { status: sidecarStatus, decidedAt: (/* @__PURE__ */ new Date()).toISOString() };
-        await adapter.write(path, JSON.stringify(parsed, null, 2));
-      } catch {
-      }
-    }
-  }
-  async ensureDirs() {
-    const adapter = this.app.vault.adapter;
-    for (const dir of [ROOT, PROPOSALS, AUDIT, REVIEWS]) {
-      if (!await adapter.exists(dir)) {
-        await adapter.mkdir(dir);
-      }
-    }
-  }
-};
-async function hash(text) {
-  const data = new TextEncoder().encode(text);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-// src/cli/proposalFromContextPack.ts
-function parseContextPack(stdout) {
-  const pack = JSON.parse(stdout);
-  if (pack.format !== "kotonoha.context_pack.v0.1") {
-    throw new Error(`unexpected context pack format: ${pack.format ?? "(missing)"}`);
-  }
-  return pack;
-}
-function proposalTextFromContextPack(request, pack) {
-  const anchor = pack.git_anchor;
-  const lines = [
-    `<!-- kotonoha cli ${request.operation} -->`,
-    "",
-    `## Operation`,
-    request.operation,
-    "",
-    `## Instruction`,
-    request.instruction || "(none)",
-    ""
-  ];
-  if (anchor?.git_commit) {
-    lines.push(`## Git anchor`, `- commit: \`${anchor.git_commit}\``, `- file: \`${anchor.file_path ?? request.context.filePath}\``);
-    if (anchor.line_range_start != null) {
-      lines.push(`- lines: ${anchor.line_range_start}\u2013${anchor.line_range_end ?? anchor.line_range_start}`);
-    }
-    lines.push("");
-  }
-  lines.push("## Source", "", request.context.sourceText, "", "---", "", "*CLI mode uses `kotonoha context export` only; connect an orchestrator/LLM for generative rewrite.*");
-  return lines.join("\n");
-}
-
-// src/cli/proposalFromLocal.ts
-function proposalTextFromLocalContext(request) {
-  const { context, operation, instruction } = request;
-  return [
-    `<!-- kotonoha cli-local ${operation} -->`,
-    "",
-    `## Operation`,
-    operation,
-    "",
-    `## Instruction`,
-    instruction || "(none)",
-    "",
-    `## Anchor (non-Git)`,
-    `- path: \`${context.filePath}\``,
-    `- source_hash: \`${context.sourceHash.slice(0, 16)}\u2026\``,
-    "",
-    "## Source",
-    "",
-    context.sourceText,
-    "",
-    "---",
-    "",
-    "*Git-aware `context export` skipped (`gitMode: off` or unavailable). Semantic anchors use path + source hash per git-mode-spec.*"
-  ].join("\n");
 }
 
 // src/rde/StructuralDiffBuilder.ts
@@ -1187,6 +660,630 @@ function performRdeAudit(request, proposalId, options) {
   }
   const merged = mergeStructuralIntoAudit(base, structural);
   return enrichAuditFromSource(merged, request);
+}
+
+// src/ui/KotonohaConsoleView.ts
+var KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
+var KotonohaConsoleView = class extends import_obsidian2.ItemView {
+  constructor(leaf, plugin) {
+    super(leaf);
+    this.plugin = plugin;
+  }
+  bundle = null;
+  lastRequest = null;
+  lastOperation = "rde_audit";
+  sourceHashAtGeneration = null;
+  reviseMode = false;
+  editedText = "";
+  proposalHost;
+  auditHost;
+  instructionInput;
+  operationSelect;
+  getViewType() {
+    return KOTONOHA_CONSOLE_VIEW;
+  }
+  getDisplayText() {
+    return "Kotonoha Console";
+  }
+  getIcon() {
+    return "layers";
+  }
+  async onOpen() {
+    const { containerEl } = this;
+    containerEl.empty();
+    containerEl.addClass("kotonoha-console-root");
+    containerEl.createEl("h2", { text: "Kotonoha Console" });
+    containerEl.createEl("p", {
+      cls: "kotonoha-console-muted",
+      text: "\u63D0\u6848\u306F\u81EA\u52D5\u9069\u7528\u3055\u308C\u307E\u305B\u3093\u3002RDE \u76E3\u67FB\u30EC\u30DD\u30FC\u30C8\u306F\u30CE\u30FC\u30C8\u306B\u66F8\u304D\u8FBC\u307F\u307E\u305B\u3093\u3002"
+    });
+    const ctx = await this.plugin.noteContext.capture();
+    if (ctx) {
+      const meta = containerEl.createEl("div", { cls: "kotonoha-console-meta" });
+      meta.createEl("div", { text: `Note: ${ctx.filePath}` });
+      meta.createEl("div", { text: `Source hash: ${ctx.sourceHash.slice(0, 16)}\u2026` });
+      if (ctx.selectionText) {
+        meta.createEl("div", { text: "Scope: selection" });
+      }
+      if (ctx.git) {
+        meta.createEl("div", {
+          text: `Git mode: ${this.plugin.settings.gitMode} \xB7 ${ctx.git.repoRelativePath}`
+        });
+      }
+    } else {
+      containerEl.createEl("p", {
+        cls: "kotonoha-console-warn",
+        text: "\u30A2\u30AF\u30C6\u30A3\u30D6\u306A Markdown \u30CE\u30FC\u30C8\u3092\u958B\u3044\u3066\u304F\u3060\u3055\u3044\u3002"
+      });
+    }
+    const form = containerEl.createDiv({ cls: "kotonoha-console-form" });
+    form.createEl("label", { text: "Operation" });
+    this.operationSelect = form.createEl("select");
+    for (const op of ["rde_audit", "summarize", "rewrite", "expand", "custom"]) {
+      const opt = this.operationSelect.createEl("option", { value: op, text: op });
+      opt.value = op;
+    }
+    this.operationSelect.value = "rde_audit";
+    form.createEl("label", { text: "Instruction" });
+    this.instructionInput = form.createEl("textarea", {
+      attr: { rows: "3", placeholder: "\u4EFB\u610F\u306E\u6307\u793A\uFF08\u76E3\u67FB\u306E\u89B3\u70B9\u306A\u3069\uFF09\u2026" }
+    });
+    const actions = form.createDiv({ cls: "kotonoha-console-actions" });
+    actions.createEl("button", { text: "RDE \u76E3\u67FB\u3092\u5B9F\u65BD", cls: "mod-cta" }).addEventListener("click", () => void this.runRdeAudit());
+    actions.createEl("button", { text: "Generate proposal" }).addEventListener(
+      "click",
+      () => void this.runGenerate()
+    );
+    this.proposalHost = containerEl.createDiv({ cls: "kotonoha-console-proposal" });
+    this.auditHost = containerEl.createDiv({ cls: "kotonoha-console-audit" });
+  }
+  async onClose() {
+    this.containerEl.empty();
+  }
+  /** Command palette: RDE 監査を実施 */
+  async runRdeAudit() {
+    this.operationSelect.value = "rde_audit";
+    await this.runGenerate();
+  }
+  async runGenerate() {
+    const ctx = await this.plugin.noteContext.capture();
+    if (!ctx) {
+      new import_obsidian2.Notice("\u30A2\u30AF\u30C6\u30A3\u30D6\u306A\u30CE\u30FC\u30C8\u304C\u3042\u308A\u307E\u305B\u3093");
+      return;
+    }
+    const operation = this.operationSelect.value;
+    this.lastOperation = operation;
+    const instruction = this.instructionInput.value.trim();
+    const request = this.plugin.generationRequests.create(
+      ctx,
+      operation,
+      instruction,
+      this.plugin.settings.defaultLanguage
+    );
+    try {
+      this.sourceHashAtGeneration = ctx.sourceHash;
+      this.lastRequest = request;
+      this.reviseMode = false;
+      this.editedText = "";
+      this.bundle = await this.plugin.proposals.generate(request);
+      await this.plugin.auditLog.logProposal(
+        this.bundle.proposal,
+        ctx.sourceText
+      );
+      if (this.plugin.settings.sidecarMode) {
+        await this.plugin.sidecar.saveProposalRecord(request, this.bundle.proposal);
+        if (this.bundle.audit) {
+          await this.plugin.sidecar.saveRdeAuditRecord(
+            request,
+            this.bundle.proposal,
+            this.bundle.audit
+          );
+        }
+      }
+      this.renderBundle();
+      const msg = operation === "rde_audit" ? "RDE \u76E3\u67FB\u5B8C\u4E86\uFF08.kotonoha/audit/ \u306B\u4FDD\u5B58\uFF09" : "Proposal ready (not applied)";
+      new import_obsidian2.Notice(msg);
+    } catch (e) {
+      new import_obsidian2.Notice(`\u5931\u6557: ${message(e)}`);
+    }
+  }
+  renderBundle() {
+    this.proposalHost.empty();
+    this.auditHost.empty();
+    if (!this.bundle) return;
+    const isAuditReport = this.lastOperation === "rde_audit";
+    const wantsAudit = this.plugin.settings.enableRdeAudit || isAuditReport;
+    const auditMissing = wantsAudit && !isAuditReport && !this.bundle.audit;
+    new ProposalView(this.proposalHost, this.bundle.proposal, {
+      onApply: () => void this.applyProposal(),
+      onReject: () => void this.rejectProposal(),
+      onCopy: () => void this.copyProposal(),
+      onRevise: isAuditReport ? void 0 : () => void this.startRevise(),
+      onCancelRevise: () => this.cancelRevise(),
+      onReAudit: () => void this.reAuditEditedProposal(),
+      auditReportOnly: isAuditReport,
+      auditMissing,
+      reviseMode: this.reviseMode,
+      editedText: this.editedText,
+      onEditedTextChange: (text) => {
+        this.editedText = text;
+      }
+    });
+    if (this.bundle.audit && wantsAudit) {
+      new RdeAuditView(this.auditHost, this.bundle.audit);
+    }
+  }
+  async applyProposal() {
+    if (!this.bundle) return;
+    if (this.lastOperation === "rde_audit") {
+      new import_obsidian2.Notice("RDE \u76E3\u67FB\u30EC\u30DD\u30FC\u30C8\u306F\u30CE\u30FC\u30C8\u306B\u9069\u7528\u3067\u304D\u307E\u305B\u3093\uFF08Copy \u3092\u4F7F\u7528\uFF09");
+      return;
+    }
+    const ctx = await this.plugin.noteContext.capture();
+    if (!ctx) {
+      new import_obsidian2.Notice("No active note");
+      return;
+    }
+    const current = await this.plugin.noteContext.capture();
+    if (this.sourceHashAtGeneration && current && current.sourceHash !== this.sourceHashAtGeneration) {
+      const ok = confirm(
+        "\u30BD\u30FC\u30B9\u304C\u5909\u66F4\u3055\u308C\u3066\u3044\u307E\u3059\u3002\u518D\u76E3\u67FB\u307E\u305F\u306F\u660E\u793A\u7684\u306A\u4E0A\u66F8\u304D\u304C\u5FC5\u8981\u3067\u3059\u3002\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F"
+      );
+      if (!ok) return;
+    }
+    if (this.plugin.settings.requireHumanApproval) {
+      const ok = confirm(
+        "\u3053\u306E\u63D0\u6848\u3092\u30CE\u30FC\u30C8\u306B\u9069\u7528\u3057\u307E\u3059\u304B\uFF1F\u5143\u306E\u30C6\u30AD\u30B9\u30C8\u306F\u4E0A\u66F8\u304D\u3055\u308C\u307E\u3059\u3002"
+      );
+      if (!ok) return;
+    }
+    const file = this.plugin.activeNoteReader.getActiveFile();
+    if (!file) return;
+    const text = this.reviseMode ? this.editedText : this.bundle.proposal.proposedText;
+    if (ctx.selectionText) {
+      const view = this.app.workspace.getActiveViewOfType(import_obsidian2.MarkdownView);
+      const editor = view?.editor;
+      if (editor) {
+        editor.replaceSelection(text);
+      } else {
+        new import_obsidian2.Notice("Open note in editor to apply selection");
+        return;
+      }
+    } else {
+      await this.plugin.markdownWriter.replaceNoteContent(file, text);
+    }
+    const decision = this.reviseMode ? this.plugin.approval.approveRevised(
+      this.bundle.proposal,
+      text,
+      this.bundle.proposal.proposedText
+    ) : this.plugin.approval.approve(this.bundle.proposal, text);
+    await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
+    await this.saveReviewSidecar(decision);
+    new import_obsidian2.Notice(
+      decision.decision === "partially_applied" ? "Applied revised text (partially_applied)" : "Applied (audit logged)"
+    );
+    this.bundle = null;
+    this.lastRequest = null;
+    this.reviseMode = false;
+    this.editedText = "";
+    this.proposalHost.empty();
+    this.auditHost.empty();
+  }
+  async rejectProposal() {
+    if (!this.bundle) return;
+    const decision = this.plugin.approval.reject(this.bundle.proposal);
+    await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
+    await this.saveReviewSidecar(decision);
+    new import_obsidian2.Notice(this.lastOperation === "rde_audit" ? "\u76E3\u67FB\u3092\u8A18\u9332\uFF08\u5374\u4E0B\uFF09" : "Rejected");
+    this.bundle = null;
+    this.lastRequest = null;
+    this.proposalHost.empty();
+    this.auditHost.empty();
+  }
+  async copyProposal() {
+    if (!this.bundle) return;
+    const text = this.reviseMode ? this.editedText : this.bundle.proposal.proposedText;
+    await navigator.clipboard.writeText(text);
+    new import_obsidian2.Notice("\u30AF\u30EA\u30C3\u30D7\u30DC\u30FC\u30C9\u306B\u30B3\u30D4\u30FC\u3057\u307E\u3057\u305F");
+  }
+  async startRevise() {
+    if (!this.bundle || this.lastOperation === "rde_audit") return;
+    this.reviseMode = true;
+    this.editedText = this.bundle.proposal.proposedText;
+    const decision = this.plugin.approval.hold(
+      this.bundle.proposal,
+      "user opened revise editor"
+    );
+    await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
+    await this.saveReviewSidecar(decision);
+    new import_obsidian2.Notice("Revise mode \u2014 edit proposal, then Apply revision or Re-audit");
+    this.renderBundle();
+  }
+  cancelRevise() {
+    this.reviseMode = false;
+    this.editedText = "";
+    this.renderBundle();
+  }
+  async reAuditEditedProposal() {
+    if (!this.bundle || !this.lastRequest) return;
+    const audit = performRdeAudit(this.lastRequest, this.bundle.proposal.id, {
+      proposalText: this.editedText
+    });
+    this.bundle = { ...this.bundle, audit };
+    if (this.plugin.settings.sidecarMode) {
+      await this.plugin.sidecar.saveRdeAuditRecord(
+        this.lastRequest,
+        this.bundle.proposal,
+        audit
+      );
+    }
+    new import_obsidian2.Notice("Re-audit complete (local rule-based)");
+    this.renderBundle();
+  }
+  async saveReviewSidecar(decision) {
+    if (!this.plugin.settings.sidecarMode || !this.lastRequest || !this.bundle) {
+      return;
+    }
+    await this.plugin.sidecar.saveReviewRecord(
+      this.lastRequest,
+      this.bundle.proposal,
+      decision,
+      this.bundle.audit
+    );
+  }
+};
+function message(e) {
+  return e instanceof Error ? e.message : String(e);
+}
+
+// src/util/hash.ts
+async function sha256Hex(text) {
+  const data = new TextEncoder().encode(text);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// src/obsidian/GitContextReader.ts
+async function readGitContext(app, file, mode) {
+  if (mode === "off") return void 0;
+  const repoRelativePath = file.path;
+  const dirty = app.vault.getAbstractFileByPath(file.path) !== null;
+  return {
+    repoRelativePath,
+    dirty,
+    branch: mode === "passive-observing" ? void 0 : void 0,
+    commit: void 0,
+    root: vaultBasePath(app) || void 0
+  };
+}
+
+// src/obsidian/ActiveNoteReader.ts
+var ActiveNoteReader = class {
+  constructor(app, gitMode) {
+    this.app = app;
+    this.gitMode = gitMode;
+  }
+  getActiveFile() {
+    const file = this.app.workspace.getActiveFile();
+    return file ?? null;
+  }
+  async readNoteContext(selectionText) {
+    const file = this.getActiveFile();
+    if (!file) return null;
+    const sourceText = await this.app.vault.read(file);
+    const targetText = selectionText !== void 0 && selectionText.length > 0 ? selectionText : sourceText;
+    const cache = this.app.metadataCache.getFileCache(file);
+    const frontmatter = cache?.frontmatter ?? {};
+    const tags = (cache?.tags ?? []).map((t) => t.tag);
+    const links = (cache?.links ?? []).map((l) => l.link);
+    const git = this.gitMode === "off" ? void 0 : await readGitContext(this.app, file, this.gitMode);
+    return {
+      vaultPath: vaultBasePath(this.app),
+      filePath: file.path,
+      title: file.basename,
+      sourceText: targetText,
+      selectionText: selectionText && selectionText.length > 0 ? selectionText : void 0,
+      sourceHash: await sha256Hex(targetText),
+      tags,
+      links,
+      frontmatter,
+      git
+    };
+  }
+};
+
+// src/obsidian/MarkdownWriter.ts
+var MarkdownWriter = class {
+  constructor(app) {
+    this.app = app;
+  }
+  async replaceNoteContent(file, newContent) {
+    await this.app.vault.modify(file, newContent);
+  }
+};
+
+// src/services/NoteContextService.ts
+var NoteContextService = class {
+  constructor(reader) {
+    this.reader = reader;
+  }
+  async capture(selectionText) {
+    return this.reader.readNoteContext(selectionText);
+  }
+};
+
+// src/services/GenerationRequestService.ts
+var GenerationRequestService = class {
+  create(context, operation, instruction, language) {
+    return {
+      id: crypto.randomUUID(),
+      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+      operation,
+      instruction,
+      context,
+      language
+    };
+  }
+};
+
+// src/services/ProposalService.ts
+var ProposalService = class {
+  constructor(client) {
+    this.client = client;
+  }
+  async generate(request) {
+    const result = await this.client.generate(request);
+    return { proposal: result.proposal, audit: result.audit };
+  }
+};
+
+// src/services/ApprovalService.ts
+var ApprovalService = class {
+  approve(proposal, appliedText, comment) {
+    return {
+      proposalId: proposal.id,
+      decidedAt: (/* @__PURE__ */ new Date()).toISOString(),
+      decision: "approved",
+      appliedText,
+      comment
+    };
+  }
+  reject(proposal, comment) {
+    return {
+      proposalId: proposal.id,
+      decidedAt: (/* @__PURE__ */ new Date()).toISOString(),
+      decision: "rejected",
+      comment
+    };
+  }
+  hold(proposal, comment) {
+    return {
+      proposalId: proposal.id,
+      decidedAt: (/* @__PURE__ */ new Date()).toISOString(),
+      decision: "hold",
+      comment
+    };
+  }
+  approveRevised(proposal, appliedText, originalText, comment) {
+    const revised = appliedText.trim() !== originalText.trim();
+    return {
+      proposalId: proposal.id,
+      decidedAt: (/* @__PURE__ */ new Date()).toISOString(),
+      decision: revised ? "partially_applied" : "approved",
+      appliedText,
+      comment: revised ? [comment, "user revised before apply"].filter(Boolean).join("; ") : comment
+    };
+  }
+};
+
+// src/services/AuditLogService.ts
+var KOTONOHA_DIR = ".kotonoha/audit";
+var AuditLogService = class {
+  constructor(app, mode) {
+    this.app = app;
+    this.mode = mode;
+  }
+  async logProposal(proposal, sourceExcerpt) {
+    const entry = {
+      kind: "proposal",
+      proposalId: proposal.id,
+      createdAt: proposal.createdAt,
+      proposalHash: await sha256Hex(proposal.proposedText),
+      sourceExcerpt: excerpt(sourceExcerpt, this.mode),
+      summary: proposal.summary
+    };
+    await this.append(entry);
+  }
+  async logDecision(decision, audit) {
+    const entry = {
+      kind: "decision",
+      ...decision,
+      rdeCategories: audit?.categories
+    };
+    await this.append(entry);
+  }
+  async append(entry) {
+    const name = `${isoFileStamp()}.json`;
+    const path = `${KOTONOHA_DIR}/${name}`;
+    await this.ensureDir();
+    const line = JSON.stringify(entry, null, 2);
+    await this.app.vault.adapter.write(path, line);
+  }
+  async ensureDir() {
+    const adapter = this.app.vault.adapter;
+    if (!await adapter.exists(KOTONOHA_DIR)) {
+      await adapter.mkdir(KOTONOHA_DIR);
+    }
+  }
+};
+function isoFileStamp() {
+  return (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+}
+function excerpt(text, mode) {
+  if (mode === "hash_only") return "";
+  const max = mode === "summary" ? 200 : 4e3;
+  return text.length <= max ? text : `${text.slice(0, max)}\u2026`;
+}
+
+// src/services/SidecarStore.ts
+var ROOT = ".kotonoha";
+var PROPOSALS = `${ROOT}/proposals`;
+var AUDIT = `${ROOT}/audit`;
+var REVIEWS = `${ROOT}/reviews`;
+var PLUGIN_ID = "obsidian-kotonoha-console";
+var SCHEMA_VERSION = "0.1.0";
+var SidecarStore = class {
+  constructor(app) {
+    this.app = app;
+  }
+  async saveProposalRecord(request, proposal) {
+    await this.ensureDirs();
+    const path = `${PROPOSALS}/${proposal.id}.proposal.json`;
+    const body = {
+      schemaVersion: SCHEMA_VERSION,
+      plugin: PLUGIN_ID,
+      format: "kotonoha.obsidian.proposal.v0.1",
+      proposalId: proposal.id,
+      requestId: request.id,
+      operation: request.operation,
+      filePath: request.context.filePath,
+      sourceHash: request.context.sourceHash,
+      proposalHash: await hash(proposal.proposedText),
+      createdAt: proposal.createdAt,
+      summary: proposal.summary,
+      decision: { status: "pending" }
+    };
+    await this.app.vault.adapter.write(path, JSON.stringify(body, null, 2));
+  }
+  async saveRdeAuditRecord(request, proposal, audit) {
+    await this.ensureDirs();
+    const path = `${AUDIT}/${proposal.id}.rde-audit.json`;
+    const proposalHash = await hash(proposal.proposedText);
+    const body = {
+      schemaVersion: SCHEMA_VERSION,
+      plugin: PLUGIN_ID,
+      format: "kotonoha.obsidian.rde_audit.v0.1",
+      proposalId: proposal.id,
+      filePath: request.context.filePath,
+      sourceHash: request.context.sourceHash,
+      proposalHash,
+      operation: request.operation,
+      createdAt: audit.createdAt,
+      rde: audit,
+      decision: { status: "pending" }
+    };
+    await this.app.vault.adapter.write(path, JSON.stringify(body, null, 2));
+  }
+  /** git-mode-spec §9.1 step 10 — human review decision sidecar. */
+  async saveReviewRecord(request, proposal, decision, audit) {
+    await this.ensureDirs();
+    const path = `${REVIEWS}/${proposal.id}.review.json`;
+    const body = {
+      schemaVersion: SCHEMA_VERSION,
+      plugin: PLUGIN_ID,
+      format: "kotonoha.obsidian.review.v0.1",
+      proposalId: proposal.id,
+      filePath: request.context.filePath,
+      sourceHash: request.context.sourceHash,
+      operation: request.operation,
+      decision: {
+        status: decision.decision,
+        decidedAt: decision.decidedAt,
+        comment: decision.comment
+      },
+      rdeRecommended: audit?.recommendedDecision,
+      rdeCategories: audit?.categories
+    };
+    await this.app.vault.adapter.write(path, JSON.stringify(body, null, 2));
+    await this.patchSidecarDecision(proposal.id, decision.decision);
+  }
+  async patchSidecarDecision(proposalId, status) {
+    const adapter = this.app.vault.adapter;
+    const sidecarStatus = status === "approved" ? "approved" : status === "partially_applied" ? "partially_applied" : status === "hold" ? "hold" : "rejected";
+    for (const path of [
+      `${PROPOSALS}/${proposalId}.proposal.json`,
+      `${AUDIT}/${proposalId}.rde-audit.json`
+    ]) {
+      if (!await adapter.exists(path)) continue;
+      try {
+        const raw = await adapter.read(path);
+        const parsed = JSON.parse(raw);
+        parsed.decision = { status: sidecarStatus, decidedAt: (/* @__PURE__ */ new Date()).toISOString() };
+        await adapter.write(path, JSON.stringify(parsed, null, 2));
+      } catch {
+      }
+    }
+  }
+  async ensureDirs() {
+    const adapter = this.app.vault.adapter;
+    for (const dir of [ROOT, PROPOSALS, AUDIT, REVIEWS]) {
+      if (!await adapter.exists(dir)) {
+        await adapter.mkdir(dir);
+      }
+    }
+  }
+};
+async function hash(text) {
+  const data = new TextEncoder().encode(text);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// src/cli/proposalFromContextPack.ts
+function parseContextPack(stdout) {
+  const pack = JSON.parse(stdout);
+  if (pack.format !== "kotonoha.context_pack.v0.1") {
+    throw new Error(`unexpected context pack format: ${pack.format ?? "(missing)"}`);
+  }
+  return pack;
+}
+function proposalTextFromContextPack(request, pack) {
+  const anchor = pack.git_anchor;
+  const lines = [
+    `<!-- kotonoha cli ${request.operation} -->`,
+    "",
+    `## Operation`,
+    request.operation,
+    "",
+    `## Instruction`,
+    request.instruction || "(none)",
+    ""
+  ];
+  if (anchor?.git_commit) {
+    lines.push(`## Git anchor`, `- commit: \`${anchor.git_commit}\``, `- file: \`${anchor.file_path ?? request.context.filePath}\``);
+    if (anchor.line_range_start != null) {
+      lines.push(`- lines: ${anchor.line_range_start}\u2013${anchor.line_range_end ?? anchor.line_range_start}`);
+    }
+    lines.push("");
+  }
+  lines.push("## Source", "", request.context.sourceText, "", "---", "", "*CLI mode uses `kotonoha context export` only; connect an orchestrator/LLM for generative rewrite.*");
+  return lines.join("\n");
+}
+
+// src/cli/proposalFromLocal.ts
+function proposalTextFromLocalContext(request) {
+  const { context, operation, instruction } = request;
+  return [
+    `<!-- kotonoha cli-local ${operation} -->`,
+    "",
+    `## Operation`,
+    operation,
+    "",
+    `## Instruction`,
+    instruction || "(none)",
+    "",
+    `## Anchor (non-Git)`,
+    `- path: \`${context.filePath}\``,
+    `- source_hash: \`${context.sourceHash.slice(0, 16)}\u2026\``,
+    "",
+    "## Source",
+    "",
+    context.sourceText,
+    "",
+    "---",
+    "",
+    "*Git-aware `context export` skipped (`gitMode: off` or unavailable). Semantic anchors use path + source hash per git-mode-spec.*"
+  ].join("\n");
 }
 
 // src/rde/rdeAuditReport.ts
