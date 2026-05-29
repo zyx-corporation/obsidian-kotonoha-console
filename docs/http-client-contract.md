@@ -94,3 +94,21 @@ Generative rewrite still requires `/v1/proposals/generate` or CLI/orchestrator L
 ## Health
 
 `GET /health` → `{ "status": "ok" }` — used by **Test connection** in settings.
+
+## Orchestrator LLM proxy (generative rewrite)
+
+Set environment variables before starting uvicorn:
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `OPENAI_API_KEY` | (unset) | When set, `POST /v1/proposals/generate` calls OpenAI-compatible chat completions |
+| `OPENAI_BASE_URL` | `https://api.openai.com/v1` | Compatible API base (Azure, local proxy, etc.) |
+| `OPENAI_MODEL` | `gpt-4o-mini` | Model id |
+
+```bash
+export OPENAI_API_KEY=sk-...
+cd kotonoha-orchestrator/orchestrator
+uvicorn kotonoha_orchestrator_api.main:app --app-dir api/src
+```
+
+Without `OPENAI_API_KEY`, the endpoint returns a **rule-based local draft** (same anchor pattern as CLI local mode). Obsidian Console shows `[orchestrator/local]` in the proposal summary.
