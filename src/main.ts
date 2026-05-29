@@ -38,6 +38,7 @@ export default class KotonohaConsolePlugin extends Plugin {
 
   private client!: KotonohaClient;
   private settingsTab!: KotonohaSettingsTab;
+  private ribbonEl?: HTMLElement;
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -50,24 +51,32 @@ export default class KotonohaConsolePlugin extends Plugin {
 
     this.registerView(KOTONOHA_CONSOLE_VIEW, (leaf) => new KotonohaConsoleView(leaf, this));
 
-    this.addRibbonIcon("layers", "Kotonoha Console", () => {
+    this.ribbonEl = this.addRibbonIcon("layers", consoleMsg(this.settings.defaultLanguage, "viewTitle"), () => {
       void this.activateConsole();
     });
 
-    this.addCommand({
-      id: "open-console",
-      name: "Open Kotonoha Console",
-      callback: () => void this.activateConsole(),
-    });
-
-    this.addCommand({
-      id: "run-rde-audit",
-      name: "RDE 監査を実施（アクティブノート）",
-      callback: () => void this.runRdeAuditCommand(),
-    });
+    this.registerLocalizedCommands();
 
     this.settingsTab = new KotonohaSettingsTab(this.app, this);
     this.addSettingTab(this.settingsTab);
+  }
+
+  /** Command palette + ribbon labels follow defaultLanguage. */
+  registerLocalizedCommands(): void {
+    const lang = this.settings.defaultLanguage;
+    if (this.ribbonEl) {
+      this.ribbonEl.setAttribute("aria-label", consoleMsg(lang, "viewTitle"));
+    }
+    this.addCommand({
+      id: "open-console",
+      name: consoleMsg(lang, "cmdOpenConsole"),
+      callback: () => void this.activateConsole(),
+    });
+    this.addCommand({
+      id: "run-rde-audit",
+      name: consoleMsg(lang, "cmdRunRdeAudit"),
+      callback: () => void this.runRdeAuditCommand(),
+    });
   }
 
   refreshNoteReader(): void {
@@ -119,6 +128,7 @@ export default class KotonohaConsolePlugin extends Plugin {
 
   /** Refresh open console panels and settings tab after defaultLanguage changes. */
   async refreshForLanguageChange(): Promise<void> {
+    this.registerLocalizedCommands();
     await this.refreshConsoleForLanguageChange();
     this.settingsTab?.refreshDisplay();
   }

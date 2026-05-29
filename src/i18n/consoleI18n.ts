@@ -89,6 +89,18 @@ const MSGS = {
     settingsBtnReloadPlugin: "Reload plugin (apply code updates)",
     noticePluginReloaded: "Kotonoha Console reloaded (v{version})",
     noticeLanguageChanged: "Display language: {lang}",
+    cmdOpenConsole: "Open Kotonoha Console",
+    cmdRunRdeAudit: "Run RDE audit (active note)",
+    cliUncertaintyRdeAudit:
+      "Rule-based source review + CLI `rde emit`/`validate` (interchange skeleton only — not full RDE). DB attach when DATABASE_URL is configured.",
+    cliUncertaintyContextExport:
+      "Generative rewrite requires an orchestrator/LLM; proposal embeds `kotonoha context export`. Local rule-based RDE audit attached.",
+    cliUncertaintyGitOff:
+      "gitMode is off — Git-aware CLI not used (git-mode-spec §4). Local rule-based RDE audit attached.",
+    cliUncertaintyLocalOnly:
+      "Local anchors only (path + source_hash). Local rule-based RDE audit attached.",
+    cliUncertaintyExportFailed:
+      "Git-aware context export failed; using path + source_hash anchors.",
   },
   ja: {
     viewTitle: "Kotonoha Console",
@@ -169,6 +181,18 @@ const MSGS = {
     settingsBtnReloadPlugin: "プラグインを再読み込み（コード更新を反映）",
     noticePluginReloaded: "Kotonoha Console を再読み込みしました（v{version}）",
     noticeLanguageChanged: "表示言語: {lang}",
+    cmdOpenConsole: "Kotonoha Console を開く",
+    cmdRunRdeAudit: "RDE 監査を実施（アクティブノート）",
+    cliUncertaintyRdeAudit:
+      "ルールベース source review + CLI `rde emit`/`validate`（interchange スケルトンのみ — full RDE ではない）。DATABASE_URL 設定時は DB 連携可。",
+    cliUncertaintyContextExport:
+      "生成系 rewrite には orchestrator/LLM が必要。提案に `kotonoha context export` を埋め込み。local rule-based RDE 監査付き。",
+    cliUncertaintyGitOff:
+      "gitMode off — Git 連携 CLI 未使用（git-mode-spec §4）。local rule-based RDE 監査付き。",
+    cliUncertaintyLocalOnly:
+      "ローカルアンカーのみ（path + source_hash）。local rule-based RDE 監査付き。",
+    cliUncertaintyExportFailed:
+      "Git 連携 context export 失敗。path + source_hash アンカーを使用。",
   },
   zh_CN: {
     viewTitle: "Kotonoha Console",
@@ -249,6 +273,18 @@ const MSGS = {
     settingsBtnReloadPlugin: "重新加载插件（应用代码更新）",
     noticePluginReloaded: "Kotonoha Console 已重新加载（v{version}）",
     noticeLanguageChanged: "显示语言: {lang}",
+    cmdOpenConsole: "打开 Kotonoha Console",
+    cmdRunRdeAudit: "运行 RDE 审计（活动笔记）",
+    cliUncertaintyRdeAudit:
+      "基于规则的 source review + CLI `rde emit`/`validate`（仅 interchange 骨架 — 非完整 RDE）。配置 DATABASE_URL 后可连接 DB。",
+    cliUncertaintyContextExport:
+      "生成式 rewrite 需要 orchestrator/LLM；提案嵌入 `kotonoha context export`。附带 local rule-based RDE 审计。",
+    cliUncertaintyGitOff:
+      "gitMode 关闭 — 未使用 Git 感知 CLI（git-mode-spec §4）。附带 local rule-based RDE 审计。",
+    cliUncertaintyLocalOnly:
+      "仅本地锚点（path + source_hash）。附带 local rule-based RDE 审计。",
+    cliUncertaintyExportFailed:
+      "Git 感知 context export 失败；使用 path + source_hash 锚点。",
   },
 } as const;
 

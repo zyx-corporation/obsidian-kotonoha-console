@@ -48,7 +48,7 @@ export class CliKotonohaClient implements KotonohaClient {
         const fallback = this.generateLocal(request, proposalId);
         fallback.proposal.uncertaintyNote = [
           fallback.proposal.uncertaintyNote,
-          "Git-aware context export failed; using path + source_hash anchors.",
+          consoleMsg(request.language, "cliUncertaintyExportFailed"),
           e instanceof Error ? e.message : String(e),
         ].join(" ");
         return fallback;
@@ -95,8 +95,7 @@ export class CliKotonohaClient implements KotonohaClient {
         summary: consoleMsg(request.language, "cliRdeSummary", {
           path: request.context.filePath,
         }),
-        uncertaintyNote:
-          "Rule-based source review + CLI `rde emit`/`validate` (interchange skeleton only — not full RDE). DB attach when DATABASE_URL is configured.",
+        uncertaintyNote: consoleMsg(request.language, "cliUncertaintyRdeAudit"),
       },
       audit,
     };
@@ -121,8 +120,7 @@ export class CliKotonohaClient implements KotonohaClient {
 
     return this.withLocalAudit(request, proposalId, proposedText, {
       summary: `[cli] context export · ${request.operation} · ${relFile}`,
-      uncertaintyNote:
-        "Generative rewrite requires an orchestrator/LLM; proposal embeds `kotonoha context export`. Local rule-based RDE audit attached.",
+      uncertaintyNote: consoleMsg(request.language, "cliUncertaintyContextExport"),
     });
   }
 
@@ -135,8 +133,8 @@ export class CliKotonohaClient implements KotonohaClient {
       summary: `[cli-local] ${request.operation} · ${request.context.filePath}`,
       uncertaintyNote:
         this.options.gitMode === "off"
-          ? "gitMode is off — Git-aware CLI not used (git-mode-spec §4). Local rule-based RDE audit attached."
-          : "Local anchors only (path + source_hash). Local rule-based RDE audit attached.",
+          ? consoleMsg(request.language, "cliUncertaintyGitOff")
+          : consoleMsg(request.language, "cliUncertaintyLocalOnly"),
     });
   }
 

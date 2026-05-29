@@ -21,4 +21,10 @@ describe("consoleI18n", () => {
     expect(consoleMsg("zh_CN", "settingsRequireApprovalName")).toBe("应用前必须人工批准");
     expect(consoleMsg("ja", "settingsLangZhCn")).toBe("简体中文 (zh_CN)");
   });
+
+  it("command palette labels", () => {
+    expect(consoleMsg("ja", "cmdRunRdeAudit")).toBe("RDE 監査を実施（アクティブノート）");
+    expect(consoleMsg("en", "cmdOpenConsole")).toBe("Open Kotonoha Console");
+    expect(consoleMsg("zh_CN", "cmdRunRdeAudit")).toBe("运行 RDE 审计（活动笔记）");
+  });
 });
