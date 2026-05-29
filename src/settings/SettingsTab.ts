@@ -1,20 +1,48 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
+import { App, Notice, PluginSettingTab, Setting } from "obsidian";
 import type KotonohaConsolePlugin from "../main";
 import type { BackendMode, GitMode } from "../domain/types";
+import { consoleMsg } from "../i18n/consoleI18n";
+import type { RdeLang } from "../rde/rdeI18n";
+
+const LANG_LABEL: Record<RdeLang, string> = {
+  ja: "ja",
+  en: "en",
+  zh_CN: "zh_CN",
+};
 
 export class KotonohaSettingsTab extends PluginSettingTab {
   constructor(app: App, private readonly plugin: KotonohaConsolePlugin) {
     super(app, plugin);
   }
 
+  /** Called when defaultLanguage changes so labels refresh while tab is open. */
+  refreshDisplay(): void {
+    this.display();
+  }
+
+  private lang(): RdeLang {
+    return this.plugin.settings.defaultLanguage;
+  }
+
+  private t(key: Parameters<typeof consoleMsg>[1]): string {
+    return consoleMsg(this.lang(), key);
+  }
+
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h2", { text: "Kotonoha Console" });
+    containerEl.createEl("h2", { text: this.t("settingsTitle") });
+    containerEl.createEl("p", {
+      cls: "kotonoha-console-muted",
+      text: consoleMsg(this.lang(), "settingsDiagnostic", {
+        version: this.plugin.manifest.version,
+        sample: this.t("settingsBackendModeName"),
+      }),
+    });
 
     new Setting(containerEl)
-      .setName("Backend mode")
-      .setDesc("cli = kotonoha CLI; RDE audit works without Git; context export only when gitMode ≠ off")
+      .setName(this.t("settingsBackendModeName"))
+      .setDesc(this.t("settingsBackendModeDesc"))
       .addDropdown((d) =>
         d
           .addOptions({ mock: "mock", http: "http", cli: "cli" })
@@ -27,11 +55,11 @@ export class KotonohaSettingsTab extends PluginSettingTab {
           }),
       );
 
-    containerEl.createEl("h3", { text: "CLI (kotonoha ≥ 0.3.1)" });
+    containerEl.createEl("h3", { text: this.t("settingsCliSection") });
 
     new Setting(containerEl)
-      .setName("CLI command")
-      .setDesc("Path to kotonoha binary")
+      .setName(this.t("settingsCliCommandName"))
+      .setDesc(this.t("settingsCliCommandDesc"))
       .addText((t) =>
         t
           .setPlaceholder("kotonoha")
@@ -43,17 +71,17 @@ export class KotonohaSettingsTab extends PluginSettingTab {
           }),
       )
       .addButton((b) =>
-        b.setButtonText("Test version").onClick(() => {
+        b.setButtonText(this.t("settingsBtnTestVersion")).onClick(() => {
           void this.plugin.testCliVersion();
         }),
       );
 
     new Setting(containerEl)
-      .setName("CLI workdir")
-      .setDesc("Git repo root for --path (empty = vault folder)")
+      .setName(this.t("settingsCliWorkdirName"))
+      .setDesc(this.t("settingsCliWorkdirDesc"))
       .addText((t) =>
         t
-          .setPlaceholder("(vault path)")
+          .setPlaceholder(this.t("settingsCliWorkdirPlaceholder"))
           .setValue(this.plugin.settings.cliWorkdir ?? "")
           .onChange(async (v) => {
             this.plugin.settings.cliWorkdir = v;
@@ -64,7 +92,7 @@ export class KotonohaSettingsTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("DATABASE_URL")
-      .setDesc("Optional; required for DB-backed CLI commands later")
+      .setDesc(this.t("settingsDatabaseUrlDesc"))
       .addText((t) =>
         t
           .setPlaceholder("postgres://…")
@@ -103,8 +131,8 @@ export class KotonohaSettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Git mode")
-      .setDesc("Git-aware but never mutates the repo (git-mode-spec)")
+      .setName(this.t("settingsGitModeName"))
+      .setDesc(this.t("settingsGitModeDesc"))
       .addDropdown((d) =>
         d
           .addOptions({
@@ -122,19 +150,30 @@ export class KotonohaSettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Default language")
+      .setName(this.t("settingsDefaultLanguageName"))
       .addDropdown((d) =>
         d
-          .addOptions({ ja: "ja", en: "en" })
+          .addOptions({
+            ja: this.t("settingsLangJa"),
+            en: this.t("settingsLangEn"),
+            zh_CN: this.t("settingsLangZhCn"),
+          })
           .setValue(this.plugin.settings.defaultLanguage)
           .onChange(async (v) => {
-            this.plugin.settings.defaultLanguage = v as "ja" | "en";
+            this.plugin.settings.defaultLanguage = v as "ja" | "en" | "zh_CN";
             await this.plugin.saveSettings();
+            new Notice(
+              consoleMsg(v as RdeLang, "noticeLanguageChanged", {
+                lang: LANG_LABEL[v as RdeLang],
+              }),
+            );
+            await this.plugin.refreshForLanguageChange();
+            this.display();
           }),
       );
 
     new Setting(containerEl)
-      .setName("Require human approval before apply")
+      .setName(this.t("settingsRequireApprovalName"))
       .addToggle((t) =>
         t
           .setValue(this.plugin.settings.requireHumanApproval)
@@ -145,7 +184,7 @@ export class KotonohaSettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Enable RDE audit panel")
+      .setName(this.t("settingsEnableRdeAuditName"))
       .addToggle((t) =>
         t
           .setValue(this.plugin.settings.enableRdeAudit)
@@ -156,7 +195,7 @@ export class KotonohaSettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Audit log mode")
+      .setName(this.t("settingsAuditLogModeName"))
       .addDropdown((d) =>
         d
           .addOptions({
@@ -170,6 +209,14 @@ export class KotonohaSettingsTab extends PluginSettingTab {
             await this.plugin.saveSettings();
             this.plugin.refreshAuditLog();
           }),
+      );
+
+    new Setting(containerEl)
+      .setName(this.t("settingsBtnReloadPlugin"))
+      .addButton((b) =>
+        b.setButtonText(this.t("settingsBtnReloadPlugin")).onClick(() => {
+          void this.plugin.reloadPlugin();
+        }),
       );
   }
 }
