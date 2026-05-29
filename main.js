@@ -2625,7 +2625,9 @@ function createObsidianFetch() {
     return new Response(res.text || (res.json != null ? JSON.stringify(res.json) : ""), {
       status: res.status,
       headers: new Headers(
-        Object.entries(res.headers ?? {}).map(([k, v]) => [k, String(v)])
+        Object.entries(res.headers ?? {}).map(
+          ([k, v]) => [k, String(v)]
+        )
       )
     });
   };
@@ -2779,8 +2781,9 @@ var KotonohaConsolePlugin = class extends import_obsidian5.Plugin {
   async reloadPlugin() {
     const id2 = this.manifest.id;
     const version = this.manifest.version;
-    await this.app.plugins.disablePlugin(id2);
-    await this.app.plugins.enablePlugin(id2);
+    const plugins = this.app.plugins;
+    await plugins.disablePlugin(id2);
+    await plugins.enablePlugin(id2);
     new import_obsidian5.Notice(consoleMsg(this.settings.defaultLanguage, "noticePluginReloaded", { version }));
   }
   async testBackendConnection() {

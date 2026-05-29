@@ -1,4 +1,4 @@
-import { Notice, Plugin } from "obsidian";
+import { Notice, Plugin, type App } from "obsidian";
 import { cliErrorMessage, runKotonoha } from "./cli/runKotonoha";
 import { buildCliEnv } from "./cli/buildCliEnv";
 import { vaultBasePath } from "./util/vaultPath";
@@ -152,8 +152,9 @@ export default class KotonohaConsolePlugin extends Plugin {
   async reloadPlugin(): Promise<void> {
     const id = this.manifest.id;
     const version = this.manifest.version;
-    await this.app.plugins.disablePlugin(id);
-    await this.app.plugins.enablePlugin(id);
+    const plugins = (this.app as App & { plugins: { disablePlugin: (id: string) => Promise<void>; enablePlugin: (id: string) => Promise<void> } }).plugins;
+    await plugins.disablePlugin(id);
+    await plugins.enablePlugin(id);
     new Notice(consoleMsg(this.settings.defaultLanguage, "noticePluginReloaded", { version }));
   }
 

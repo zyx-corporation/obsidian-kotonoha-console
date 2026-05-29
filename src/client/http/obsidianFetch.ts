@@ -16,7 +16,9 @@ export function createObsidianFetch(): typeof fetch {
     return new Response(res.text || (res.json != null ? JSON.stringify(res.json) : ""), {
       status: res.status,
       headers: new Headers(
-        Object.entries(res.headers ?? {}).map(([k, v]) => [k, String(v)]),
+        Object.entries(res.headers ?? {}).map(
+          ([k, v]) => [k, String(v)] as [string, string],
+        ),
       ),
     });
   };
