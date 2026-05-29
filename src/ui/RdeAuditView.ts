@@ -1,10 +1,17 @@
 import type { RdeAudit } from "../domain/types";
+import {
+  RDE_AUDIT_LOW_CONFIDENCE,
+  shouldShowLowConfidenceWarning,
+} from "./rdeAuditPolicyMessages";
 
 export class RdeAuditView {
   constructor(host: HTMLElement, audit: RdeAudit) {
     host.createEl("h3", { text: "RDE audit" });
+    if (shouldShowLowConfidenceWarning(audit)) {
+      host.createEl("p", { cls: "kotonoha-console-warn", text: RDE_AUDIT_LOW_CONFIDENCE });
+    }
     host.createEl("p", {
-      text: `Recommended: ${audit.recommendedDecision} · confidence ${(audit.confidence * 100).toFixed(0)}% (informative)`,
+      text: `Recommended: ${audit.recommendedDecision} · confidence ${(audit.confidence * 100).toFixed(0)}% (informative — not safety score)`,
     });
 
     const cats = host.createEl("p", {

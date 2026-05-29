@@ -74,6 +74,7 @@ describe("CliKotonohaClient", () => {
     const result = await client.generate(request);
     expect(calls.some((a) => a[0] === "context")).toBe(true);
     expect(result.proposal.proposedText).toContain("hello world");
+    expect(result.audit).toBeDefined();
   });
 
   it("does not call context export when gitMode is off", async () => {
@@ -94,6 +95,7 @@ describe("CliKotonohaClient", () => {
     expect(calls.some((a) => a[0] === "context")).toBe(false);
     expect(result.proposal.summary).toContain("[cli-local]");
     expect(result.proposal.proposedText).toContain("hello world");
+    expect(result.audit).toBeDefined();
   });
 
   it("rde_audit uses rde emit/validate only (no context export, gitMode off)", async () => {
@@ -132,5 +134,8 @@ describe("CliKotonohaClient", () => {
     expect(result.audit?.preservedElements.some((e) => e.includes("path:"))).toBe(
       true,
     );
+    expect(
+      result.audit?.unresolvedElements.some((e) => e.includes("hedging")),
+    ).toBe(true);
   });
 });
