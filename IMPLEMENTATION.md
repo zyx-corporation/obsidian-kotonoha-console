@@ -6,7 +6,7 @@ Aligned with [`docs/architecture.ja.md`](docs/architecture.ja.md) phases.
 | --- | --- | --- |
 | 0 Plugin skeleton | **done** | `main.ts`, settings, commands, side panel |
 | 1 Note I/O | **partial** | active note, selection via editor on apply, frontmatter/tags |
-| 2 Kotonoha client | **partial** | `CliKotonohaClient`: RDE audit without Git; `context export` only if `gitMode ≠ off` |
+| 2 Kotonoha client | **partial** | `CliKotonohaClient`, **`HttpKotonohaClient`** (orchestrator/gateway/console); see [`docs/http-client-contract.md`](docs/http-client-contract.md) |
 | 3 Proposal mode | **done** | generate, copy, reject, revise, confirm apply |
 | 4 RDE audit | **done** | source review + structural diff + CLI `rde emit`/`validate`; sidecar |
 | 5 Approval workflow | **done** | audit log + `.kotonoha/reviews/` (approve/reject/hold/partial) |
@@ -62,6 +62,5 @@ Headless pre-check: `npm run demo:rde-audit`
 
 ## Next
 
-- `HttpKotonohaClient` · orchestrator LLM for generative rewrite
+- Orchestrator **LLM proxy** implementation for `POST /v1/proposals/generate` (server-side)
 - Git passive mode via read-only subprocess
-- Obsidian manual acceptance checklist

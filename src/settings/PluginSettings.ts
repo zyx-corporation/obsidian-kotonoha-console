@@ -8,6 +8,8 @@ import type {
 export interface KotonohaConsoleSettings {
   backendMode: BackendMode;
   httpEndpoint?: string;
+  /** Bearer token for gateway / orchestrator when auth is enabled. */
+  httpApiKey?: string;
   cliCommand?: string;
   defaultLanguage: "ja" | "en" | "zh_CN";
   requireHumanApproval: boolean;
@@ -33,4 +35,5 @@ export const DEFAULT_SETTINGS: KotonohaConsoleSettings = {
   gitMode: "off",
   sidecarMode: true,
   cliCommand: "kotonoha",
+  httpEndpoint: "http://127.0.0.1:8000",
 };

@@ -27,7 +27,7 @@ __export(main_exports, {
   default: () => KotonohaConsolePlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian3 = require("obsidian");
+var import_obsidian5 = require("obsidian");
 
 // src/cli/runKotonoha.ts
 var import_child_process = require("child_process");
@@ -366,7 +366,29 @@ var MSGS2 = {
     cliUncertaintyContextExport: "Generative rewrite requires an orchestrator/LLM; proposal embeds `kotonoha context export`. Local rule-based RDE audit attached.",
     cliUncertaintyGitOff: "gitMode is off \u2014 Git-aware CLI not used (git-mode-spec \xA74). Local rule-based RDE audit attached.",
     cliUncertaintyLocalOnly: "Local anchors only (path + source_hash). Local rule-based RDE audit attached.",
-    cliUncertaintyExportFailed: "Git-aware context export failed; using path + source_hash anchors."
+    cliUncertaintyExportFailed: "Git-aware context export failed; using path + source_hash anchors.",
+    settingsHttpSection: "HTTP (orchestrator / gateway / LLM proxy)",
+    settingsHttpEndpointName: "HTTP endpoint",
+    settingsHttpEndpointDesc: "Orchestrator (default :8000), Gateway (:8787), or console LLM proxy. Auto-detects backend.",
+    settingsHttpEndpointPlaceholder: "http://127.0.0.1:8000",
+    settingsHttpApiKeyName: "HTTP API key (optional)",
+    settingsHttpApiKeyDesc: "Bearer token when gateway/orchestrator auth is enabled",
+    settingsBtnTestHttp: "Test connection",
+    noticeHttpOk: "HTTP OK: {status} \xB7 {backend} @ {endpoint}",
+    noticeHttpFailed: "HTTP failed @ {endpoint}: {msg}",
+    settingsTestBackendName: "Test backend connection",
+    settingsTestBackendDesc: "mock / CLI version / HTTP health + backend auto-detect",
+    settingsBtnTestBackend: "Run connection test",
+    cmdTestBackend: "Test Kotonoha backend connection",
+    noticeMockBackendOk: "Mock backend \u2014 no remote connection required",
+    httpOrchestratorRdeSummary: "[http/orchestrator] RDE audit \xB7 {path}",
+    httpGatewaySummary: "[http/gateway] {operation} \xB7 {path}",
+    httpLocalSummary: "[http/local] {operation} \xB7 {path}",
+    httpUncertaintyOrchestratorRde: "Orchestrator RDE evaluate + local rule-based guardrails (not full LLM RDE).",
+    httpUncertaintyOrchestratorNoLlm: "Orchestrator has no /v1/proposals/generate LLM proxy \u2014 local anchors only.",
+    httpUncertaintyGateway: "Gateway context export only \u2014 connect /v1/proposals/generate for generative rewrite.",
+    httpUncertaintyGatewayRde: "Gateway mode \u2014 local rule-based RDE audit (use orchestrator for /v1/rde/evaluate).",
+    httpProposalEndpointMissing: "POST /v1/proposals/generate not found \u2014 deploy an orchestrator LLM proxy or use CLI/mock."
   },
   ja: {
     viewTitle: "Kotonoha Console",
@@ -450,7 +472,29 @@ var MSGS2 = {
     cliUncertaintyContextExport: "\u751F\u6210\u7CFB rewrite \u306B\u306F orchestrator/LLM \u304C\u5FC5\u8981\u3002\u63D0\u6848\u306B `kotonoha context export` \u3092\u57CB\u3081\u8FBC\u307F\u3002local rule-based RDE \u76E3\u67FB\u4ED8\u304D\u3002",
     cliUncertaintyGitOff: "gitMode off \u2014 Git \u9023\u643A CLI \u672A\u4F7F\u7528\uFF08git-mode-spec \xA74\uFF09\u3002local rule-based RDE \u76E3\u67FB\u4ED8\u304D\u3002",
     cliUncertaintyLocalOnly: "\u30ED\u30FC\u30AB\u30EB\u30A2\u30F3\u30AB\u30FC\u306E\u307F\uFF08path + source_hash\uFF09\u3002local rule-based RDE \u76E3\u67FB\u4ED8\u304D\u3002",
-    cliUncertaintyExportFailed: "Git \u9023\u643A context export \u5931\u6557\u3002path + source_hash \u30A2\u30F3\u30AB\u30FC\u3092\u4F7F\u7528\u3002"
+    cliUncertaintyExportFailed: "Git \u9023\u643A context export \u5931\u6557\u3002path + source_hash \u30A2\u30F3\u30AB\u30FC\u3092\u4F7F\u7528\u3002",
+    settingsHttpSection: "HTTP\uFF08orchestrator / gateway / LLM proxy\uFF09",
+    settingsHttpEndpointName: "HTTP \u30A8\u30F3\u30C9\u30DD\u30A4\u30F3\u30C8",
+    settingsHttpEndpointDesc: "Orchestrator\uFF08\u65E2\u5B9A :8000\uFF09\u3001Gateway\uFF08:8787\uFF09\u3001\u307E\u305F\u306F console LLM proxy\u3002\u30D0\u30C3\u30AF\u30A8\u30F3\u30C9\u81EA\u52D5\u691C\u51FA\u3002",
+    settingsHttpEndpointPlaceholder: "http://127.0.0.1:8000",
+    settingsHttpApiKeyName: "HTTP API \u30AD\u30FC\uFF08\u4EFB\u610F\uFF09",
+    settingsHttpApiKeyDesc: "gateway/orchestrator \u8A8D\u8A3C\u6709\u52B9\u6642\u306E Bearer \u30C8\u30FC\u30AF\u30F3",
+    settingsBtnTestHttp: "\u63A5\u7D9A\u30C6\u30B9\u30C8",
+    noticeHttpOk: "HTTP OK: {status} \xB7 {backend} @ {endpoint}",
+    noticeHttpFailed: "HTTP \u5931\u6557 @ {endpoint}: {msg}",
+    settingsTestBackendName: "\u30D0\u30C3\u30AF\u30A8\u30F3\u30C9\u63A5\u7D9A\u30C6\u30B9\u30C8",
+    settingsTestBackendDesc: "mock / CLI \u30D0\u30FC\u30B8\u30E7\u30F3 / HTTP \u30D8\u30EB\u30B9 + \u30D0\u30C3\u30AF\u30A8\u30F3\u30C9\u81EA\u52D5\u691C\u51FA",
+    settingsBtnTestBackend: "\u63A5\u7D9A\u30C6\u30B9\u30C8\u3092\u5B9F\u884C",
+    cmdTestBackend: "Kotonoha \u30D0\u30C3\u30AF\u30A8\u30F3\u30C9\u63A5\u7D9A\u30C6\u30B9\u30C8",
+    noticeMockBackendOk: "Mock \u30D0\u30C3\u30AF\u30A8\u30F3\u30C9 \u2014 \u30EA\u30E2\u30FC\u30C8\u63A5\u7D9A\u306F\u4E0D\u8981\u3067\u3059",
+    httpOrchestratorRdeSummary: "[http/orchestrator] RDE \u76E3\u67FB \xB7 {path}",
+    httpGatewaySummary: "[http/gateway] {operation} \xB7 {path}",
+    httpLocalSummary: "[http/local] {operation} \xB7 {path}",
+    httpUncertaintyOrchestratorRde: "Orchestrator RDE evaluate + local rule-based guardrails\uFF08full LLM RDE \u3067\u306F\u306A\u3044\uFF09\u3002",
+    httpUncertaintyOrchestratorNoLlm: "Orchestrator \u306B /v1/proposals/generate LLM proxy \u306A\u3057 \u2014 \u30ED\u30FC\u30AB\u30EB\u30A2\u30F3\u30AB\u30FC\u306E\u307F\u3002",
+    httpUncertaintyGateway: "Gateway context export \u306E\u307F \u2014 \u751F\u6210\u7CFB\u306F /v1/proposals/generate \u3092\u63A5\u7D9A\u3002",
+    httpUncertaintyGatewayRde: "Gateway \u30E2\u30FC\u30C9 \u2014 local rule-based RDE \u76E3\u67FB\uFF08orchestrator \u306E /v1/rde/evaluate \u306F\u5225\u9014\uFF09\u3002",
+    httpProposalEndpointMissing: "POST /v1/proposals/generate \u304C\u3042\u308A\u307E\u305B\u3093 \u2014 orchestrator LLM proxy \u307E\u305F\u306F CLI/mock \u3092\u4F7F\u7528\u3002"
   },
   zh_CN: {
     viewTitle: "Kotonoha Console",
@@ -534,7 +578,29 @@ var MSGS2 = {
     cliUncertaintyContextExport: "\u751F\u6210\u5F0F rewrite \u9700\u8981 orchestrator/LLM\uFF1B\u63D0\u6848\u5D4C\u5165 `kotonoha context export`\u3002\u9644\u5E26 local rule-based RDE \u5BA1\u8BA1\u3002",
     cliUncertaintyGitOff: "gitMode \u5173\u95ED \u2014 \u672A\u4F7F\u7528 Git \u611F\u77E5 CLI\uFF08git-mode-spec \xA74\uFF09\u3002\u9644\u5E26 local rule-based RDE \u5BA1\u8BA1\u3002",
     cliUncertaintyLocalOnly: "\u4EC5\u672C\u5730\u951A\u70B9\uFF08path + source_hash\uFF09\u3002\u9644\u5E26 local rule-based RDE \u5BA1\u8BA1\u3002",
-    cliUncertaintyExportFailed: "Git \u611F\u77E5 context export \u5931\u8D25\uFF1B\u4F7F\u7528 path + source_hash \u951A\u70B9\u3002"
+    cliUncertaintyExportFailed: "Git \u611F\u77E5 context export \u5931\u8D25\uFF1B\u4F7F\u7528 path + source_hash \u951A\u70B9\u3002",
+    settingsHttpSection: "HTTP\uFF08orchestrator / gateway / LLM proxy\uFF09",
+    settingsHttpEndpointName: "HTTP \u7AEF\u70B9",
+    settingsHttpEndpointDesc: "Orchestrator\uFF08\u9ED8\u8BA4 :8000\uFF09\u3001Gateway\uFF08:8787\uFF09\u6216 console LLM \u4EE3\u7406\u3002\u81EA\u52A8\u68C0\u6D4B\u540E\u7AEF\u3002",
+    settingsHttpEndpointPlaceholder: "http://127.0.0.1:8000",
+    settingsHttpApiKeyName: "HTTP API \u5BC6\u94A5\uFF08\u53EF\u9009\uFF09",
+    settingsHttpApiKeyDesc: "\u542F\u7528 gateway/orchestrator \u8BA4\u8BC1\u65F6\u7684 Bearer \u4EE4\u724C",
+    settingsBtnTestHttp: "\u6D4B\u8BD5\u8FDE\u63A5",
+    noticeHttpOk: "HTTP \u6B63\u5E38: {status} \xB7 {backend} @ {endpoint}",
+    noticeHttpFailed: "HTTP \u5931\u8D25 @ {endpoint}: {msg}",
+    settingsTestBackendName: "\u540E\u7AEF\u8FDE\u63A5\u6D4B\u8BD5",
+    settingsTestBackendDesc: "mock / CLI \u7248\u672C / HTTP \u5065\u5EB7\u68C0\u67E5 + \u540E\u7AEF\u81EA\u52A8\u68C0\u6D4B",
+    settingsBtnTestBackend: "\u8FD0\u884C\u8FDE\u63A5\u6D4B\u8BD5",
+    cmdTestBackend: "\u6D4B\u8BD5 Kotonoha \u540E\u7AEF\u8FDE\u63A5",
+    noticeMockBackendOk: "Mock \u540E\u7AEF \u2014 \u65E0\u9700\u8FDC\u7A0B\u8FDE\u63A5",
+    httpOrchestratorRdeSummary: "[http/orchestrator] RDE \u5BA1\u8BA1 \xB7 {path}",
+    httpGatewaySummary: "[http/gateway] {operation} \xB7 {path}",
+    httpLocalSummary: "[http/local] {operation} \xB7 {path}",
+    httpUncertaintyOrchestratorRde: "Orchestrator RDE evaluate + local rule-based guardrails\uFF08\u975E\u5B8C\u6574 LLM RDE\uFF09\u3002",
+    httpUncertaintyOrchestratorNoLlm: "Orchestrator \u65E0 /v1/proposals/generate LLM \u4EE3\u7406 \u2014 \u4EC5\u672C\u5730\u951A\u70B9\u3002",
+    httpUncertaintyGateway: "\u4EC5 Gateway context export \u2014 \u751F\u6210\u5F0F\u6539\u5199\u9700\u8FDE\u63A5 /v1/proposals/generate\u3002",
+    httpUncertaintyGatewayRde: "Gateway \u6A21\u5F0F \u2014 local rule-based RDE \u5BA1\u8BA1\uFF08orchestrator \u7684 /v1/rde/evaluate \u53E6\u884C\u914D\u7F6E\uFF09\u3002",
+    httpProposalEndpointMissing: "\u672A\u627E\u5230 POST /v1/proposals/generate \u2014 \u8BF7\u90E8\u7F72 orchestrator LLM \u4EE3\u7406\u6216\u4F7F\u7528 CLI/mock\u3002"
   }
 };
 function consoleMsg(lang, key, params) {
@@ -562,7 +628,8 @@ var DEFAULT_SETTINGS = {
   enableRdeAudit: true,
   gitMode: "off",
   sidecarMode: true,
-  cliCommand: "kotonoha"
+  cliCommand: "kotonoha",
+  httpEndpoint: "http://127.0.0.1:8000"
 };
 
 // src/settings/SettingsTab.ts
@@ -606,46 +673,66 @@ var KotonohaSettingsTab = class extends import_obsidian.PluginSettingTab {
         this.display();
       })
     );
-    containerEl.createEl("h3", { text: this.t("settingsCliSection") });
-    new import_obsidian.Setting(containerEl).setName(this.t("settingsCliCommandName")).setDesc(this.t("settingsCliCommandDesc")).addText(
-      (t) => t.setPlaceholder("kotonoha").setValue(this.plugin.settings.cliCommand ?? "kotonoha").onChange(async (v) => {
-        this.plugin.settings.cliCommand = v;
-        await this.plugin.saveSettings();
-        this.plugin.refreshClient();
-      })
-    ).addButton(
-      (b) => b.setButtonText(this.t("settingsBtnTestVersion")).onClick(() => {
-        void this.plugin.testCliVersion();
+    new import_obsidian.Setting(containerEl).setName(this.t("settingsTestBackendName")).setDesc(this.t("settingsTestBackendDesc")).addButton(
+      (b) => b.setButtonText(this.t("settingsBtnTestBackend")).onClick(() => {
+        void this.plugin.testBackendConnection();
       })
     );
-    new import_obsidian.Setting(containerEl).setName(this.t("settingsCliWorkdirName")).setDesc(this.t("settingsCliWorkdirDesc")).addText(
-      (t) => t.setPlaceholder(this.t("settingsCliWorkdirPlaceholder")).setValue(this.plugin.settings.cliWorkdir ?? "").onChange(async (v) => {
-        this.plugin.settings.cliWorkdir = v;
-        await this.plugin.saveSettings();
-        this.plugin.refreshClient();
-      })
-    );
-    new import_obsidian.Setting(containerEl).setName("DATABASE_URL").setDesc(this.t("settingsDatabaseUrlDesc")).addText(
-      (t) => t.setPlaceholder("postgres://\u2026").setValue(this.plugin.settings.databaseUrl ?? "").onChange(async (v) => {
-        this.plugin.settings.databaseUrl = v;
-        await this.plugin.saveSettings();
-        this.plugin.refreshClient();
-      })
-    );
-    new import_obsidian.Setting(containerEl).setName("KOTONOHA_PRINCIPAL_ID").addText(
-      (t) => t.setPlaceholder("UUID").setValue(this.plugin.settings.principalId ?? "").onChange(async (v) => {
-        this.plugin.settings.principalId = v;
-        await this.plugin.saveSettings();
-        this.plugin.refreshClient();
-      })
-    );
-    new import_obsidian.Setting(containerEl).setName("KOTONOHA_PROJECT_ID").addText(
-      (t) => t.setPlaceholder("UUID").setValue(this.plugin.settings.projectId ?? "").onChange(async (v) => {
-        this.plugin.settings.projectId = v;
-        await this.plugin.saveSettings();
-        this.plugin.refreshClient();
-      })
-    );
+    if (this.plugin.settings.backendMode === "http") {
+      containerEl.createEl("h3", { text: this.t("settingsHttpSection") });
+      new import_obsidian.Setting(containerEl).setName(this.t("settingsHttpEndpointName")).setDesc(this.t("settingsHttpEndpointDesc")).addText(
+        (t) => t.setPlaceholder(this.t("settingsHttpEndpointPlaceholder")).setValue(this.plugin.settings.httpEndpoint ?? "").onChange(async (v) => {
+          this.plugin.settings.httpEndpoint = v;
+          await this.plugin.saveSettings();
+          this.plugin.refreshClient();
+        })
+      );
+      new import_obsidian.Setting(containerEl).setName(this.t("settingsHttpApiKeyName")).setDesc(this.t("settingsHttpApiKeyDesc")).addText(
+        (t) => t.setPlaceholder("Bearer \u2026").setValue(this.plugin.settings.httpApiKey ?? "").onChange(async (v) => {
+          this.plugin.settings.httpApiKey = v;
+          await this.plugin.saveSettings();
+          this.plugin.refreshClient();
+        })
+      );
+    }
+    if (this.plugin.settings.backendMode === "cli") {
+      containerEl.createEl("h3", { text: this.t("settingsCliSection") });
+      new import_obsidian.Setting(containerEl).setName(this.t("settingsCliCommandName")).setDesc(this.t("settingsCliCommandDesc")).addText(
+        (t) => t.setPlaceholder("kotonoha").setValue(this.plugin.settings.cliCommand ?? "kotonoha").onChange(async (v) => {
+          this.plugin.settings.cliCommand = v;
+          await this.plugin.saveSettings();
+          this.plugin.refreshClient();
+        })
+      );
+      new import_obsidian.Setting(containerEl).setName(this.t("settingsCliWorkdirName")).setDesc(this.t("settingsCliWorkdirDesc")).addText(
+        (t) => t.setPlaceholder(this.t("settingsCliWorkdirPlaceholder")).setValue(this.plugin.settings.cliWorkdir ?? "").onChange(async (v) => {
+          this.plugin.settings.cliWorkdir = v;
+          await this.plugin.saveSettings();
+          this.plugin.refreshClient();
+        })
+      );
+      new import_obsidian.Setting(containerEl).setName("DATABASE_URL").setDesc(this.t("settingsDatabaseUrlDesc")).addText(
+        (t) => t.setPlaceholder("postgres://\u2026").setValue(this.plugin.settings.databaseUrl ?? "").onChange(async (v) => {
+          this.plugin.settings.databaseUrl = v;
+          await this.plugin.saveSettings();
+          this.plugin.refreshClient();
+        })
+      );
+      new import_obsidian.Setting(containerEl).setName("KOTONOHA_PRINCIPAL_ID").addText(
+        (t) => t.setPlaceholder("UUID").setValue(this.plugin.settings.principalId ?? "").onChange(async (v) => {
+          this.plugin.settings.principalId = v;
+          await this.plugin.saveSettings();
+          this.plugin.refreshClient();
+        })
+      );
+      new import_obsidian.Setting(containerEl).setName("KOTONOHA_PROJECT_ID").addText(
+        (t) => t.setPlaceholder("UUID").setValue(this.plugin.settings.projectId ?? "").onChange(async (v) => {
+          this.plugin.settings.projectId = v;
+          await this.plugin.saveSettings();
+          this.plugin.refreshClient();
+        })
+      );
+    }
     new import_obsidian.Setting(containerEl).setName(this.t("settingsGitModeName")).setDesc(this.t("settingsGitModeDesc")).addDropdown(
       (d) => d.addOptions({
         off: "off",
@@ -1859,6 +1946,90 @@ async function hash(text) {
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+// src/client/http/obsidianHttp.ts
+var import_obsidian3 = require("obsidian");
+
+// src/client/http/httpEndpoint.ts
+function endpointCandidates(endpoint) {
+  const base = endpoint.replace(/\/+$/, "");
+  const out = [base];
+  if (base.includes("127.0.0.1")) {
+    out.push(base.replace("127.0.0.1", "localhost"));
+  } else if (base.includes("localhost")) {
+    out.push(base.replace("localhost", "127.0.0.1"));
+  }
+  return [...new Set(out)];
+}
+
+// src/client/http/obsidianHttp.ts
+async function obsidianHttpRequest(url, init) {
+  const res = await (0, import_obsidian3.requestUrl)({
+    url,
+    method: init?.method ?? "GET",
+    headers: init?.headers,
+    body: init?.body,
+    throw: false
+  });
+  const text = res.text ?? "";
+  let json = res.json;
+  if ((json === void 0 || json === null) && text.trim()) {
+    try {
+      json = JSON.parse(text);
+    } catch {
+      json = text;
+    }
+  }
+  return { status: res.status, text, json };
+}
+
+// src/client/http/probeHttpBackend.ts
+var HttpProbeError = class extends Error {
+  constructor(message2, attempts) {
+    super(message2);
+    this.attempts = attempts;
+    this.name = "HttpProbeError";
+  }
+};
+async function probeHttpBackend(endpoint, apiKey) {
+  const headers = { Accept: "application/json" };
+  if (apiKey?.trim()) headers.Authorization = `Bearer ${apiKey.trim()}`;
+  const attempts = [];
+  for (const base of endpointCandidates(endpoint)) {
+    try {
+      const health = await obsidianHttpRequest(`${base}/health`, {
+        headers
+      });
+      if (health.status !== 200) {
+        attempts.push({
+          endpoint: base,
+          status: health.status,
+          detail: health.text.slice(0, 200) || `HTTP ${health.status}`
+        });
+        continue;
+      }
+      const healthStatus = health.json?.status ?? "ok";
+      const agents = await obsidianHttpRequest(`${base}/v1/agents`, { headers });
+      if (agents.status === 200) {
+        return { endpoint: base, health: healthStatus, backend: "orchestrator" };
+      }
+      const tools = await obsidianHttpRequest(`${base}/v1/tools`, { headers });
+      if (tools.status === 200) {
+        return { endpoint: base, health: healthStatus, backend: "gateway" };
+      }
+      return { endpoint: base, health: healthStatus, backend: "console" };
+    } catch (e) {
+      attempts.push({
+        endpoint: base,
+        detail: e instanceof Error ? e.message : String(e)
+      });
+    }
+  }
+  throw new HttpProbeError(
+    attempts.map((a) => `${a.endpoint}: ${a.detail}`).join(" \xB7 ") || "no endpoint candidates",
+    attempts
+  );
+}
+
 // src/cli/proposalFromContextPack.ts
 function parseContextPack(stdout) {
   const pack = JSON.parse(stdout);
@@ -2045,6 +2216,350 @@ var CliKotonohaClient = class {
   }
 };
 
+// src/client/http/httpClient.ts
+var HttpClientError = class extends Error {
+  constructor(message2, status, detail) {
+    super(message2);
+    this.status = status;
+    this.detail = detail;
+    this.name = "HttpClientError";
+  }
+};
+function normalizeBase(endpoint) {
+  return endpoint.replace(/\/+$/, "");
+}
+function authHeaders(apiKey) {
+  if (!apiKey?.trim()) return {};
+  return { Authorization: `Bearer ${apiKey.trim()}` };
+}
+var HttpClient = class {
+  base;
+  apiKey;
+  timeoutMs;
+  fetchFn;
+  constructor(options) {
+    this.base = normalizeBase(options.endpoint);
+    this.apiKey = options.apiKey;
+    this.timeoutMs = options.timeoutMs ?? 3e4;
+    this.fetchFn = options.fetchFn ?? fetch;
+  }
+  get baseUrl() {
+    return this.base;
+  }
+  async getJson(path) {
+    return this.requestJson("GET", path);
+  }
+  async postJson(path, body) {
+    return this.requestJson("POST", path, body);
+  }
+  async requestJson(method, path, body) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    try {
+      const res = await this.fetchFn(`${this.base}${path}`, {
+        method,
+        signal: controller.signal,
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          ...authHeaders(this.apiKey)
+        },
+        body: body === void 0 ? void 0 : JSON.stringify(body)
+      });
+      if (!res.ok) {
+        let detail = res.statusText;
+        try {
+          const errBody = await res.json();
+          detail = errBody.detail ?? errBody.message ?? detail;
+        } catch {
+        }
+        throw new HttpClientError(`HTTP ${res.status}`, res.status, detail);
+      }
+      return await res.json();
+    } catch (e) {
+      if (e instanceof HttpClientError) throw e;
+      if (e instanceof Error && e.name === "AbortError") {
+        throw new HttpClientError(`HTTP timeout after ${this.timeoutMs}ms`);
+      }
+      throw new HttpClientError(e instanceof Error ? e.message : String(e));
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+};
+
+// src/client/http/detectBackend.ts
+async function detectHttpBackend(baseUrl, fetchFn) {
+  const base = baseUrl.replace(/\/+$/, "");
+  try {
+    const res = await fetchFn(`${base}/v1/agents`, { method: "GET" });
+    if (res.ok) return "orchestrator";
+  } catch {
+  }
+  try {
+    const res = await fetchFn(`${base}/v1/tools`, { method: "GET" });
+    if (res.ok) return "gateway";
+  } catch {
+  }
+  return "console";
+}
+
+// src/client/http/gatewayTools.ts
+function parseGatewayToolStdout(response) {
+  const result = response.result;
+  if (result.stdout?.trim()) return result.stdout.trim();
+  const text = result.content?.[0]?.text;
+  if (!text) {
+    throw new HttpClientError("Gateway tool returned empty stdout");
+  }
+  try {
+    const payload = JSON.parse(text);
+    if (payload.stdout?.trim()) return payload.stdout.trim();
+  } catch {
+    return text.trim();
+  }
+  throw new HttpClientError("Gateway tool returned empty stdout");
+}
+function parseGatewayContextPack(response) {
+  if (!response.ok || response.result.isError) {
+    throw new HttpClientError(
+      "Gateway context export failed",
+      void 0,
+      parseGatewayToolStdout(response)
+    );
+  }
+  return parseContextPack(parseGatewayToolStdout(response));
+}
+
+// src/client/http/orchestratorRde.ts
+function subjectRefForRequest(request) {
+  const hash2 = request.context.sourceHash.slice(0, 16);
+  return `obsidian://${request.context.filePath}#${hash2}`;
+}
+function structuralToMeaningChanges(structural) {
+  return {
+    preserved: structural.preservedElements,
+    transformed: structural.transformedElements,
+    complemented: structural.inferredExtensions,
+    unresolved: structural.unresolvedElements,
+    deviation_risk: structural.driftRisks
+  };
+}
+function orchestratorEvaluateToEmitStdout(body) {
+  const out = body.rde_review_output;
+  const normalized = {};
+  for (const [key, items] of Object.entries(out.categories ?? {})) {
+    normalized[key] = (items ?? []).map(
+      (item) => typeof item === "string" ? item : item.summary
+    );
+  }
+  return JSON.stringify({
+    rde_review_output: {
+      spec_version: out.spec_version ?? "0.1",
+      subject_ref: out.subject_ref,
+      categories: normalized
+    }
+  });
+}
+
+// src/client/http/httpTypes.ts
+function toHttpGenerateBody(request) {
+  return {
+    operation: request.operation,
+    instruction: request.instruction,
+    language: request.language,
+    context: {
+      filePath: request.context.filePath,
+      title: request.context.title,
+      sourceText: request.context.sourceText,
+      sourceHash: request.context.sourceHash,
+      selectionText: request.context.selectionText,
+      tags: request.context.tags,
+      links: request.context.links,
+      frontmatter: request.context.frontmatter
+    }
+  };
+}
+function toGenerateResult(request, proposalId, body) {
+  return {
+    proposal: {
+      id: proposalId,
+      requestId: request.id,
+      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+      proposedText: body.proposal.proposedText,
+      summary: body.proposal.summary,
+      uncertaintyNote: body.proposal.uncertaintyNote
+    },
+    audit: body.audit
+  };
+}
+
+// src/client/HttpKotonohaClient.ts
+var HttpKotonohaClient = class {
+  constructor(options) {
+    this.options = options;
+    this.http = new HttpClient(options);
+    this.fetchFn = options.fetchFn ?? fetch;
+    this.backendKind = options.backendKind;
+  }
+  http;
+  fetchFn;
+  backendKind;
+  async generate(request) {
+    const kind = await this.resolveBackendKind();
+    switch (kind) {
+      case "orchestrator":
+        return this.generateOrchestrator(request);
+      case "gateway":
+        return this.generateGateway(request);
+      default:
+        return this.generateConsole(request);
+    }
+  }
+  /** Health probe for settings UI. */
+  async pingHealth() {
+    const body = await this.http.getJson("/health");
+    return body.status ?? "ok";
+  }
+  /** Health + auto-detected backend kind (orchestrator / gateway / console). */
+  async probe() {
+    const health = await this.pingHealth();
+    const backend = await this.resolveBackendKind();
+    return { health, backend };
+  }
+  async resolveBackendKind() {
+    if (this.backendKind) return this.backendKind;
+    this.backendKind = await detectHttpBackend(this.http.baseUrl, this.fetchFn);
+    return this.backendKind;
+  }
+  async generateConsole(request) {
+    const proposalId = crypto.randomUUID();
+    try {
+      const body = await this.http.postJson(
+        "/v1/proposals/generate",
+        toHttpGenerateBody(request)
+      );
+      const { proposal, audit } = toGenerateResult(request, proposalId, body);
+      return this.withAudit(request, proposalId, proposal, audit);
+    } catch (e) {
+      if (e instanceof HttpClientError && e.status === 404) {
+        throw new HttpClientError(
+          consoleMsg(request.language, "httpProposalEndpointMissing"),
+          e.status,
+          e.detail
+        );
+      }
+      throw e;
+    }
+  }
+  async generateOrchestrator(request) {
+    const proposalId = crypto.randomUUID();
+    if (request.operation === "rde_audit") {
+      const structural = buildSourceReview(request.context.sourceText, request.language);
+      const evaluate = await this.http.postJson(
+        "/v1/rde/evaluate",
+        {
+          subject_ref: subjectRefForRequest(request),
+          meaning_changes: structuralToMeaningChanges(structural)
+        }
+      );
+      const audit = performRdeAudit(request, proposalId, {
+        sourceReview: true,
+        cli: { emitStdout: orchestratorEvaluateToEmitStdout(evaluate) }
+      });
+      const proposedText = rdeAuditReportMarkdown(request, audit);
+      return {
+        proposal: {
+          id: proposalId,
+          requestId: request.id,
+          createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+          proposedText,
+          summary: consoleMsg(request.language, "httpOrchestratorRdeSummary", {
+            path: request.context.filePath
+          }),
+          uncertaintyNote: consoleMsg(request.language, "httpUncertaintyOrchestratorRde")
+        },
+        audit
+      };
+    }
+    try {
+      return await this.generateConsole(request);
+    } catch (e) {
+      if (e instanceof HttpClientError && (e.status === 404 || e.detail?.includes("404"))) {
+        return this.generateLocalWithNote(
+          request,
+          proposalId,
+          consoleMsg(request.language, "httpUncertaintyOrchestratorNoLlm")
+        );
+      }
+      throw e;
+    }
+  }
+  async generateGateway(request) {
+    const proposalId = crypto.randomUUID();
+    if (request.operation === "rde_audit") {
+      return this.generateLocalWithNote(
+        request,
+        proposalId,
+        consoleMsg(request.language, "httpUncertaintyGatewayRde")
+      );
+    }
+    const toolRes = await this.http.postJson(
+      "/v1/tools/kotonoha_context_export",
+      { file: request.context.filePath }
+    );
+    const pack = parseGatewayContextPack(toolRes);
+    const proposedText = proposalTextFromContextPack(request, pack);
+    const audit = performRdeAudit(request, proposalId, { proposalText: proposedText });
+    return {
+      proposal: {
+        id: proposalId,
+        requestId: request.id,
+        createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+        proposedText,
+        summary: consoleMsg(request.language, "httpGatewaySummary", {
+          operation: request.operation,
+          path: request.context.filePath
+        }),
+        uncertaintyNote: consoleMsg(request.language, "httpUncertaintyGateway")
+      },
+      audit
+    };
+  }
+  generateLocalWithNote(request, proposalId, uncertaintyNote) {
+    const proposedTextForDiff = request.operation === "rde_audit" ? void 0 : proposalTextFromLocalContext(request);
+    const audit = performRdeAudit(request, proposalId, {
+      sourceReview: request.operation === "rde_audit",
+      proposalText: proposedTextForDiff
+    });
+    const proposedText = request.operation === "rde_audit" ? rdeAuditReportMarkdown(request, audit) : proposedTextForDiff;
+    return {
+      proposal: {
+        id: proposalId,
+        requestId: request.id,
+        createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+        proposedText,
+        summary: request.operation === "rde_audit" ? consoleMsg(request.language, "httpOrchestratorRdeSummary", {
+          path: request.context.filePath
+        }) : consoleMsg(request.language, "httpLocalSummary", {
+          operation: request.operation,
+          path: request.context.filePath
+        }),
+        uncertaintyNote
+      },
+      audit
+    };
+  }
+  withAudit(request, proposalId, proposal, audit) {
+    if (audit) return { proposal, audit };
+    const computed = performRdeAudit(request, proposalId, {
+      sourceReview: request.operation === "rde_audit",
+      proposalText: request.operation === "rde_audit" ? void 0 : proposal.proposedText
+    });
+    return { proposal, audit: computed };
+  }
+};
+
 // src/client/MockKotonohaClient.ts
 function id() {
   return crypto.randomUUID();
@@ -2095,6 +2610,27 @@ var MockKotonohaClient = class {
   }
 };
 
+// src/client/http/obsidianFetch.ts
+var import_obsidian4 = require("obsidian");
+function createObsidianFetch() {
+  return async (input, init) => {
+    const url = typeof input === "string" ? input : input.toString();
+    const res = await (0, import_obsidian4.requestUrl)({
+      url,
+      method: init?.method ?? "GET",
+      headers: init?.headers,
+      body: typeof init?.body === "string" ? init.body : void 0,
+      throw: false
+    });
+    return new Response(res.text || (res.json != null ? JSON.stringify(res.json) : ""), {
+      status: res.status,
+      headers: new Headers(
+        Object.entries(res.headers ?? {}).map(([k, v]) => [k, String(v)])
+      )
+    });
+  };
+}
+
 // src/client/createClient.ts
 var OBSERVATION_REL = ".kotonoha/cli-observation.json";
 function createKotonohaClient(settings, app) {
@@ -2123,14 +2659,18 @@ function createKotonohaClient(settings, app) {
     case "mock":
       return new MockKotonohaClient();
     case "http":
-      return new MockKotonohaClient();
+      return new HttpKotonohaClient({
+        endpoint: settings.httpEndpoint?.trim() || "http://127.0.0.1:8000",
+        apiKey: settings.httpApiKey,
+        fetchFn: createObsidianFetch()
+      });
     default:
       return new MockKotonohaClient();
   }
 }
 
 // src/main.ts
-var KotonohaConsolePlugin = class extends import_obsidian3.Plugin {
+var KotonohaConsolePlugin = class extends import_obsidian5.Plugin {
   settings = { ...DEFAULT_SETTINGS };
   activeNoteReader;
   markdownWriter;
@@ -2174,6 +2714,11 @@ var KotonohaConsolePlugin = class extends import_obsidian3.Plugin {
       id: "run-rde-audit",
       name: consoleMsg(lang, "cmdRunRdeAudit"),
       callback: () => void this.runRdeAuditCommand()
+    });
+    this.addCommand({
+      id: "test-backend-connection",
+      name: consoleMsg(lang, "cmdTestBackend"),
+      callback: () => void this.testBackendConnection()
     });
   }
   refreshNoteReader() {
@@ -2236,7 +2781,48 @@ var KotonohaConsolePlugin = class extends import_obsidian3.Plugin {
     const version = this.manifest.version;
     await this.app.plugins.disablePlugin(id2);
     await this.app.plugins.enablePlugin(id2);
-    new import_obsidian3.Notice(consoleMsg(this.settings.defaultLanguage, "noticePluginReloaded", { version }));
+    new import_obsidian5.Notice(consoleMsg(this.settings.defaultLanguage, "noticePluginReloaded", { version }));
+  }
+  async testBackendConnection() {
+    const lang = this.settings.defaultLanguage;
+    switch (this.settings.backendMode) {
+      case "mock":
+        new import_obsidian5.Notice(consoleMsg(lang, "noticeMockBackendOk"));
+        return;
+      case "cli":
+        await this.testCliVersion();
+        return;
+      case "http":
+        await this.testHttpConnection();
+        return;
+    }
+  }
+  async testHttpConnection() {
+    const lang = this.settings.defaultLanguage;
+    const endpoint = this.settings.httpEndpoint?.trim() || "http://127.0.0.1:8000";
+    try {
+      const result = await probeHttpBackend(endpoint, this.settings.httpApiKey);
+      if (result.endpoint !== endpoint.replace(/\/+$/, "")) {
+        this.settings.httpEndpoint = result.endpoint;
+        await this.saveSettings();
+        this.refreshClient();
+      }
+      new import_obsidian5.Notice(
+        consoleMsg(lang, "noticeHttpOk", {
+          status: result.health,
+          backend: result.backend,
+          endpoint: result.endpoint
+        })
+      );
+    } catch (e) {
+      const detail = e instanceof HttpProbeError ? e.message : e instanceof Error ? e.message : String(e);
+      new import_obsidian5.Notice(
+        consoleMsg(lang, "noticeHttpFailed", {
+          msg: detail,
+          endpoint
+        })
+      );
+    }
   }
   async testCliVersion() {
     const lang = this.settings.defaultLanguage;
@@ -2250,12 +2836,12 @@ var KotonohaConsolePlugin = class extends import_obsidian3.Plugin {
         env: buildCliEnv(this.settings)
       });
       if (result.exitCode === 0) {
-        new import_obsidian3.Notice(result.stdout.trim().split("\n")[0] ?? consoleMsg(lang, "noticeCliOk"));
+        new import_obsidian5.Notice(result.stdout.trim().split("\n")[0] ?? consoleMsg(lang, "noticeCliOk"));
       } else {
-        new import_obsidian3.Notice(consoleMsg(lang, "noticeCliError", { msg: cliErrorMessage(result) }));
+        new import_obsidian5.Notice(consoleMsg(lang, "noticeCliError", { msg: cliErrorMessage(result) }));
       }
     } catch (e) {
-      new import_obsidian3.Notice(
+      new import_obsidian5.Notice(
         consoleMsg(lang, "noticeCliSpawnFailed", {
           msg: e instanceof Error ? e.message : String(e)
         })
