@@ -146,3 +146,9 @@ vite.config.ts.timestamp-*
 
 # RDE demo ephemeral output
 fixtures/demo-output/
+
+# Local Obsidian dev vault (plugin symlink target)
+dev-vault/.kotonoha/
+dev-vault/.obsidian/workspace.json
+dev-vault/.obsidian/workspace-mobile.json
+dev-vault/.obsidian/plugins/kotonoha-console

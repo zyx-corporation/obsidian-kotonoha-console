@@ -35,6 +35,23 @@ npm test
 
 Link into a vault: copy or symlink this folder to `Vault/.obsidian/plugins/kotonoha-console/` (needs `main.js`, `manifest.json`, `styles.css`).
 
+### Obsidian manual acceptance (RDE 監査)
+
+```bash
+npm run build
+npm run link:dev-vault    # creates dev-vault/ + plugin symlink
+open -a Obsidian dev-vault
+```
+
+1. **Settings → Community plugins** → enable **Kotonoha Console**
+2. **Settings → Kotonoha Console** → Backend: `mock`, **sidecarMode**: on
+3. Open `notes/rde-sample.md`
+4. Command palette → **RDE 監査を実施（アクティブノート）** (or Console panel → **RDE 監査を実施**)
+5. Confirm: RDE audit panel shows `unresolved` (hedging), report is **not** Apply-able
+6. Click **記録を閉じる** → check `dev-vault/.kotonoha/audit/*.rde-audit.json`
+
+Headless pre-check: `npm run demo:rde-audit`
+
 ## Next
 
 - `HttpKotonohaClient` · orchestrator LLM for generative rewrite

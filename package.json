@@ -9,7 +9,8 @@
     "dev": "node esbuild.config.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "demo:rde-audit": "bash scripts/rde_audit_demo.sh"
+    "demo:rde-audit": "bash scripts/rde_audit_demo.sh",
+    "link:dev-vault": "bash scripts/link-dev-vault.sh"
   },
   "devDependencies": {
     "@types/node": "^22.19.19",
