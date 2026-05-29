@@ -29,6 +29,76 @@ __export(main_exports, {
 module.exports = __toCommonJS(main_exports);
 var import_obsidian3 = require("obsidian");
 
+// src/cli/runKotonoha.ts
+var import_child_process = require("child_process");
+function runKotonoha(options) {
+  const useStdin = options.stdin !== void 0;
+  return new Promise((resolve, reject) => {
+    const child = (0, import_child_process.spawn)(options.bin, options.args, {
+      cwd: options.cwd,
+      env: { ...process.env, ...options.env },
+      stdio: useStdin ? ["pipe", "pipe", "pipe"] : ["ignore", "pipe", "pipe"]
+    });
+    let stdout = "";
+    let stderr = "";
+    child.stdout?.on("data", (chunk) => {
+      stdout += chunk.toString("utf8");
+    });
+    child.stderr?.on("data", (chunk) => {
+      stderr += chunk.toString("utf8");
+    });
+    if (useStdin && child.stdin) {
+      child.stdin.write(options.stdin);
+      child.stdin.end();
+    }
+    child.on("error", (err) => {
+      reject(err);
+    });
+    child.on("close", (code, signal) => {
+      if (signal) {
+        reject(new Error(`kotonoha terminated by signal ${signal}`));
+        return;
+      }
+      resolve({ stdout, stderr, exitCode: code ?? 1 });
+    });
+  });
+}
+function cliErrorMessage(result) {
+  const err = result.stderr.trim();
+  if (err) return err;
+  switch (result.exitCode) {
+    case 1:
+      return "CLI usage or environment error (exit 1)";
+    case 2:
+      return "CLI validation or capability deny (exit 2)";
+    case 3:
+      return "CLI database or I/O error (exit 3)";
+    default:
+      return `kotonoha exited with code ${result.exitCode}`;
+  }
+}
+
+// src/cli/buildCliEnv.ts
+function buildCliEnv(settings) {
+  const env = {};
+  if (settings.databaseUrl?.trim()) {
+    env.DATABASE_URL = settings.databaseUrl.trim();
+  }
+  if (settings.principalId?.trim()) {
+    env.KOTONOHA_PRINCIPAL_ID = settings.principalId.trim();
+  }
+  if (settings.projectId?.trim()) {
+    env.KOTONOHA_PROJECT_ID = settings.projectId.trim();
+  }
+  return env;
+}
+
+// src/util/vaultPath.ts
+function vaultBasePath(app) {
+  const adapter = app.vault.adapter;
+  return typeof adapter.getBasePath === "function" ? adapter.getBasePath() : "";
+}
+
 // src/settings/PluginSettings.ts
 var DEFAULT_SETTINGS = {
   backendMode: "mock",
@@ -53,17 +123,52 @@ var KotonohaSettingsTab = class extends import_obsidian.PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
     containerEl.createEl("h2", { text: "Kotonoha Console" });
-    new import_obsidian.Setting(containerEl).setName("Backend mode").setDesc("mock = local stub; http/cli reserved for Phase 2").addDropdown(
+    new import_obsidian.Setting(containerEl).setName("Backend mode").setDesc("cli = kotonoha context export (requires Git vault); mock = local stub").addDropdown(
       (d) => d.addOptions({ mock: "mock", http: "http", cli: "cli" }).setValue(this.plugin.settings.backendMode).onChange(async (v) => {
         this.plugin.settings.backendMode = v;
         await this.plugin.saveSettings();
         this.plugin.refreshClient();
+        this.display();
       })
     );
-    new import_obsidian.Setting(containerEl).setName("CLI command").setDesc("Path to kotonoha binary (cli mode, Phase 2)").addText(
+    containerEl.createEl("h3", { text: "CLI (kotonoha \u2265 0.3.1)" });
+    new import_obsidian.Setting(containerEl).setName("CLI command").setDesc("Path to kotonoha binary").addText(
       (t) => t.setPlaceholder("kotonoha").setValue(this.plugin.settings.cliCommand ?? "kotonoha").onChange(async (v) => {
         this.plugin.settings.cliCommand = v;
         await this.plugin.saveSettings();
+        this.plugin.refreshClient();
+      })
+    ).addButton(
+      (b) => b.setButtonText("Test version").onClick(() => {
+        void this.plugin.testCliVersion();
+      })
+    );
+    new import_obsidian.Setting(containerEl).setName("CLI workdir").setDesc("Git repo root for --path (empty = vault folder)").addText(
+      (t) => t.setPlaceholder("(vault path)").setValue(this.plugin.settings.cliWorkdir ?? "").onChange(async (v) => {
+        this.plugin.settings.cliWorkdir = v;
+        await this.plugin.saveSettings();
+        this.plugin.refreshClient();
+      })
+    );
+    new import_obsidian.Setting(containerEl).setName("DATABASE_URL").setDesc("Optional; required for DB-backed CLI commands later").addText(
+      (t) => t.setPlaceholder("postgres://\u2026").setValue(this.plugin.settings.databaseUrl ?? "").onChange(async (v) => {
+        this.plugin.settings.databaseUrl = v;
+        await this.plugin.saveSettings();
+        this.plugin.refreshClient();
+      })
+    );
+    new import_obsidian.Setting(containerEl).setName("KOTONOHA_PRINCIPAL_ID").addText(
+      (t) => t.setPlaceholder("UUID").setValue(this.plugin.settings.principalId ?? "").onChange(async (v) => {
+        this.plugin.settings.principalId = v;
+        await this.plugin.saveSettings();
+        this.plugin.refreshClient();
+      })
+    );
+    new import_obsidian.Setting(containerEl).setName("KOTONOHA_PROJECT_ID").addText(
+      (t) => t.setPlaceholder("UUID").setValue(this.plugin.settings.projectId ?? "").onChange(async (v) => {
+        this.plugin.settings.projectId = v;
+        await this.plugin.saveSettings();
+        this.plugin.refreshClient();
       })
     );
     new import_obsidian.Setting(containerEl).setName("Git mode").setDesc("Git-aware but never mutates the repo (git-mode-spec)").addDropdown(
@@ -334,12 +439,6 @@ async function sha256Hex(text) {
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-// src/util/vaultPath.ts
-function vaultBasePath(app) {
-  const adapter = app.vault.adapter;
-  return typeof adapter.getBasePath === "function" ? adapter.getBasePath() : "";
-}
-
 // src/obsidian/GitContextReader.ts
 async function readGitContext(app, file, mode) {
   if (mode === "off") return void 0;
@@ -504,6 +603,167 @@ function excerpt(text, mode) {
   return text.length <= max ? text : `${text.slice(0, max)}\u2026`;
 }
 
+// src/cli/proposalFromContextPack.ts
+function parseContextPack(stdout) {
+  const pack = JSON.parse(stdout);
+  if (pack.format !== "kotonoha.context_pack.v0.1") {
+    throw new Error(`unexpected context pack format: ${pack.format ?? "(missing)"}`);
+  }
+  return pack;
+}
+function proposalTextFromContextPack(request, pack) {
+  const anchor = pack.git_anchor;
+  const lines = [
+    `<!-- kotonoha cli ${request.operation} -->`,
+    "",
+    `## Operation`,
+    request.operation,
+    "",
+    `## Instruction`,
+    request.instruction || "(none)",
+    ""
+  ];
+  if (anchor?.git_commit) {
+    lines.push(`## Git anchor`, `- commit: \`${anchor.git_commit}\``, `- file: \`${anchor.file_path ?? request.context.filePath}\``);
+    if (anchor.line_range_start != null) {
+      lines.push(`- lines: ${anchor.line_range_start}\u2013${anchor.line_range_end ?? anchor.line_range_start}`);
+    }
+    lines.push("");
+  }
+  lines.push("## Source", "", request.context.sourceText, "", "---", "", "*CLI mode uses `kotonoha context export` only; connect an orchestrator/LLM for generative rewrite.*");
+  return lines.join("\n");
+}
+
+// src/rde/parseRdeEmit.ts
+var CATEGORY_MAP = {
+  preserved: "preserved",
+  complemented: "inferred_extension",
+  transformed: "authorized_transformation",
+  deviation_risk: "suspicious_drift",
+  intentionally_unresolved: "unresolved",
+  lost: "critical_distortion",
+  next_update_policy: "unresolved"
+};
+function rdeAuditFromEmit(stdout, proposalId) {
+  const root = JSON.parse(stdout);
+  const cats = root.rde_review_output?.categories ?? {};
+  const categories = /* @__PURE__ */ new Set();
+  const preservedElements = [];
+  const transformedElements = [];
+  const inferredExtensions = [];
+  const unresolvedElements = [];
+  const driftRisks = [];
+  for (const [key, items] of Object.entries(cats)) {
+    const mapped = CATEGORY_MAP[key];
+    if (mapped) categories.add(mapped);
+    const target = key === "preserved" ? preservedElements : key === "transformed" ? transformedElements : key === "complemented" ? inferredExtensions : key === "deviation_risk" ? driftRisks : unresolvedElements;
+    for (const item of items ?? []) {
+      target.push(String(item));
+    }
+  }
+  if (categories.size === 0) {
+    categories.add("unresolved");
+  }
+  return {
+    proposalId,
+    createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+    categories: [...categories],
+    preservedElements,
+    transformedElements,
+    inferredExtensions,
+    unresolvedElements,
+    driftRisks,
+    recommendedDecision: "human_review",
+    confidence: 0.5
+  };
+}
+
+// src/client/CliKotonohaClient.ts
+var CliKotonohaClient = class {
+  constructor(options) {
+    this.options = options;
+    this.runner = options.runner ?? runKotonoha;
+  }
+  runner;
+  async generate(request) {
+    await this.assertCliAvailable();
+    const proposalId = crypto.randomUUID();
+    const relFile = request.context.filePath;
+    const args = ["context", "export", relFile, "--path", this.options.cwd];
+    const obsPath = await this.maybeObservationPath(request);
+    if (obsPath) {
+      args.push("--observation", obsPath);
+    }
+    const packResult = await this.run({ args });
+    if (packResult.exitCode !== 0) {
+      throw new Error(cliErrorMessage(packResult));
+    }
+    const pack = parseContextPack(packResult.stdout);
+    const proposedText = proposalTextFromContextPack(request, pack);
+    let audit;
+    if (request.operation === "rde_audit") {
+      const rdeResult = await this.run({ args: ["rde", "emit"] });
+      if (rdeResult.exitCode === 0) {
+        audit = rdeAuditFromEmit(rdeResult.stdout, proposalId);
+      }
+    } else {
+      const hints = pack.meaning_delta_draft?.observation;
+      if (hints && typeof hints === "object") {
+        audit = {
+          proposalId,
+          createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+          categories: ["preserved"],
+          preservedElements: [JSON.stringify(hints).slice(0, 120)],
+          transformedElements: [`cli context export \xB7 ${request.operation}`],
+          inferredExtensions: [],
+          unresolvedElements: [],
+          driftRisks: [],
+          recommendedDecision: "human_review",
+          confidence: 0.6
+        };
+      }
+    }
+    return {
+      proposal: {
+        id: proposalId,
+        requestId: request.id,
+        createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+        proposedText,
+        summary: `[cli] context export \xB7 ${request.operation} \xB7 ${relFile}`,
+        uncertaintyNote: "Generative rewrite requires an orchestrator/LLM; this proposal embeds `kotonoha context export` output."
+      },
+      audit
+    };
+  }
+  async assertCliAvailable() {
+    const result = await this.run({ args: ["version"] });
+    if (result.exitCode !== 0) {
+      throw new Error(
+        `kotonoha not available (${this.options.bin}): ${cliErrorMessage(result)}`
+      );
+    }
+  }
+  async maybeObservationPath(request) {
+    if (!this.options.writeObservation) return void 0;
+    const hasInstruction = request.instruction.trim().length > 0;
+    if (!hasInstruction && request.operation === "custom") return void 0;
+    return this.options.writeObservation({
+      operation: request.operation,
+      instruction: request.instruction,
+      source_hash: request.context.sourceHash
+    });
+  }
+  run(partial) {
+    return this.runner({
+      bin: this.options.bin,
+      cwd: this.options.cwd,
+      env: this.options.env,
+      args: partial.args,
+      stdin: partial.stdin
+    });
+  }
+};
+
 // src/client/MockKotonohaClient.ts
 function id() {
   return crypto.randomUUID();
@@ -547,13 +807,32 @@ var MockKotonohaClient = class {
 };
 
 // src/client/createClient.ts
-function createKotonohaClient(settings) {
-  const mode = settings.backendMode;
-  switch (mode) {
+var OBSERVATION_REL = ".kotonoha/cli-observation.json";
+function createKotonohaClient(settings, app) {
+  switch (settings.backendMode) {
+    case "cli": {
+      const cwd = settings.cliWorkdir?.trim() || vaultBasePath(app) || process.cwd();
+      return new CliKotonohaClient({
+        bin: settings.cliCommand?.trim() || "kotonoha",
+        cwd,
+        env: buildCliEnv(settings),
+        writeObservation: async (payload) => {
+          const dir = ".kotonoha";
+          const adapter = app.vault.adapter;
+          if (!await adapter.exists(dir)) {
+            await adapter.mkdir(dir);
+          }
+          await adapter.write(
+            OBSERVATION_REL,
+            JSON.stringify(payload, null, 2)
+          );
+          return OBSERVATION_REL;
+        }
+      });
+    }
     case "mock":
       return new MockKotonohaClient();
     case "http":
-    case "cli":
       return new MockKotonohaClient();
     default:
       return new MockKotonohaClient();
@@ -598,7 +877,7 @@ var KotonohaConsolePlugin = class extends import_obsidian3.Plugin {
     this.activeNoteReader = new ActiveNoteReader(this.app, this.settings.gitMode);
   }
   refreshClient() {
-    this.client = createKotonohaClient(this.settings);
+    this.client = createKotonohaClient(this.settings, this.app);
     this.proposals = new ProposalService(this.client);
   }
   refreshAuditLog() {
@@ -623,5 +902,24 @@ var KotonohaConsolePlugin = class extends import_obsidian3.Plugin {
   }
   async saveSettings() {
     await this.saveData(this.settings);
+  }
+  async testCliVersion() {
+    const bin = this.settings.cliCommand?.trim() || "kotonoha";
+    const cwd = this.settings.cliWorkdir?.trim() || vaultBasePath(this.app) || ".";
+    try {
+      const result = await runKotonoha({
+        bin,
+        cwd,
+        args: ["version"],
+        env: buildCliEnv(this.settings)
+      });
+      if (result.exitCode === 0) {
+        new import_obsidian3.Notice(result.stdout.trim().split("\n")[0] ?? "kotonoha ok");
+      } else {
+        new import_obsidian3.Notice(`CLI error: ${cliErrorMessage(result)}`);
+      }
+    } catch (e) {
+      new import_obsidian3.Notice(`CLI spawn failed: ${e instanceof Error ? e.message : String(e)}`);
+    }
   }
 };

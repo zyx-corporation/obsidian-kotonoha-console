@@ -1,4 +1,7 @@
-import { Plugin } from "obsidian";
+import { Notice, Plugin } from "obsidian";
+import { cliErrorMessage, runKotonoha } from "./cli/runKotonoha";
+import { buildCliEnv } from "./cli/buildCliEnv";
+import { vaultBasePath } from "./util/vaultPath";
 import {
   DEFAULT_SETTINGS,
   type KotonohaConsoleSettings,
@@ -65,7 +68,7 @@ export default class KotonohaConsolePlugin extends Plugin {
   }
 
   refreshClient(): void {
-    this.client = createKotonohaClient(this.settings);
+    this.client = createKotonohaClient(this.settings, this.app);
     this.proposals = new ProposalService(this.client);
   }
 
@@ -94,5 +97,26 @@ export default class KotonohaConsolePlugin extends Plugin {
 
   async saveSettings(): Promise<void> {
     await this.saveData(this.settings);
+  }
+
+  async testCliVersion(): Promise<void> {
+    const bin = this.settings.cliCommand?.trim() || "kotonoha";
+    const cwd =
+      this.settings.cliWorkdir?.trim() || vaultBasePath(this.app) || ".";
+    try {
+      const result = await runKotonoha({
+        bin,
+        cwd,
+        args: ["version"],
+        env: buildCliEnv(this.settings),
+      });
+      if (result.exitCode === 0) {
+        new Notice(result.stdout.trim().split("\n")[0] ?? "kotonoha ok");
+      } else {
+        new Notice(`CLI error: ${cliErrorMessage(result)}`);
+      }
+    } catch (e) {
+      new Notice(`CLI spawn failed: ${e instanceof Error ? e.message : String(e)}`);
+    }
   }
 }
