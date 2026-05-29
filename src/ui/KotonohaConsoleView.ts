@@ -9,6 +9,8 @@ export const KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
 
 export class KotonohaConsoleView extends ItemView {
   private bundle: ProposalBundle | null = null;
+  private lastOperation: OperationType = "rde_audit";
+  private sourceHashAtGeneration: string | null = null;
   private proposalHost!: HTMLElement;
   private auditHost!: HTMLElement;
   private instructionInput!: HTMLTextAreaElement;
@@ -38,7 +40,7 @@ export class KotonohaConsoleView extends ItemView {
     containerEl.createEl("h2", { text: "Kotonoha Console" });
     containerEl.createEl("p", {
       cls: "kotonoha-console-muted",
-      text: "提案は自動適用されません。Apply の前に内容を確認してください。",
+      text: "提案は自動適用されません。RDE 監査レポートはノートに書き込みません。",
     });
 
     const ctx = await this.plugin.noteContext.capture();
@@ -64,17 +66,21 @@ export class KotonohaConsoleView extends ItemView {
     const form = containerEl.createDiv({ cls: "kotonoha-console-form" });
     form.createEl("label", { text: "Operation" });
     this.operationSelect = form.createEl("select");
-    for (const op of ["summarize", "rewrite", "expand", "rde_audit", "custom"] as OperationType[]) {
+    for (const op of ["rde_audit", "summarize", "rewrite", "expand", "custom"] as OperationType[]) {
       const opt = this.operationSelect.createEl("option", { value: op, text: op });
       opt.value = op;
     }
+    this.operationSelect.value = "rde_audit";
 
     form.createEl("label", { text: "Instruction" });
     this.instructionInput = form.createEl("textarea", {
-      attr: { rows: "3", placeholder: "任意の指示…" },
+      attr: { rows: "3", placeholder: "任意の指示（監査の観点など）…" },
     });
 
     const actions = form.createDiv({ cls: "kotonoha-console-actions" });
+    actions
+      .createEl("button", { text: "RDE 監査を実施", cls: "mod-cta" })
+      .addEventListener("click", () => void this.runRdeAudit());
     actions.createEl("button", { text: "Generate proposal" }).addEventListener(
       "click",
       () => void this.runGenerate(),
@@ -88,14 +94,21 @@ export class KotonohaConsoleView extends ItemView {
     this.containerEl.empty();
   }
 
+  /** Command palette: RDE 監査を実施 */
+  async runRdeAudit(): Promise<void> {
+    this.operationSelect.value = "rde_audit";
+    await this.runGenerate();
+  }
+
   private async runGenerate(): Promise<void> {
     const ctx = await this.plugin.noteContext.capture();
     if (!ctx) {
-      new Notice("No active note");
+      new Notice("アクティブなノートがありません");
       return;
     }
 
     const operation = this.operationSelect.value as OperationType;
+    this.lastOperation = operation;
     const instruction = this.instructionInput.value.trim();
     const request = this.plugin.generationRequests.create(
       ctx,
@@ -105,15 +118,28 @@ export class KotonohaConsoleView extends ItemView {
     );
 
     try {
+      this.sourceHashAtGeneration = ctx.sourceHash;
       this.bundle = await this.plugin.proposals.generate(request);
       await this.plugin.auditLog.logProposal(
         this.bundle.proposal,
         ctx.sourceText,
       );
+      if (this.plugin.settings.sidecarMode && this.bundle.audit) {
+        await this.plugin.sidecar.saveProposalRecord(request, this.bundle.proposal);
+        await this.plugin.sidecar.saveRdeAuditRecord(
+          request,
+          this.bundle.proposal,
+          this.bundle.audit,
+        );
+      }
       this.renderBundle();
-      new Notice("Proposal ready (not applied)");
+      const msg =
+        operation === "rde_audit"
+          ? "RDE 監査完了（.kotonoha/audit/ に保存）"
+          : "Proposal ready (not applied)";
+      new Notice(msg);
     } catch (e) {
-      new Notice(`Generate failed: ${message(e)}`);
+      new Notice(`失敗: ${message(e)}`);
     }
   }
 
@@ -122,30 +148,50 @@ export class KotonohaConsoleView extends ItemView {
     this.auditHost.empty();
     if (!this.bundle) return;
 
+    const isAuditReport = this.lastOperation === "rde_audit";
+
     new ProposalView(this.proposalHost, this.bundle.proposal, {
       onApply: () => void this.applyProposal(),
       onReject: () => void this.rejectProposal(),
       onCopy: () => void this.copyProposal(),
+      auditReportOnly: isAuditReport,
     });
 
-    if (this.plugin.settings.enableRdeAudit && this.bundle.audit) {
+    if (this.bundle.audit && (this.plugin.settings.enableRdeAudit || isAuditReport)) {
       new RdeAuditView(this.auditHost, this.bundle.audit);
     }
   }
 
   private async applyProposal(): Promise<void> {
     if (!this.bundle) return;
-    if (this.plugin.settings.requireHumanApproval) {
-      const ok = confirm(
-        "この提案をノートに適用しますか？元のテキストは上書きされます。",
-      );
-      if (!ok) return;
+    if (this.lastOperation === "rde_audit") {
+      new Notice("RDE 監査レポートはノートに適用できません（Copy を使用）");
+      return;
     }
 
     const ctx = await this.plugin.noteContext.capture();
     if (!ctx) {
       new Notice("No active note");
       return;
+    }
+
+    const current = await this.plugin.noteContext.capture();
+    if (
+      this.sourceHashAtGeneration &&
+      current &&
+      current.sourceHash !== this.sourceHashAtGeneration
+    ) {
+      const ok = confirm(
+        "ソースが変更されています。再監査または明示的な上書きが必要です。続行しますか？",
+      );
+      if (!ok) return;
+    }
+
+    if (this.plugin.settings.requireHumanApproval) {
+      const ok = confirm(
+        "この提案をノートに適用しますか？元のテキストは上書きされます。",
+      );
+      if (!ok) return;
     }
 
     const file = this.plugin.activeNoteReader.getActiveFile();
@@ -177,7 +223,7 @@ export class KotonohaConsoleView extends ItemView {
     if (!this.bundle) return;
     const decision = this.plugin.approval.reject(this.bundle.proposal);
     await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
-    new Notice("Rejected");
+    new Notice(this.lastOperation === "rde_audit" ? "監査を記録（却下）" : "Rejected");
     this.bundle = null;
     this.proposalHost.empty();
     this.auditHost.empty();
@@ -186,7 +232,7 @@ export class KotonohaConsoleView extends ItemView {
   private async copyProposal(): Promise<void> {
     if (!this.bundle) return;
     await navigator.clipboard.writeText(this.bundle.proposal.proposedText);
-    new Notice("Copied to clipboard");
+    new Notice("クリップボードにコピーしました");
   }
 }
 

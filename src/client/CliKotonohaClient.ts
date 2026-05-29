@@ -11,8 +11,7 @@ import {
   proposalTextFromContextPack,
 } from "../cli/proposalFromContextPack";
 import { proposalTextFromLocalContext } from "../cli/proposalFromLocal";
-import { rdeAuditFromEmit } from "../rde/parseRdeEmit";
-import { enrichAuditFromSource } from "../rde/enrichAuditFromSource";
+import { performRdeAudit } from "../services/RdeAuditService";
 import { rdeAuditReportMarkdown } from "../rde/rdeAuditReport";
 
 export interface CliKotonohaClientOptions {
@@ -79,10 +78,9 @@ export class CliKotonohaClient implements KotonohaClient {
       throw new Error(cliErrorMessage(validateResult));
     }
 
-    const audit = enrichAuditFromSource(
-      rdeAuditFromEmit(emitResult.stdout, proposalId),
-      request,
-    );
+    const audit = performRdeAudit(request, proposalId, {
+      cli: { emitStdout: emitResult.stdout },
+    });
     const proposedText = rdeAuditReportMarkdown(request, audit);
 
     return {

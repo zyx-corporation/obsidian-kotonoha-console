@@ -8,7 +8,7 @@ Aligned with [`docs/architecture.ja.md`](docs/architecture.ja.md) phases.
 | 1 Note I/O | **partial** | active note, selection via editor on apply, frontmatter/tags |
 | 2 Kotonoha client | **partial** | `CliKotonohaClient`: RDE audit without Git (`rde emit`/`validate`); `context export` only if `gitMode ≠ off` |
 | 3 Proposal mode | **done** | generate, copy, reject, confirm apply |
-| 4 RDE audit | **partial** | mock categories in panel |
+| 4 RDE audit | **done** | structural diff + CLI `rde emit`/`validate`; `.kotonoha/audit/` sidecar |
 | 5 Approval workflow | **partial** | audit log to `.kotonoha/audit/` |
 
 ## Develop
