@@ -39,11 +39,17 @@ Link into a vault: copy or symlink this folder to `Vault/.obsidian/plugins/koton
 
 ```bash
 npm run build
-npm run link:dev-vault    # creates dev-vault/ + plugin symlink
+npm run link:dev-vault    # copies main.js into dev-vault/.obsidian/plugins/
 open -a Obsidian dev-vault
 ```
 
-1. **Settings → Community plugins** → enable **Kotonoha Console**
+**プラグインが見えない場合**
+
+1. **Restricted mode を OFF** — Settings → Community plugins → 「Restricted mode」を無効化（新規 vault ではデフォルト ON のため、これをしないと一覧に出ません）
+2. **Reload** — Settings → Community plugins → 右上のリロードアイコン
+3. **再コピー** — `npm run build && npm run link:dev-vault`（vault 外 symlink は Obsidian が読み込みません）
+
+手順:
 2. **Settings → Kotonoha Console** → Backend: `mock`, **sidecarMode**: on
 3. Open `notes/rde-sample.md`
 4. Command palette → **RDE 監査を実施（アクティブノート）** (or Console panel → **RDE 監査を実施**)
