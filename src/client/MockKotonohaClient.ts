@@ -1,5 +1,6 @@
 import type { GenerateResult, KotonohaClient } from "./KotonohaClient";
 import type { GenerationRequest } from "../domain/types";
+import { consoleMsg } from "../i18n/consoleI18n";
 import { performRdeAudit } from "../services/RdeAuditService";
 import { rdeAuditReportMarkdown } from "../rde/rdeAuditReport";
 
@@ -10,14 +11,12 @@ function id(): string {
 export class MockKotonohaClient implements KotonohaClient {
   async generate(request: GenerationRequest): Promise<GenerateResult> {
     const { context, operation, instruction } = request;
-    const excerpt =
-      context.sourceText.slice(0, 120).replace(/\n/g, " ") +
-      (context.sourceText.length > 120 ? "…" : "");
+    const lang = request.language;
 
     const proposedText = [
       `<!-- kotonoha mock ${operation} -->`,
       "",
-      `> ${instruction || "(no instruction)"}`,
+      `> ${instruction || consoleMsg(lang, "noInstruction")}`,
       "",
       context.sourceText,
     ].join("\n");
@@ -32,7 +31,7 @@ export class MockKotonohaClient implements KotonohaClient {
           requestId: request.id,
           createdAt: new Date().toISOString(),
           proposedText: rdeAuditReportMarkdown(request, audit),
-          summary: `[mock] RDE audit · ${context.title}`,
+          summary: consoleMsg(lang, "mockRdeSummary", { title: context.title }),
         },
         audit,
       };
@@ -49,9 +48,11 @@ export class MockKotonohaClient implements KotonohaClient {
         requestId: request.id,
         createdAt: new Date().toISOString(),
         proposedText: mockProposal,
-        summary: `[mock] ${operation} on ${context.title}`,
-        uncertaintyNote:
-          "Mock backend — connect HTTP or CLI in settings for real Kotonoha output.",
+        summary: consoleMsg(lang, "mockOpSummary", {
+          operation,
+          title: context.title,
+        }),
+        uncertaintyNote: consoleMsg(lang, "mockUncertainty"),
       },
       audit,
     };

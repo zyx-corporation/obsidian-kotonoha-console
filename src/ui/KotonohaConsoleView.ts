@@ -4,7 +4,8 @@ import type { GenerationRequest, OperationType, ApprovalDecision } from "../doma
 import type { ProposalBundle } from "../services/ProposalService";
 import { ProposalView } from "./ProposalView";
 import { RdeAuditView } from "./RdeAuditView";
-import { performRdeAudit } from "../services/RdeAuditService";
+import { consoleMsg, operationLabel } from "../i18n/consoleI18n";
+import type { RdeLang } from "../rde/rdeI18n";
 
 export const KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
 
@@ -29,7 +30,7 @@ export class KotonohaConsoleView extends ItemView {
   }
 
   getDisplayText(): string {
-    return "Kotonoha Console";
+    return consoleMsg(this.plugin.settings.defaultLanguage, "viewTitle");
   }
 
   getIcon(): string {
@@ -37,15 +38,16 @@ export class KotonohaConsoleView extends ItemView {
   }
 
   async onOpen(): Promise<void> {
+    const lang = this.uiLang();
     const { containerEl } = this;
     containerEl.empty();
     containerEl.addClass("kotonoha-console-root");
 
     const header = containerEl.createDiv({ cls: "kotonoha-console-header" });
-    header.createEl("h2", { text: "Kotonoha Console" });
+    header.createEl("h2", { text: consoleMsg(lang, "viewTitle") });
     header.createEl("p", {
       cls: "kotonoha-console-muted kotonoha-console-tagline",
-      text: "提案は自動適用されません。",
+      text: consoleMsg(lang, "tagline"),
     });
 
     const ctx = await this.plugin.noteContext.capture();
@@ -56,43 +58,48 @@ export class KotonohaConsoleView extends ItemView {
         text: `${ctx.filePath} · ${ctx.sourceHash.slice(0, 8)}…`,
       });
       if (ctx.selectionText) {
-        meta.createEl("div", { cls: "kotonoha-console-meta-line", text: "Scope: selection" });
+        meta.createEl("div", {
+          cls: "kotonoha-console-meta-line",
+          text: consoleMsg(lang, "scopeSelection"),
+        });
       }
       if (ctx.git) {
         meta.createEl("div", {
           cls: "kotonoha-console-meta-line",
-          text: `Git: ${this.plugin.settings.gitMode}`,
+          text: consoleMsg(lang, "gitMode", { mode: this.plugin.settings.gitMode }),
         });
       }
     } else {
       header.createEl("p", {
         cls: "kotonoha-console-warn",
-        text: "アクティブな Markdown ノートを開いてください。",
+        text: consoleMsg(lang, "noActiveNote"),
       });
     }
 
     const form = containerEl.createDiv({ cls: "kotonoha-console-form" });
-    form.createEl("label", { text: "Operation" });
+    form.createEl("label", { text: consoleMsg(lang, "labelOperation") });
     this.operationSelect = form.createEl("select");
     for (const op of ["rde_audit", "summarize", "rewrite", "expand", "custom"] as OperationType[]) {
-      const opt = this.operationSelect.createEl("option", { value: op, text: op });
+      const opt = this.operationSelect.createEl("option", {
+        value: op,
+        text: operationLabel(lang, op),
+      });
       opt.value = op;
     }
     this.operationSelect.value = "rde_audit";
 
-    form.createEl("label", { text: "Instruction" });
+    form.createEl("label", { text: consoleMsg(lang, "labelInstruction") });
     this.instructionInput = form.createEl("textarea", {
-      attr: { rows: "2", placeholder: "任意の指示…" },
+      attr: { rows: "2", placeholder: consoleMsg(lang, "instructionPlaceholder") },
     });
 
     const actions = form.createDiv({ cls: "kotonoha-console-actions" });
     actions
-      .createEl("button", { text: "RDE 監査を実施", cls: "mod-cta" })
+      .createEl("button", { text: consoleMsg(lang, "btnRdeAudit"), cls: "mod-cta" })
       .addEventListener("click", () => void this.runRdeAudit());
-    actions.createEl("button", { text: "Generate proposal" }).addEventListener(
-      "click",
-      () => void this.runGenerate(),
-    );
+    actions
+      .createEl("button", { text: consoleMsg(lang, "btnGenerate") })
+      .addEventListener("click", () => void this.runGenerate());
 
     const results = containerEl.createDiv({ cls: "kotonoha-console-results" });
     this.proposalHost = results.createDiv({ cls: "kotonoha-console-proposal" });
@@ -109,10 +116,18 @@ export class KotonohaConsoleView extends ItemView {
     await this.runGenerate();
   }
 
+  private uiLang(): RdeLang {
+    return this.lastRequest?.language ?? this.plugin.settings.defaultLanguage;
+  }
+
   private async runGenerate(): Promise<void> {
+    const lang = this.plugin.settings.defaultLanguage;
     const ctx = await this.plugin.noteContext.capture();
     if (!ctx) {
-      new Notice("アクティブなノートがありません");
+      this.bundle = null;
+      this.proposalHost?.empty();
+      this.auditHost?.empty();
+      new Notice(consoleMsg(lang, "noticeNoNote"));
       return;
     }
 
@@ -147,17 +162,16 @@ export class KotonohaConsoleView extends ItemView {
         }
       }
       this.renderBundle();
-      const saved =
-        this.plugin.settings.sidecarMode
-          ? "（.kotonoha/ に保存）"
-          : "（sidecarMode off — UI のみ）";
+      const saved = this.plugin.settings.sidecarMode
+        ? consoleMsg(lang, "noticeSavedSidecar")
+        : consoleMsg(lang, "noticeSavedUiOnly");
       const msg =
         operation === "rde_audit"
-          ? `RDE 監査完了${saved}`
-          : "Proposal ready (not applied)";
+          ? consoleMsg(lang, "noticeAuditDone", { saved })
+          : consoleMsg(lang, "noticeProposalReady");
       new Notice(msg);
     } catch (e) {
-      new Notice(`失敗: ${message(e)}`);
+      new Notice(consoleMsg(lang, "noticeFailed", { msg: message(e) }));
     }
   }
 
@@ -197,14 +211,15 @@ export class KotonohaConsoleView extends ItemView {
 
   private async applyProposal(): Promise<void> {
     if (!this.bundle) return;
+    const lang = this.uiLang();
     if (this.lastOperation === "rde_audit") {
-      new Notice("RDE 監査レポートはノートに適用できません（Copy を使用）");
+      new Notice(consoleMsg(lang, "noticeAuditNoApply"));
       return;
     }
 
     const ctx = await this.plugin.noteContext.capture();
     if (!ctx) {
-      new Notice("No active note");
+      new Notice(consoleMsg(lang, "noticeNoNote"));
       return;
     }
 
@@ -214,16 +229,12 @@ export class KotonohaConsoleView extends ItemView {
       current &&
       current.sourceHash !== this.sourceHashAtGeneration
     ) {
-      const ok = confirm(
-        "ソースが変更されています。再監査または明示的な上書きが必要です。続行しますか？",
-      );
+      const ok = confirm(consoleMsg(lang, "confirmSourceChanged"));
       if (!ok) return;
     }
 
     if (this.plugin.settings.requireHumanApproval) {
-      const ok = confirm(
-        "この提案をノートに適用しますか？元のテキストは上書きされます。",
-      );
+      const ok = confirm(consoleMsg(lang, "confirmApply"));
       if (!ok) return;
     }
 
@@ -239,7 +250,7 @@ export class KotonohaConsoleView extends ItemView {
       if (editor) {
         editor.replaceSelection(text);
       } else {
-        new Notice("Open note in editor to apply selection");
+        new Notice(consoleMsg(lang, "noticeOpenEditor"));
         return;
       }
     } else {
@@ -257,8 +268,8 @@ export class KotonohaConsoleView extends ItemView {
     await this.saveReviewSidecar(decision);
     new Notice(
       decision.decision === "partially_applied"
-        ? "Applied revised text (partially_applied)"
-        : "Applied (audit logged)",
+        ? consoleMsg(lang, "noticeAppliedRevised")
+        : consoleMsg(lang, "noticeApplied"),
     );
     this.bundle = null;
     this.lastRequest = null;
@@ -270,10 +281,15 @@ export class KotonohaConsoleView extends ItemView {
 
   private async rejectProposal(): Promise<void> {
     if (!this.bundle) return;
+    const lang = this.uiLang();
     const decision = this.plugin.approval.reject(this.bundle.proposal);
     await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
     await this.saveReviewSidecar(decision);
-    new Notice(this.lastOperation === "rde_audit" ? "監査を記録（却下）" : "Rejected");
+    new Notice(
+      this.lastOperation === "rde_audit"
+        ? consoleMsg(lang, "noticeAuditDismissed")
+        : consoleMsg(lang, "noticeRejected"),
+    );
     this.bundle = null;
     this.lastRequest = null;
     this.proposalHost.empty();
@@ -284,11 +300,12 @@ export class KotonohaConsoleView extends ItemView {
     if (!this.bundle) return;
     const text = this.reviseMode ? this.editedText : this.bundle.proposal.proposedText;
     await navigator.clipboard.writeText(text);
-    new Notice("クリップボードにコピーしました");
+    new Notice(consoleMsg(this.uiLang(), "noticeCopied"));
   }
 
   private async startRevise(): Promise<void> {
     if (!this.bundle || this.lastOperation === "rde_audit") return;
+    const lang = this.uiLang();
     this.reviseMode = true;
     this.editedText = this.bundle.proposal.proposedText;
     const decision = this.plugin.approval.hold(
@@ -297,7 +314,7 @@ export class KotonohaConsoleView extends ItemView {
     );
     await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
     await this.saveReviewSidecar(decision);
-    new Notice("Revise mode — edit proposal, then Apply revision or Re-audit");
+    new Notice(consoleMsg(lang, "noticeReviseMode"));
     this.renderBundle();
   }
 
@@ -320,7 +337,7 @@ export class KotonohaConsoleView extends ItemView {
         audit,
       );
     }
-    new Notice("Re-audit complete (local rule-based)");
+    new Notice(consoleMsg(this.uiLang(), "noticeReAuditDone"));
     this.renderBundle();
   }
 
