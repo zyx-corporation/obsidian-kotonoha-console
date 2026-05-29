@@ -123,7 +123,7 @@ var KotonohaSettingsTab = class extends import_obsidian.PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
     containerEl.createEl("h2", { text: "Kotonoha Console" });
-    new import_obsidian.Setting(containerEl).setName("Backend mode").setDesc("cli = kotonoha context export (requires Git vault); mock = local stub").addDropdown(
+    new import_obsidian.Setting(containerEl).setName("Backend mode").setDesc("cli = kotonoha CLI; RDE audit works without Git; context export only when gitMode \u2260 off").addDropdown(
       (d) => d.addOptions({ mock: "mock", http: "http", cli: "cli" }).setValue(this.plugin.settings.backendMode).onChange(async (v) => {
         this.plugin.settings.backendMode = v;
         await this.plugin.saveSettings();
@@ -634,6 +634,32 @@ function proposalTextFromContextPack(request, pack) {
   return lines.join("\n");
 }
 
+// src/cli/proposalFromLocal.ts
+function proposalTextFromLocalContext(request) {
+  const { context, operation, instruction } = request;
+  return [
+    `<!-- kotonoha cli-local ${operation} -->`,
+    "",
+    `## Operation`,
+    operation,
+    "",
+    `## Instruction`,
+    instruction || "(none)",
+    "",
+    `## Anchor (non-Git)`,
+    `- path: \`${context.filePath}\``,
+    `- source_hash: \`${context.sourceHash.slice(0, 16)}\u2026\``,
+    "",
+    "## Source",
+    "",
+    context.sourceText,
+    "",
+    "---",
+    "",
+    "*Git-aware `context export` skipped (`gitMode: off` or unavailable). Semantic anchors use path + source hash per git-mode-spec.*"
+  ].join("\n");
+}
+
 // src/rde/parseRdeEmit.ts
 var CATEGORY_MAP = {
   preserved: "preserved",
@@ -678,6 +704,56 @@ function rdeAuditFromEmit(stdout, proposalId) {
   };
 }
 
+// src/rde/enrichAuditFromSource.ts
+function enrichAuditFromSource(audit, request) {
+  const excerpt2 = request.context.sourceText.slice(0, 200).replace(/\n/g, " ") + (request.context.sourceText.length > 200 ? "\u2026" : "");
+  return {
+    ...audit,
+    preservedElements: [
+      `path:${request.context.filePath}`,
+      `source_hash:${request.context.sourceHash.slice(0, 16)}\u2026`,
+      excerpt2,
+      ...audit.preservedElements
+    ],
+    driftRisks: audit.driftRisks.length > 0 ? audit.driftRisks : ["Review source vs RDE skeleton \u2014 no Git commit boundary"]
+  };
+}
+
+// src/rde/rdeAuditReport.ts
+function rdeAuditReportMarkdown(request, audit) {
+  const lines = [
+    `<!-- kotonoha rde-audit -->`,
+    "",
+    `# RDE audit`,
+    "",
+    `**File:** \`${request.context.filePath}\``,
+    `**Source hash:** \`${request.context.sourceHash.slice(0, 16)}\u2026\``,
+    `**Recommended:** ${audit.recommendedDecision}`,
+    "",
+    "## Categories",
+    audit.categories.join(", ") || "(none)",
+    ""
+  ];
+  appendSection(lines, "Preserved", audit.preservedElements);
+  appendSection(lines, "Transformed", audit.transformedElements);
+  appendSection(lines, "Inferred", audit.inferredExtensions);
+  appendSection(lines, "Unresolved", audit.unresolvedElements);
+  appendSection(lines, "Drift risks", audit.driftRisks);
+  lines.push("## Source excerpt", "", request.context.sourceText.slice(0, 2e3));
+  if (request.context.sourceText.length > 2e3) {
+    lines.push("", "\u2026");
+  }
+  return lines.join("\n");
+}
+function appendSection(lines, title, items) {
+  if (items.length === 0) return;
+  lines.push(`## ${title}`, "");
+  for (const item of items) {
+    lines.push(`- ${item}`);
+  }
+  lines.push("");
+}
+
 // src/client/CliKotonohaClient.ts
 var CliKotonohaClient = class {
   constructor(options) {
@@ -688,41 +764,67 @@ var CliKotonohaClient = class {
   async generate(request) {
     await this.assertCliAvailable();
     const proposalId = crypto.randomUUID();
+    if (request.operation === "rde_audit") {
+      return this.generateRdeAudit(request, proposalId);
+    }
+    if (this.mayUseContextExport()) {
+      try {
+        return await this.generateWithContextExport(request, proposalId);
+      } catch (e) {
+        const fallback = this.generateLocal(request, proposalId);
+        fallback.proposal.uncertaintyNote = [
+          "Git-aware context export failed; using path + source_hash anchors.",
+          e instanceof Error ? e.message : String(e)
+        ].join(" ");
+        return fallback;
+      }
+    }
+    return this.generateLocal(request, proposalId);
+  }
+  /** git-mode-spec §10: non-Git mode must not require Git-aware CLI. */
+  mayUseContextExport() {
+    return this.options.gitMode !== "off";
+  }
+  async generateRdeAudit(request, proposalId) {
+    const emitResult = await this.run({ args: ["rde", "emit"] });
+    if (emitResult.exitCode !== 0) {
+      throw new Error(cliErrorMessage(emitResult));
+    }
+    const validateResult = await this.run({
+      args: ["rde", "validate", "--strict"],
+      stdin: emitResult.stdout
+    });
+    if (validateResult.exitCode !== 0) {
+      throw new Error(cliErrorMessage(validateResult));
+    }
+    const audit = enrichAuditFromSource(
+      rdeAuditFromEmit(emitResult.stdout, proposalId),
+      request
+    );
+    const proposedText = rdeAuditReportMarkdown(request, audit);
+    return {
+      proposal: {
+        id: proposalId,
+        requestId: request.id,
+        createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+        proposedText,
+        summary: `[cli] RDE audit \xB7 ${request.context.filePath}`,
+        uncertaintyNote: "RDE audit uses `rde emit` + `rde validate` only (no Git). Attach via DB workflow when DATABASE_URL is configured."
+      },
+      audit
+    };
+  }
+  async generateWithContextExport(request, proposalId) {
     const relFile = request.context.filePath;
     const args = ["context", "export", relFile, "--path", this.options.cwd];
     const obsPath = await this.maybeObservationPath(request);
-    if (obsPath) {
-      args.push("--observation", obsPath);
-    }
+    if (obsPath) args.push("--observation", obsPath);
     const packResult = await this.run({ args });
     if (packResult.exitCode !== 0) {
       throw new Error(cliErrorMessage(packResult));
     }
     const pack = parseContextPack(packResult.stdout);
     const proposedText = proposalTextFromContextPack(request, pack);
-    let audit;
-    if (request.operation === "rde_audit") {
-      const rdeResult = await this.run({ args: ["rde", "emit"] });
-      if (rdeResult.exitCode === 0) {
-        audit = rdeAuditFromEmit(rdeResult.stdout, proposalId);
-      }
-    } else {
-      const hints = pack.meaning_delta_draft?.observation;
-      if (hints && typeof hints === "object") {
-        audit = {
-          proposalId,
-          createdAt: (/* @__PURE__ */ new Date()).toISOString(),
-          categories: ["preserved"],
-          preservedElements: [JSON.stringify(hints).slice(0, 120)],
-          transformedElements: [`cli context export \xB7 ${request.operation}`],
-          inferredExtensions: [],
-          unresolvedElements: [],
-          driftRisks: [],
-          recommendedDecision: "human_review",
-          confidence: 0.6
-        };
-      }
-    }
     return {
       proposal: {
         id: proposalId,
@@ -730,9 +832,20 @@ var CliKotonohaClient = class {
         createdAt: (/* @__PURE__ */ new Date()).toISOString(),
         proposedText,
         summary: `[cli] context export \xB7 ${request.operation} \xB7 ${relFile}`,
-        uncertaintyNote: "Generative rewrite requires an orchestrator/LLM; this proposal embeds `kotonoha context export` output."
-      },
-      audit
+        uncertaintyNote: "Generative rewrite requires an orchestrator/LLM; proposal embeds `kotonoha context export`."
+      }
+    };
+  }
+  generateLocal(request, proposalId) {
+    return {
+      proposal: {
+        id: proposalId,
+        requestId: request.id,
+        createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+        proposedText: proposalTextFromLocalContext(request),
+        summary: `[cli-local] ${request.operation} \xB7 ${request.context.filePath}`,
+        uncertaintyNote: this.options.gitMode === "off" ? "gitMode is off \u2014 Git-aware CLI not used (git-mode-spec \xA74)." : "Local anchors only (path + source_hash)."
+      }
     };
   }
   async assertCliAvailable() {
@@ -815,6 +928,7 @@ function createKotonohaClient(settings, app) {
       return new CliKotonohaClient({
         bin: settings.cliCommand?.trim() || "kotonoha",
         cwd,
+        gitMode: settings.gitMode,
         env: buildCliEnv(settings),
         writeObservation: async (payload) => {
           const dir = ".kotonoha";
