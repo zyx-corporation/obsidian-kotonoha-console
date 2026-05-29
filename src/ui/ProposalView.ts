@@ -25,6 +25,7 @@ export class ProposalView {
     actions: ProposalViewActions,
   ) {
     host.createEl("h3", {
+      cls: "kotonoha-console-section-title",
       text: actions.auditReportOnly
         ? "RDE 監査レポート"
         : actions.reviseMode
@@ -54,7 +55,11 @@ export class ProposalView {
         actions.onEditedTextChange?.(textarea.value);
       });
     } else {
-      const pre = host.createEl("pre", { cls: "kotonoha-console-pre" });
+      const pre = host.createEl("pre", {
+        cls: actions.auditReportOnly
+          ? "kotonoha-console-pre kotonoha-console-pre-audit"
+          : "kotonoha-console-pre",
+      });
       pre.setText(proposal.proposedText);
     }
 

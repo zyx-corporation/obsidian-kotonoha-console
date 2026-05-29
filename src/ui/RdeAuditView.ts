@@ -4,20 +4,19 @@ import {
   shouldShowLowConfidenceWarning,
 } from "./rdeAuditPolicyMessages";
 
+const OPEN_BY_DEFAULT = new Set(["Unresolved", "Drift risks"]);
+
 export class RdeAuditView {
   constructor(host: HTMLElement, audit: RdeAudit) {
-    host.createEl("h3", { text: "RDE audit" });
+    host.addClass("kotonoha-console-audit-panel");
+    host.createEl("h3", { cls: "kotonoha-console-section-title", text: "RDE audit" });
     if (shouldShowLowConfidenceWarning(audit)) {
       host.createEl("p", { cls: "kotonoha-console-warn", text: RDE_AUDIT_LOW_CONFIDENCE });
     }
     host.createEl("p", {
-      text: `Recommended: ${audit.recommendedDecision} · confidence ${(audit.confidence * 100).toFixed(0)}% (informative — not safety score)`,
+      cls: "kotonoha-console-audit-summary",
+      text: `${audit.recommendedDecision} · ${(audit.confidence * 100).toFixed(0)}% · ${audit.categories.join(", ") || "(none)"}`,
     });
-
-    const cats = host.createEl("p", {
-      text: `Categories: ${audit.categories.join(", ")}`,
-    });
-    cats.addClass("kotonoha-console-muted");
 
     appendList(host, "Preserved", audit.preservedElements);
     appendList(host, "Transformed", audit.transformedElements);
@@ -29,9 +28,10 @@ export class RdeAuditView {
 
 function appendList(host: HTMLElement, title: string, items: string[]): void {
   if (items.length === 0) return;
-  const section = host.createEl("div");
-  section.createEl("strong", { text: title });
-  const ul = section.createEl("ul");
+  const details = host.createEl("details", { cls: "kotonoha-console-audit-details" });
+  if (OPEN_BY_DEFAULT.has(title)) details.open = true;
+  details.createEl("summary", { text: `${title} (${items.length})` });
+  const ul = details.createEl("ul");
   for (const item of items) {
     ul.createEl("li", { text: item });
   }

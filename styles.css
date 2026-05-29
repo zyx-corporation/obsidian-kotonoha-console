@@ -1,6 +1,25 @@
 .kotonoha-console-root {
-  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  padding: 0.5rem 0.6rem;
   font-size: var(--font-ui-small);
+  box-sizing: border-box;
+}
+
+.kotonoha-console-header {
+  flex-shrink: 0;
+}
+
+.kotonoha-console-header h2 {
+  margin: 0 0 0.25rem;
+  font-size: var(--font-ui-medium);
+}
+
+.kotonoha-console-tagline {
+  margin: 0 0 0.35rem;
+  font-size: var(--font-ui-smaller);
 }
 
 .kotonoha-console-muted {
@@ -9,47 +28,125 @@
 
 .kotonoha-console-warn {
   color: var(--text-warning);
+  margin: 0.25rem 0;
+  font-size: var(--font-ui-smaller);
 }
 
 .kotonoha-console-meta {
-  margin: 0.5rem 0;
-  padding: 0.5rem;
+  margin: 0.25rem 0 0.5rem;
+  padding: 0.35rem 0.5rem;
   border-radius: 4px;
   background: var(--background-secondary);
+  font-size: var(--font-ui-smaller);
+}
+
+.kotonoha-console-meta-line {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kotonoha-console-form {
+  flex-shrink: 0;
 }
 
 .kotonoha-console-form label {
   display: block;
-  margin-top: 0.5rem;
+  margin-top: 0.35rem;
   font-weight: 600;
+  font-size: var(--font-ui-smaller);
 }
 
 .kotonoha-console-form textarea,
 .kotonoha-console-form select,
 .kotonoha-console-revise {
   width: 100%;
-  margin-top: 0.25rem;
+  margin-top: 0.15rem;
+  box-sizing: border-box;
 }
 
 .kotonoha-console-revise {
-  min-height: 160px;
+  min-height: 120px;
+  max-height: 200px;
   font-family: var(--font-monospace);
   font-size: var(--font-ui-smaller);
 }
 
 .kotonoha-console-actions {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
   flex-wrap: wrap;
 }
 
+.kotonoha-console-actions button {
+  font-size: var(--font-ui-smaller);
+}
+
+.kotonoha-console-results {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.kotonoha-console-section-title {
+  margin: 0.5rem 0 0.25rem;
+  font-size: var(--font-ui-small);
+}
+
+.kotonoha-console-proposal:first-child .kotonoha-console-section-title {
+  margin-top: 0;
+}
+
 .kotonoha-console-pre {
-  max-height: 240px;
+  max-height: 9rem;
   overflow: auto;
   white-space: pre-wrap;
   word-break: break-word;
   background: var(--background-primary-alt);
-  padding: 0.5rem;
+  padding: 0.4rem 0.5rem;
   border-radius: 4px;
+  margin: 0.25rem 0;
+  font-size: var(--font-ui-smaller);
+  line-height: 1.35;
+}
+
+.kotonoha-console-pre-audit {
+  max-height: 6rem;
+}
+
+.kotonoha-console-audit-panel {
+  margin-top: 0.5rem;
+}
+
+.kotonoha-console-audit-summary {
+  margin: 0.15rem 0 0.35rem;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+.kotonoha-console-audit-details {
+  margin: 0.2rem 0;
+  font-size: var(--font-ui-smaller);
+}
+
+.kotonoha-console-audit-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.15rem 0;
+}
+
+.kotonoha-console-audit-details ul {
+  margin: 0.15rem 0 0.35rem;
+  padding-left: 1.1rem;
+  max-height: 5.5rem;
+  overflow-y: auto;
+}
+
+.kotonoha-console-audit-details li {
+  margin: 0.1rem 0;
+  word-break: break-word;
 }
