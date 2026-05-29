@@ -218,6 +218,14 @@ var KotonohaSettingsTab = class extends import_obsidian.PluginSettingTab {
 // src/ui/KotonohaConsoleView.ts
 var import_obsidian2 = require("obsidian");
 
+// src/ui/rdeAuditPolicyMessages.ts
+var RDE_AUDIT_UNAVAILABLE = "RDE audit is not available for this proposal. Review carefully before applying.";
+var RDE_AUDIT_LOW_CONFIDENCE = "RDE audit confidence is low. Human review is required.";
+var LOW_CONFIDENCE_THRESHOLD = 0.55;
+function shouldShowLowConfidenceWarning(audit) {
+  return audit.confidence < LOW_CONFIDENCE_THRESHOLD || audit.recommendedDecision === "human_review";
+}
+
 // src/ui/ProposalView.ts
 var ProposalView = class {
   constructor(host, proposal, actions) {
@@ -226,6 +234,9 @@ var ProposalView = class {
     });
     if (proposal.summary) {
       host.createEl("p", { cls: "kotonoha-console-muted", text: proposal.summary });
+    }
+    if (actions.auditMissing) {
+      host.createEl("p", { cls: "kotonoha-console-warn", text: RDE_AUDIT_UNAVAILABLE });
     }
     if (proposal.uncertaintyNote) {
       host.createEl("p", {
@@ -248,8 +259,11 @@ var ProposalView = class {
 var RdeAuditView = class {
   constructor(host, audit) {
     host.createEl("h3", { text: "RDE audit" });
+    if (shouldShowLowConfidenceWarning(audit)) {
+      host.createEl("p", { cls: "kotonoha-console-warn", text: RDE_AUDIT_LOW_CONFIDENCE });
+    }
     host.createEl("p", {
-      text: `Recommended: ${audit.recommendedDecision} \xB7 confidence ${(audit.confidence * 100).toFixed(0)}% (informative)`
+      text: `Recommended: ${audit.recommendedDecision} \xB7 confidence ${(audit.confidence * 100).toFixed(0)}% (informative \u2014 not safety score)`
     });
     const cats = host.createEl("p", {
       text: `Categories: ${audit.categories.join(", ")}`
@@ -394,13 +408,16 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     this.auditHost.empty();
     if (!this.bundle) return;
     const isAuditReport = this.lastOperation === "rde_audit";
+    const wantsAudit = this.plugin.settings.enableRdeAudit || isAuditReport;
+    const auditMissing = wantsAudit && !isAuditReport && !this.bundle.audit;
     new ProposalView(this.proposalHost, this.bundle.proposal, {
       onApply: () => void this.applyProposal(),
       onReject: () => void this.rejectProposal(),
       onCopy: () => void this.copyProposal(),
-      auditReportOnly: isAuditReport
+      auditReportOnly: isAuditReport,
+      auditMissing
     });
-    if (this.bundle.audit && (this.plugin.settings.enableRdeAudit || isAuditReport)) {
+    if (this.bundle.audit && wantsAudit) {
       new RdeAuditView(this.auditHost, this.bundle.audit);
     }
   }
@@ -644,6 +661,8 @@ function excerpt(text, mode) {
 var ROOT = ".kotonoha";
 var PROPOSALS = `${ROOT}/proposals`;
 var AUDIT = `${ROOT}/audit`;
+var PLUGIN_ID = "obsidian-kotonoha-console";
+var SCHEMA_VERSION = "0.1.0";
 var SidecarStore = class {
   constructor(app) {
     this.app = app;
@@ -652,6 +671,8 @@ var SidecarStore = class {
     await this.ensureDirs();
     const path = `${PROPOSALS}/${proposal.id}.proposal.json`;
     const body = {
+      schemaVersion: SCHEMA_VERSION,
+      plugin: PLUGIN_ID,
       format: "kotonoha.obsidian.proposal.v0.1",
       proposalId: proposal.id,
       requestId: request.id,
@@ -660,21 +681,27 @@ var SidecarStore = class {
       sourceHash: request.context.sourceHash,
       proposalHash: await hash(proposal.proposedText),
       createdAt: proposal.createdAt,
-      summary: proposal.summary
+      summary: proposal.summary,
+      decision: { status: "pending" }
     };
     await this.app.vault.adapter.write(path, JSON.stringify(body, null, 2));
   }
   async saveRdeAuditRecord(request, proposal, audit) {
     await this.ensureDirs();
     const path = `${AUDIT}/${proposal.id}.rde-audit.json`;
+    const proposalHash = await hash(proposal.proposedText);
     const body = {
+      schemaVersion: SCHEMA_VERSION,
+      plugin: PLUGIN_ID,
       format: "kotonoha.obsidian.rde_audit.v0.1",
       proposalId: proposal.id,
       filePath: request.context.filePath,
       sourceHash: request.context.sourceHash,
+      proposalHash,
       operation: request.operation,
       createdAt: audit.createdAt,
-      audit
+      rde: audit,
+      decision: { status: "pending" }
     };
     await this.app.vault.adapter.write(path, JSON.stringify(body, null, 2));
   }
@@ -751,9 +778,45 @@ function proposalTextFromLocalContext(request) {
 }
 
 // src/rde/StructuralDiffBuilder.ts
+var REWRITE_LENGTH_SHRINK_RATIO = 0.5;
 var HEDGING = /\b(may|might|could|possibly|perhaps|likely|probably|かもしれない|可能性|推測)\b/giu;
 var STRONG = /\b(must|will|always|never|certainly|clearly|proves?|確実|必ず|明らか|証明)\b/giu;
-function buildStructuralDiff(source, proposal) {
+function buildSourceReview(source) {
+  const preservedElements = [];
+  const unresolvedElements = [];
+  const categories = /* @__PURE__ */ new Set();
+  const hedgeCount = (source.match(HEDGING) ?? []).length;
+  const strongCount = (source.match(STRONG) ?? []).length;
+  const lineCount = source.split(/\n/).filter((l) => l.trim()).length;
+  categories.add("preserved");
+  preservedElements.push(`source note review (${lineCount} non-empty lines)`);
+  if (hedgeCount > 0) {
+    categories.add("unresolved");
+    unresolvedElements.push(
+      `source contains ${hedgeCount} hedging marker(s) \u2014 meaning may remain open`
+    );
+  }
+  if (strongCount > 0) {
+    preservedElements.push(`source contains ${strongCount} strong claim marker(s)`);
+  }
+  if (hedgeCount === 0 && strongCount === 0 && source.trim().length > 0) {
+    unresolvedElements.push(
+      "no hedging or strong-claim markers detected \u2014 rule-based signals limited"
+    );
+    categories.add("unresolved");
+  }
+  return {
+    categories: [...categories],
+    preservedElements,
+    transformedElements: [],
+    inferredExtensions: [],
+    unresolvedElements,
+    driftRisks: [],
+    lineAdditions: 0,
+    lineDeletions: 0
+  };
+}
+function buildStructuralDiff(source, proposal, options) {
   const preservedElements = [];
   const transformedElements = [];
   const inferredExtensions = [];
@@ -796,6 +859,9 @@ function buildStructuralDiff(source, proposal) {
       categories.add("inferred_extension");
     }
   }
+  if (!sameText && proposal) {
+    scanMvpGuardrails(source, proposal, options, driftRisks, categories);
+  }
   if (categories.size === 0) {
     categories.add("unresolved");
     unresolvedElements.push("insufficient structural signal for classification");
@@ -833,6 +899,38 @@ function scanHedgingLoss(source, proposal, driftRisks, categories) {
   if (lost.length > 0) {
     driftRisks.push(`hedging terms dropped: ${lost.join(", ")}`);
     categories.add("suspicious_drift");
+  }
+}
+function scanMvpGuardrails(source, proposal, options, driftRisks, categories) {
+  const fm = options?.frontmatter ?? {};
+  for (const key of Object.keys(fm)) {
+    if (!proposal.includes(`${key}:`) && !proposal.includes(`${key} `)) {
+      driftRisks.push(`frontmatter key may be removed or altered: ${key}`);
+      categories.add("suspicious_drift");
+    }
+  }
+  const linkTargets = new Set(options?.sourceLinks ?? []);
+  for (const m of source.matchAll(/\[\[([^\]|#]+)/g)) {
+    linkTargets.add(m[1]);
+  }
+  for (const m of source.matchAll(/\]\(([^)]+)\)/g)) {
+    linkTargets.add(m[1]);
+  }
+  for (const target of linkTargets) {
+    const needle = target.replace(/^\[\[/, "").replace(/\]\]$/, "");
+    if (needle && !proposal.includes(needle)) {
+      driftRisks.push(`link or wikilink may be removed: ${needle}`);
+      categories.add("suspicious_drift");
+    }
+  }
+  if (options?.operation === "rewrite") {
+    const ratio = proposal.length / Math.max(source.length, 1);
+    if (ratio < REWRITE_LENGTH_SHRINK_RATIO) {
+      driftRisks.push(
+        `rewrite shortened text to ${(ratio * 100).toFixed(0)}% of source (threshold ${REWRITE_LENGTH_SHRINK_RATIO * 100}%)`
+      );
+      categories.add("suspicious_drift");
+    }
   }
 }
 
@@ -887,6 +985,12 @@ function recommendDecision(categories, driftRisks) {
 // src/rde/enrichAuditFromSource.ts
 function enrichAuditFromSource(audit, request) {
   const excerpt2 = request.context.sourceText.slice(0, 200).replace(/\n/g, " ") + (request.context.sourceText.length > 200 ? "\u2026" : "");
+  const unresolvedElements = [...audit.unresolvedElements];
+  if (!request.context.git) {
+    unresolvedElements.push(
+      "Non-Git vault: no commit boundary; semantic anchors use path + source_hash only"
+    );
+  }
   return {
     ...audit,
     preservedElements: [
@@ -895,7 +999,7 @@ function enrichAuditFromSource(audit, request) {
       excerpt2,
       ...audit.preservedElements
     ],
-    driftRisks: audit.driftRisks.length > 0 ? audit.driftRisks : ["Review source vs RDE skeleton \u2014 no Git commit boundary"]
+    unresolvedElements
   };
 }
 
@@ -945,10 +1049,14 @@ function rdeAuditFromEmit(stdout, proposalId) {
 
 // src/services/RdeAuditService.ts
 function performRdeAudit(request, proposalId, options) {
-  const compareTarget = options?.proposalText ?? request.context.sourceText;
-  const structural = buildStructuralDiff(
+  const structural = options?.sourceReview && !options?.proposalText ? buildSourceReview(request.context.sourceText) : buildStructuralDiff(
     request.context.sourceText,
-    compareTarget
+    options?.proposalText ?? request.context.sourceText,
+    {
+      operation: request.operation,
+      frontmatter: request.context.frontmatter,
+      sourceLinks: request.context.links
+    }
   );
   let base;
   if (options?.cli?.emitStdout) {
@@ -1025,6 +1133,7 @@ var CliKotonohaClient = class {
       } catch (e) {
         const fallback = this.generateLocal(request, proposalId);
         fallback.proposal.uncertaintyNote = [
+          fallback.proposal.uncertaintyNote,
           "Git-aware context export failed; using path + source_hash anchors.",
           e instanceof Error ? e.message : String(e)
         ].join(" ");
@@ -1050,7 +1159,8 @@ var CliKotonohaClient = class {
       throw new Error(cliErrorMessage(validateResult));
     }
     const audit = performRdeAudit(request, proposalId, {
-      cli: { emitStdout: emitResult.stdout }
+      cli: { emitStdout: emitResult.stdout },
+      sourceReview: true
     });
     const proposedText = rdeAuditReportMarkdown(request, audit);
     return {
@@ -1060,7 +1170,7 @@ var CliKotonohaClient = class {
         createdAt: (/* @__PURE__ */ new Date()).toISOString(),
         proposedText,
         summary: `[cli] RDE audit \xB7 ${request.context.filePath}`,
-        uncertaintyNote: "RDE audit uses `rde emit` + `rde validate` only (no Git). Attach via DB workflow when DATABASE_URL is configured."
+        uncertaintyNote: "Rule-based source review + CLI `rde emit`/`validate` (interchange skeleton only \u2014 not full RDE). DB attach when DATABASE_URL is configured."
       },
       audit
     };
@@ -1076,27 +1186,30 @@ var CliKotonohaClient = class {
     }
     const pack = parseContextPack(packResult.stdout);
     const proposedText = proposalTextFromContextPack(request, pack);
+    return this.withLocalAudit(request, proposalId, proposedText, {
+      summary: `[cli] context export \xB7 ${request.operation} \xB7 ${relFile}`,
+      uncertaintyNote: "Generative rewrite requires an orchestrator/LLM; proposal embeds `kotonoha context export`. Local rule-based RDE audit attached."
+    });
+  }
+  generateLocal(request, proposalId) {
+    const proposedText = proposalTextFromLocalContext(request);
+    return this.withLocalAudit(request, proposalId, proposedText, {
+      summary: `[cli-local] ${request.operation} \xB7 ${request.context.filePath}`,
+      uncertaintyNote: this.options.gitMode === "off" ? "gitMode is off \u2014 Git-aware CLI not used (git-mode-spec \xA74). Local rule-based RDE audit attached." : "Local anchors only (path + source_hash). Local rule-based RDE audit attached."
+    });
+  }
+  withLocalAudit(request, proposalId, proposedText, meta) {
+    const audit = performRdeAudit(request, proposalId, { proposalText: proposedText });
     return {
       proposal: {
         id: proposalId,
         requestId: request.id,
         createdAt: (/* @__PURE__ */ new Date()).toISOString(),
         proposedText,
-        summary: `[cli] context export \xB7 ${request.operation} \xB7 ${relFile}`,
-        uncertaintyNote: "Generative rewrite requires an orchestrator/LLM; proposal embeds `kotonoha context export`."
-      }
-    };
-  }
-  generateLocal(request, proposalId) {
-    return {
-      proposal: {
-        id: proposalId,
-        requestId: request.id,
-        createdAt: (/* @__PURE__ */ new Date()).toISOString(),
-        proposedText: proposalTextFromLocalContext(request),
-        summary: `[cli-local] ${request.operation} \xB7 ${request.context.filePath}`,
-        uncertaintyNote: this.options.gitMode === "off" ? "gitMode is off \u2014 Git-aware CLI not used (git-mode-spec \xA74)." : "Local anchors only (path + source_hash)."
-      }
+        summary: meta.summary,
+        uncertaintyNote: meta.uncertaintyNote
+      },
+      audit
     };
   }
   async assertCliAvailable() {
@@ -1145,7 +1258,7 @@ var MockKotonohaClient = class {
     ].join("\n");
     const proposalId = id();
     if (operation === "rde_audit") {
-      const audit2 = performRdeAudit(request, proposalId);
+      const audit2 = performRdeAudit(request, proposalId, { sourceReview: true });
       return {
         proposal: {
           id: proposalId,

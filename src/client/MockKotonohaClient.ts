@@ -25,7 +25,7 @@ export class MockKotonohaClient implements KotonohaClient {
     const proposalId = id();
 
     if (operation === "rde_audit") {
-      const audit = performRdeAudit(request, proposalId);
+      const audit = performRdeAudit(request, proposalId, { sourceReview: true });
       return {
         proposal: {
           id: proposalId,

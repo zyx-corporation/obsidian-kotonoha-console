@@ -4,6 +4,8 @@ import type { GenerationRequest, Proposal, RdeAudit } from "../domain/types";
 const ROOT = ".kotonoha";
 const PROPOSALS = `${ROOT}/proposals`;
 const AUDIT = `${ROOT}/audit`;
+const PLUGIN_ID = "obsidian-kotonoha-console";
+const SCHEMA_VERSION = "0.1.0";
 
 export class SidecarStore {
   constructor(private readonly app: App) {}
@@ -15,6 +17,8 @@ export class SidecarStore {
     await this.ensureDirs();
     const path = `${PROPOSALS}/${proposal.id}.proposal.json`;
     const body = {
+      schemaVersion: SCHEMA_VERSION,
+      plugin: PLUGIN_ID,
       format: "kotonoha.obsidian.proposal.v0.1",
       proposalId: proposal.id,
       requestId: request.id,
@@ -24,6 +28,7 @@ export class SidecarStore {
       proposalHash: await hash(proposal.proposedText),
       createdAt: proposal.createdAt,
       summary: proposal.summary,
+      decision: { status: "pending" as const },
     };
     await this.app.vault.adapter.write(path, JSON.stringify(body, null, 2));
   }
@@ -35,14 +40,19 @@ export class SidecarStore {
   ): Promise<void> {
     await this.ensureDirs();
     const path = `${AUDIT}/${proposal.id}.rde-audit.json`;
+    const proposalHash = await hash(proposal.proposedText);
     const body = {
+      schemaVersion: SCHEMA_VERSION,
+      plugin: PLUGIN_ID,
       format: "kotonoha.obsidian.rde_audit.v0.1",
       proposalId: proposal.id,
       filePath: request.context.filePath,
       sourceHash: request.context.sourceHash,
+      proposalHash,
       operation: request.operation,
       createdAt: audit.createdAt,
-      audit,
+      rde: audit,
+      decision: { status: "pending" as const },
     };
     await this.app.vault.adapter.write(path, JSON.stringify(body, null, 2));
   }

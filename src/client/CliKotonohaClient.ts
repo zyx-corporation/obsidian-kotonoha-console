@@ -46,6 +46,7 @@ export class CliKotonohaClient implements KotonohaClient {
       } catch (e) {
         const fallback = this.generateLocal(request, proposalId);
         fallback.proposal.uncertaintyNote = [
+          fallback.proposal.uncertaintyNote,
           "Git-aware context export failed; using path + source_hash anchors.",
           e instanceof Error ? e.message : String(e),
         ].join(" ");
@@ -80,6 +81,7 @@ export class CliKotonohaClient implements KotonohaClient {
 
     const audit = performRdeAudit(request, proposalId, {
       cli: { emitStdout: emitResult.stdout },
+      sourceReview: true,
     });
     const proposedText = rdeAuditReportMarkdown(request, audit);
 
@@ -91,7 +93,7 @@ export class CliKotonohaClient implements KotonohaClient {
         proposedText,
         summary: `[cli] RDE audit · ${request.context.filePath}`,
         uncertaintyNote:
-          "RDE audit uses `rde emit` + `rde validate` only (no Git). Attach via DB workflow when DATABASE_URL is configured.",
+          "Rule-based source review + CLI `rde emit`/`validate` (interchange skeleton only — not full RDE). DB attach when DATABASE_URL is configured.",
       },
       audit,
     };
@@ -114,35 +116,44 @@ export class CliKotonohaClient implements KotonohaClient {
     const pack = parseContextPack(packResult.stdout);
     const proposedText = proposalTextFromContextPack(request, pack);
 
-    return {
-      proposal: {
-        id: proposalId,
-        requestId: request.id,
-        createdAt: new Date().toISOString(),
-        proposedText,
-        summary: `[cli] context export · ${request.operation} · ${relFile}`,
-        uncertaintyNote:
-          "Generative rewrite requires an orchestrator/LLM; proposal embeds `kotonoha context export`.",
-      },
-    };
+    return this.withLocalAudit(request, proposalId, proposedText, {
+      summary: `[cli] context export · ${request.operation} · ${relFile}`,
+      uncertaintyNote:
+        "Generative rewrite requires an orchestrator/LLM; proposal embeds `kotonoha context export`. Local rule-based RDE audit attached.",
+    });
   }
 
   private generateLocal(
     request: GenerationRequest,
     proposalId: string,
   ): GenerateResult {
+    const proposedText = proposalTextFromLocalContext(request);
+    return this.withLocalAudit(request, proposalId, proposedText, {
+      summary: `[cli-local] ${request.operation} · ${request.context.filePath}`,
+      uncertaintyNote:
+        this.options.gitMode === "off"
+          ? "gitMode is off — Git-aware CLI not used (git-mode-spec §4). Local rule-based RDE audit attached."
+          : "Local anchors only (path + source_hash). Local rule-based RDE audit attached.",
+    });
+  }
+
+  private withLocalAudit(
+    request: GenerationRequest,
+    proposalId: string,
+    proposedText: string,
+    meta: { summary: string; uncertaintyNote: string },
+  ): GenerateResult {
+    const audit = performRdeAudit(request, proposalId, { proposalText: proposedText });
     return {
       proposal: {
         id: proposalId,
         requestId: request.id,
         createdAt: new Date().toISOString(),
-        proposedText: proposalTextFromLocalContext(request),
-        summary: `[cli-local] ${request.operation} · ${request.context.filePath}`,
-        uncertaintyNote:
-          this.options.gitMode === "off"
-            ? "gitMode is off — Git-aware CLI not used (git-mode-spec §4)."
-            : "Local anchors only (path + source_hash).",
+        proposedText,
+        summary: meta.summary,
+        uncertaintyNote: meta.uncertaintyNote,
       },
+      audit,
     };
   }
 

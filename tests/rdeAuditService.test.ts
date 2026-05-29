@@ -23,11 +23,14 @@ const request: GenerationRequest = {
 };
 
 describe("performRdeAudit", () => {
-  it("merges structural analysis for source-only audit", () => {
-    const audit = performRdeAudit(request, "p1");
+  it("source review flags hedging without fake drift risks", () => {
+    const audit = performRdeAudit(request, "p1", { sourceReview: true });
     expect(audit.proposalId).toBe("p1");
     expect(audit.preservedElements.some((e) => e.includes("path:"))).toBe(true);
-    expect(audit.categories.length).toBeGreaterThan(0);
+    expect(audit.unresolvedElements.some((e) => e.includes("hedging"))).toBe(true);
+    expect(audit.driftRisks.some((r) => r.includes("Git commit boundary"))).toBe(
+      false,
+    );
   });
 
   it("detects drift when proposal strengthens claims", () => {

@@ -1,4 +1,5 @@
 import type { Proposal } from "../domain/types";
+import { RDE_AUDIT_UNAVAILABLE } from "./rdeAuditPolicyMessages";
 
 export interface ProposalViewActions {
   onApply: () => void;
@@ -6,6 +7,8 @@ export interface ProposalViewActions {
   onCopy: () => void;
   /** RDE audit report — do not offer Apply to note */
   auditReportOnly?: boolean;
+  /** rde-audit-policy §16 — audit expected but missing */
+  auditMissing?: boolean;
 }
 
 export class ProposalView {
@@ -19,6 +22,9 @@ export class ProposalView {
     });
     if (proposal.summary) {
       host.createEl("p", { cls: "kotonoha-console-muted", text: proposal.summary });
+    }
+    if (actions.auditMissing) {
+      host.createEl("p", { cls: "kotonoha-console-warn", text: RDE_AUDIT_UNAVAILABLE });
     }
     if (proposal.uncertaintyNote) {
       host.createEl("p", {

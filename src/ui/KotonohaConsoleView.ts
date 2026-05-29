@@ -150,14 +150,18 @@ export class KotonohaConsoleView extends ItemView {
 
     const isAuditReport = this.lastOperation === "rde_audit";
 
+    const wantsAudit = this.plugin.settings.enableRdeAudit || isAuditReport;
+    const auditMissing = wantsAudit && !isAuditReport && !this.bundle.audit;
+
     new ProposalView(this.proposalHost, this.bundle.proposal, {
       onApply: () => void this.applyProposal(),
       onReject: () => void this.rejectProposal(),
       onCopy: () => void this.copyProposal(),
       auditReportOnly: isAuditReport,
+      auditMissing,
     });
 
-    if (this.bundle.audit && (this.plugin.settings.enableRdeAudit || isAuditReport)) {
+    if (this.bundle.audit && wantsAudit) {
       new RdeAuditView(this.auditHost, this.bundle.audit);
     }
   }

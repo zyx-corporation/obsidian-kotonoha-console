@@ -9,6 +9,13 @@ export function enrichAuditFromSource(
     request.context.sourceText.slice(0, 200).replace(/\n/g, " ") +
     (request.context.sourceText.length > 200 ? "…" : "");
 
+  const unresolvedElements = [...audit.unresolvedElements];
+  if (!request.context.git) {
+    unresolvedElements.push(
+      "Non-Git vault: no commit boundary; semantic anchors use path + source_hash only",
+    );
+  }
+
   return {
     ...audit,
     preservedElements: [
@@ -17,9 +24,6 @@ export function enrichAuditFromSource(
       excerpt,
       ...audit.preservedElements,
     ],
-    driftRisks:
-      audit.driftRisks.length > 0
-        ? audit.driftRisks
-        : ["Review source vs RDE skeleton — no Git commit boundary"],
+    unresolvedElements,
   };
 }
