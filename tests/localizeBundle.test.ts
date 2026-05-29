@@ -38,7 +38,7 @@ describe("localizeBundleForDisplay", () => {
       audit,
     };
     const zh = localizeBundleForDisplay(b, requestEn, "rde_audit", "zh_CN");
-    expect(zh.proposal.summary).toContain("RDE 审计");
+    expect(zh.proposal.summary).toBe("[mock] RDE audit · sample");
     expect(zh.proposal.proposedText).toContain("# RDE 审计");
     expect(zh.audit?.unresolvedElements[0]).toContain("未确定");
   });

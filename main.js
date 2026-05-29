@@ -1319,8 +1319,7 @@ function localizeBundleForDisplay(bundle, request, operation, lang) {
     return {
       proposal: {
         ...bundle.proposal,
-        proposedText: rdeAuditReportMarkdown(localizedRequest, audit2),
-        summary: consoleMsg(lang, "mockRdeSummary", { title: request.context.title })
+        proposedText: rdeAuditReportMarkdown(localizedRequest, audit2)
       },
       audit: audit2
     };
@@ -1329,12 +1328,7 @@ function localizeBundleForDisplay(bundle, request, operation, lang) {
   const audit = performRdeAudit(localizedRequest, proposalId, { proposalText });
   return {
     proposal: {
-      ...bundle.proposal,
-      summary: consoleMsg(lang, "mockOpSummary", {
-        operation,
-        title: request.context.title
-      }),
-      uncertaintyNote: bundle.proposal.uncertaintyNote ? consoleMsg(lang, "mockUncertainty") : void 0
+      ...bundle.proposal
     },
     audit
   };
@@ -1356,7 +1350,9 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
   proposalHost;
   auditHost;
   instructionInput;
+  instructionBlock;
   operationSelect;
+  primaryActionButton;
   getViewType() {
     return KOTONOHA_CONSOLE_VIEW;
   }
@@ -1423,16 +1419,19 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       opt.value = op;
     }
     this.operationSelect.value = restoreOp ?? "rde_audit";
-    form.createEl("label", { text: consoleMsg(lang, "labelInstruction") });
-    this.instructionInput = form.createEl("textarea", {
+    this.operationSelect.addEventListener("change", () => this.syncOperationUi());
+    this.instructionBlock = form.createDiv({ cls: "kotonoha-console-instruction" });
+    this.instructionBlock.createEl("label", { text: consoleMsg(lang, "labelInstruction") });
+    this.instructionInput = this.instructionBlock.createEl("textarea", {
       attr: { rows: "2", placeholder: consoleMsg(lang, "instructionPlaceholder") }
     });
     if (restoreInstruction !== void 0) {
       this.instructionInput.value = restoreInstruction;
     }
     const actions = form.createDiv({ cls: "kotonoha-console-actions" });
-    actions.createEl("button", { text: consoleMsg(lang, "btnRdeAudit"), cls: "mod-cta" }).addEventListener("click", () => void this.runRdeAudit());
-    actions.createEl("button", { text: consoleMsg(lang, "btnGenerate") }).addEventListener("click", () => void this.runGenerate());
+    this.primaryActionButton = actions.createEl("button", { cls: "mod-cta" });
+    this.syncOperationUi();
+    this.primaryActionButton.addEventListener("click", () => void this.runGenerate());
     const results = containerEl.createDiv({ cls: "kotonoha-console-results" });
     this.proposalHost = results.createDiv({ cls: "kotonoha-console-proposal" });
     this.auditHost = results.createDiv({ cls: "kotonoha-console-audit" });
@@ -1443,7 +1442,29 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
   /** Command palette: RDE 監査を実施 */
   async runRdeAudit() {
     this.operationSelect.value = "rde_audit";
+    this.syncOperationUi();
     await this.runGenerate();
+  }
+  /** Keep form chrome aligned with selected operation; drop stale results on operation change. */
+  syncOperationUi() {
+    const lang = this.plugin.settings.defaultLanguage;
+    const op = this.operationSelect?.value ?? "rde_audit";
+    this.primaryActionButton.textContent = op === "rde_audit" ? consoleMsg(lang, "btnRdeAudit") : consoleMsg(lang, "btnGenerate");
+    if (this.instructionBlock) {
+      this.instructionBlock.style.display = op === "rde_audit" ? "none" : "";
+    }
+    if (this.bundle && op !== this.lastOperation) {
+      this.clearResults();
+    }
+  }
+  clearResults() {
+    this.bundle = null;
+    this.lastRequest = null;
+    this.sourceHashAtGeneration = null;
+    this.reviseMode = false;
+    this.editedText = "";
+    this.proposalHost?.empty();
+    this.auditHost?.empty();
   }
   uiLang() {
     return this.plugin.settings.defaultLanguage;
@@ -1575,12 +1596,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     new import_obsidian2.Notice(
       decision.decision === "partially_applied" ? consoleMsg(lang, "noticeAppliedRevised") : consoleMsg(lang, "noticeApplied")
     );
-    this.bundle = null;
-    this.lastRequest = null;
-    this.reviseMode = false;
-    this.editedText = "";
-    this.proposalHost.empty();
-    this.auditHost.empty();
+    this.clearResults();
   }
   async rejectProposal() {
     if (!this.bundle) return;
@@ -1591,10 +1607,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     new import_obsidian2.Notice(
       this.lastOperation === "rde_audit" ? consoleMsg(lang, "noticeAuditDismissed") : consoleMsg(lang, "noticeRejected")
     );
-    this.bundle = null;
-    this.lastRequest = null;
-    this.proposalHost.empty();
-    this.auditHost.empty();
+    this.clearResults();
   }
   async copyProposal() {
     if (!this.bundle) return;

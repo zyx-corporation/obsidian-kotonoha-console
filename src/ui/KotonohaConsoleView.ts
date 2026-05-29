@@ -21,7 +21,9 @@ export class KotonohaConsoleView extends ItemView {
   private proposalHost!: HTMLElement;
   private auditHost!: HTMLElement;
   private instructionInput!: HTMLTextAreaElement;
+  private instructionBlock!: HTMLElement;
   private operationSelect!: HTMLSelectElement;
+  private primaryActionButton!: HTMLButtonElement;
 
   constructor(leaf: WorkspaceLeaf, private readonly plugin: KotonohaConsolePlugin) {
     super(leaf);
@@ -104,9 +106,11 @@ export class KotonohaConsoleView extends ItemView {
       opt.value = op;
     }
     this.operationSelect.value = restoreOp ?? "rde_audit";
+    this.operationSelect.addEventListener("change", () => this.syncOperationUi());
 
-    form.createEl("label", { text: consoleMsg(lang, "labelInstruction") });
-    this.instructionInput = form.createEl("textarea", {
+    this.instructionBlock = form.createDiv({ cls: "kotonoha-console-instruction" });
+    this.instructionBlock.createEl("label", { text: consoleMsg(lang, "labelInstruction") });
+    this.instructionInput = this.instructionBlock.createEl("textarea", {
       attr: { rows: "2", placeholder: consoleMsg(lang, "instructionPlaceholder") },
     });
     if (restoreInstruction !== undefined) {
@@ -114,12 +118,9 @@ export class KotonohaConsoleView extends ItemView {
     }
 
     const actions = form.createDiv({ cls: "kotonoha-console-actions" });
-    actions
-      .createEl("button", { text: consoleMsg(lang, "btnRdeAudit"), cls: "mod-cta" })
-      .addEventListener("click", () => void this.runRdeAudit());
-    actions
-      .createEl("button", { text: consoleMsg(lang, "btnGenerate") })
-      .addEventListener("click", () => void this.runGenerate());
+    this.primaryActionButton = actions.createEl("button", { cls: "mod-cta" });
+    this.syncOperationUi();
+    this.primaryActionButton.addEventListener("click", () => void this.runGenerate());
 
     const results = containerEl.createDiv({ cls: "kotonoha-console-results" });
     this.proposalHost = results.createDiv({ cls: "kotonoha-console-proposal" });
@@ -133,7 +134,34 @@ export class KotonohaConsoleView extends ItemView {
   /** Command palette: RDE 監査を実施 */
   async runRdeAudit(): Promise<void> {
     this.operationSelect.value = "rde_audit";
+    this.syncOperationUi();
     await this.runGenerate();
+  }
+
+  /** Keep form chrome aligned with selected operation; drop stale results on operation change. */
+  private syncOperationUi(): void {
+    const lang = this.plugin.settings.defaultLanguage;
+    const op = (this.operationSelect?.value ?? "rde_audit") as OperationType;
+    this.primaryActionButton.textContent =
+      op === "rde_audit"
+        ? consoleMsg(lang, "btnRdeAudit")
+        : consoleMsg(lang, "btnGenerate");
+    if (this.instructionBlock) {
+      this.instructionBlock.style.display = op === "rde_audit" ? "none" : "";
+    }
+    if (this.bundle && op !== this.lastOperation) {
+      this.clearResults();
+    }
+  }
+
+  private clearResults(): void {
+    this.bundle = null;
+    this.lastRequest = null;
+    this.sourceHashAtGeneration = null;
+    this.reviseMode = false;
+    this.editedText = "";
+    this.proposalHost?.empty();
+    this.auditHost?.empty();
   }
 
   private uiLang(): RdeLang {
@@ -297,12 +325,7 @@ export class KotonohaConsoleView extends ItemView {
         ? consoleMsg(lang, "noticeAppliedRevised")
         : consoleMsg(lang, "noticeApplied"),
     );
-    this.bundle = null;
-    this.lastRequest = null;
-    this.reviseMode = false;
-    this.editedText = "";
-    this.proposalHost.empty();
-    this.auditHost.empty();
+    this.clearResults();
   }
 
   private async rejectProposal(): Promise<void> {
@@ -316,10 +339,7 @@ export class KotonohaConsoleView extends ItemView {
         ? consoleMsg(lang, "noticeAuditDismissed")
         : consoleMsg(lang, "noticeRejected"),
     );
-    this.bundle = null;
-    this.lastRequest = null;
-    this.proposalHost.empty();
-    this.auditHost.empty();
+    this.clearResults();
   }
 
   private async copyProposal(): Promise<void> {

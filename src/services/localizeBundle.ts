@@ -1,6 +1,5 @@
 import type { GenerationRequest, OperationType } from "../domain/types";
 import type { ProposalBundle } from "./ProposalService";
-import { consoleMsg } from "../i18n/consoleI18n";
 import type { RdeLang } from "../rde/rdeI18n";
 import { rdeAuditReportMarkdown } from "../rde/rdeAuditReport";
 import { performRdeAudit } from "./RdeAuditService";
@@ -21,7 +20,6 @@ export function localizeBundleForDisplay(
       proposal: {
         ...bundle.proposal,
         proposedText: rdeAuditReportMarkdown(localizedRequest, audit),
-        summary: consoleMsg(lang, "mockRdeSummary", { title: request.context.title }),
       },
       audit,
     };
@@ -32,13 +30,6 @@ export function localizeBundleForDisplay(
   return {
     proposal: {
       ...bundle.proposal,
-      summary: consoleMsg(lang, "mockOpSummary", {
-        operation,
-        title: request.context.title,
-      }),
-      uncertaintyNote: bundle.proposal.uncertaintyNote
-        ? consoleMsg(lang, "mockUncertainty")
-        : undefined,
     },
     audit,
   };
