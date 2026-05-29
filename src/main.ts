@@ -18,6 +18,7 @@ import { GenerationRequestService } from "./services/GenerationRequestService";
 import { ProposalService } from "./services/ProposalService";
 import { ApprovalService } from "./services/ApprovalService";
 import { AuditLogService } from "./services/AuditLogService";
+import { SidecarStore } from "./services/SidecarStore";
 import { createKotonohaClient } from "./client/createClient";
 import type { KotonohaClient } from "./client/KotonohaClient";
 
@@ -31,6 +32,7 @@ export default class KotonohaConsolePlugin extends Plugin {
   proposals!: ProposalService;
   approval = new ApprovalService();
   auditLog!: AuditLogService;
+  sidecar!: SidecarStore;
 
   private client!: KotonohaClient;
 
@@ -41,6 +43,7 @@ export default class KotonohaConsolePlugin extends Plugin {
     this.noteContext = new NoteContextService(this.activeNoteReader);
     this.refreshClient();
     this.refreshAuditLog();
+    this.sidecar = new SidecarStore(this.app);
 
     this.registerView(KOTONOHA_CONSOLE_VIEW, (leaf) => new KotonohaConsoleView(leaf, this));
 
@@ -55,9 +58,9 @@ export default class KotonohaConsolePlugin extends Plugin {
     });
 
     this.addCommand({
-      id: "generate-mock-proposal",
-      name: "Generate mock proposal (active note)",
-      callback: () => void this.activateConsole(),
+      id: "run-rde-audit",
+      name: "RDE 監査を実施（アクティブノート）",
+      callback: () => void this.runRdeAuditCommand(),
     });
 
     this.addSettingTab(new KotonohaSettingsTab(this.app, this));
@@ -74,6 +77,15 @@ export default class KotonohaConsolePlugin extends Plugin {
 
   refreshAuditLog(): void {
     this.auditLog = new AuditLogService(this.app, this.settings.auditLogMode);
+  }
+
+  async runRdeAuditCommand(): Promise<void> {
+    await this.activateConsole();
+    const leaves = this.app.workspace.getLeavesOfType(KOTONOHA_CONSOLE_VIEW);
+    const view = leaves[0]?.view;
+    if (view && "runRdeAudit" in view && typeof view.runRdeAudit === "function") {
+      await (view as { runRdeAudit: () => Promise<void> }).runRdeAudit();
+    }
   }
 
   async activateConsole(): Promise<void> {

@@ -4,6 +4,8 @@ export interface ProposalViewActions {
   onApply: () => void;
   onReject: () => void;
   onCopy: () => void;
+  /** RDE audit report — do not offer Apply to note */
+  auditReportOnly?: boolean;
 }
 
 export class ProposalView {
@@ -12,7 +14,9 @@ export class ProposalView {
     proposal: Proposal,
     actions: ProposalViewActions,
   ) {
-    host.createEl("h3", { text: "Proposal" });
+    host.createEl("h3", {
+      text: actions.auditReportOnly ? "RDE 監査レポート" : "Proposal",
+    });
     if (proposal.summary) {
       host.createEl("p", { cls: "kotonoha-console-muted", text: proposal.summary });
     }
@@ -26,8 +30,12 @@ export class ProposalView {
     pre.setText(proposal.proposedText);
 
     const bar = host.createDiv({ cls: "kotonoha-console-actions" });
-    bar.createEl("button", { text: "Apply" }).addEventListener("click", actions.onApply);
-    bar.createEl("button", { text: "Reject" }).addEventListener("click", actions.onReject);
+    if (!actions.auditReportOnly) {
+      bar.createEl("button", { text: "Apply" }).addEventListener("click", actions.onApply);
+    }
+    bar
+      .createEl("button", { text: actions.auditReportOnly ? "記録を閉じる" : "Reject" })
+      .addEventListener("click", actions.onReject);
     bar.createEl("button", { text: "Copy" }).addEventListener("click", actions.onCopy);
   }
 }

@@ -1,5 +1,7 @@
 import type { GenerateResult, KotonohaClient } from "./KotonohaClient";
-import type { GenerationRequest, RdeAudit } from "../domain/types";
+import type { GenerationRequest } from "../domain/types";
+import { performRdeAudit } from "../services/RdeAuditService";
+import { rdeAuditReportMarkdown } from "../rde/rdeAuditReport";
 
 function id(): string {
   return crypto.randomUUID();
@@ -21,25 +23,32 @@ export class MockKotonohaClient implements KotonohaClient {
     ].join("\n");
 
     const proposalId = id();
-    const audit: RdeAudit = {
-      proposalId,
-      createdAt: new Date().toISOString(),
-      categories: ["preserved", "authorized_transformation"],
-      preservedElements: [excerpt],
-      transformedElements: [`mock ${operation} wrapper`],
-      inferredExtensions: [],
-      unresolvedElements: [],
-      driftRisks: [],
-      recommendedDecision: "human_review",
-      confidence: 0.55,
-    };
+
+    if (operation === "rde_audit") {
+      const audit = performRdeAudit(request, proposalId);
+      return {
+        proposal: {
+          id: proposalId,
+          requestId: request.id,
+          createdAt: new Date().toISOString(),
+          proposedText: rdeAuditReportMarkdown(request, audit),
+          summary: `[mock] RDE audit · ${context.title}`,
+        },
+        audit,
+      };
+    }
+
+    const mockProposal = proposedText;
+    const audit = performRdeAudit(request, proposalId, {
+      proposalText: mockProposal,
+    });
 
     return {
       proposal: {
         id: proposalId,
         requestId: request.id,
         createdAt: new Date().toISOString(),
-        proposedText,
+        proposedText: mockProposal,
         summary: `[mock] ${operation} on ${context.title}`,
         uncertaintyNote:
           "Mock backend — connect HTTP or CLI in settings for real Kotonoha output.",
