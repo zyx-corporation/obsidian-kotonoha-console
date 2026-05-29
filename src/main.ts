@@ -1,4 +1,4 @@
-import { Notice, Plugin } from "obsidian";
+import { Notice, Plugin, type App } from "obsidian";
 import { cliErrorMessage, runKotonoha } from "./cli/runKotonoha";
 import { buildCliEnv } from "./cli/buildCliEnv";
 import { vaultBasePath } from "./util/vaultPath";
@@ -21,6 +21,7 @@ import { ProposalService } from "./services/ProposalService";
 import { ApprovalService } from "./services/ApprovalService";
 import { AuditLogService } from "./services/AuditLogService";
 import { SidecarStore } from "./services/SidecarStore";
+import { HttpProbeError, probeHttpBackend } from "./client/http/probeHttpBackend";
 import { createKotonohaClient } from "./client/createClient";
 import type { KotonohaClient } from "./client/KotonohaClient";
 
@@ -76,6 +77,11 @@ export default class KotonohaConsolePlugin extends Plugin {
       id: "run-rde-audit",
       name: consoleMsg(lang, "cmdRunRdeAudit"),
       callback: () => void this.runRdeAuditCommand(),
+    });
+    this.addCommand({
+      id: "test-backend-connection",
+      name: consoleMsg(lang, "cmdTestBackend"),
+      callback: () => void this.testBackendConnection(),
     });
   }
 
@@ -146,9 +152,58 @@ export default class KotonohaConsolePlugin extends Plugin {
   async reloadPlugin(): Promise<void> {
     const id = this.manifest.id;
     const version = this.manifest.version;
-    await this.app.plugins.disablePlugin(id);
-    await this.app.plugins.enablePlugin(id);
+    const plugins = (this.app as App & { plugins: { disablePlugin: (id: string) => Promise<void>; enablePlugin: (id: string) => Promise<void> } }).plugins;
+    await plugins.disablePlugin(id);
+    await plugins.enablePlugin(id);
     new Notice(consoleMsg(this.settings.defaultLanguage, "noticePluginReloaded", { version }));
+  }
+
+  async testBackendConnection(): Promise<void> {
+    const lang = this.settings.defaultLanguage;
+    switch (this.settings.backendMode) {
+      case "mock":
+        new Notice(consoleMsg(lang, "noticeMockBackendOk"));
+        return;
+      case "cli":
+        await this.testCliVersion();
+        return;
+      case "http":
+        await this.testHttpConnection();
+        return;
+    }
+  }
+
+  async testHttpConnection(): Promise<void> {
+    const lang = this.settings.defaultLanguage;
+    const endpoint = this.settings.httpEndpoint?.trim() || "http://127.0.0.1:8000";
+    try {
+      const result = await probeHttpBackend(endpoint, this.settings.httpApiKey);
+      if (result.endpoint !== endpoint.replace(/\/+$/, "")) {
+        this.settings.httpEndpoint = result.endpoint;
+        await this.saveSettings();
+        this.refreshClient();
+      }
+      new Notice(
+        consoleMsg(lang, "noticeHttpOk", {
+          status: result.health,
+          backend: result.backend,
+          endpoint: result.endpoint,
+        }),
+      );
+    } catch (e) {
+      const detail =
+        e instanceof HttpProbeError
+          ? e.message
+          : e instanceof Error
+            ? e.message
+            : String(e);
+      new Notice(
+        consoleMsg(lang, "noticeHttpFailed", {
+          msg: detail,
+          endpoint,
+        }),
+      );
+    }
   }
 
   async testCliVersion(): Promise<void> {

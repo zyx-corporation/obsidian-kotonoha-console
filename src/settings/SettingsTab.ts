@@ -55,80 +55,118 @@ export class KotonohaSettingsTab extends PluginSettingTab {
           }),
       );
 
-    containerEl.createEl("h3", { text: this.t("settingsCliSection") });
-
     new Setting(containerEl)
-      .setName(this.t("settingsCliCommandName"))
-      .setDesc(this.t("settingsCliCommandDesc"))
-      .addText((t) =>
-        t
-          .setPlaceholder("kotonoha")
-          .setValue(this.plugin.settings.cliCommand ?? "kotonoha")
-          .onChange(async (v) => {
-            this.plugin.settings.cliCommand = v;
-            await this.plugin.saveSettings();
-            this.plugin.refreshClient();
-          }),
-      )
+      .setName(this.t("settingsTestBackendName"))
+      .setDesc(this.t("settingsTestBackendDesc"))
       .addButton((b) =>
-        b.setButtonText(this.t("settingsBtnTestVersion")).onClick(() => {
-          void this.plugin.testCliVersion();
+        b.setButtonText(this.t("settingsBtnTestBackend")).onClick(() => {
+          void this.plugin.testBackendConnection();
         }),
       );
 
-    new Setting(containerEl)
-      .setName(this.t("settingsCliWorkdirName"))
-      .setDesc(this.t("settingsCliWorkdirDesc"))
-      .addText((t) =>
-        t
-          .setPlaceholder(this.t("settingsCliWorkdirPlaceholder"))
-          .setValue(this.plugin.settings.cliWorkdir ?? "")
-          .onChange(async (v) => {
-            this.plugin.settings.cliWorkdir = v;
-            await this.plugin.saveSettings();
-            this.plugin.refreshClient();
-          }),
-      );
+    if (this.plugin.settings.backendMode === "http") {
+      containerEl.createEl("h3", { text: this.t("settingsHttpSection") });
 
-    new Setting(containerEl)
-      .setName("DATABASE_URL")
-      .setDesc(this.t("settingsDatabaseUrlDesc"))
-      .addText((t) =>
-        t
-          .setPlaceholder("postgres://…")
-          .setValue(this.plugin.settings.databaseUrl ?? "")
-          .onChange(async (v) => {
-            this.plugin.settings.databaseUrl = v;
-            await this.plugin.saveSettings();
-            this.plugin.refreshClient();
-          }),
-      );
+      new Setting(containerEl)
+        .setName(this.t("settingsHttpEndpointName"))
+        .setDesc(this.t("settingsHttpEndpointDesc"))
+        .addText((t) =>
+          t
+            .setPlaceholder(this.t("settingsHttpEndpointPlaceholder"))
+            .setValue(this.plugin.settings.httpEndpoint ?? "")
+            .onChange(async (v) => {
+              this.plugin.settings.httpEndpoint = v;
+              await this.plugin.saveSettings();
+              this.plugin.refreshClient();
+            }),
+        );
 
-    new Setting(containerEl)
-      .setName("KOTONOHA_PRINCIPAL_ID")
-      .addText((t) =>
-        t
-          .setPlaceholder("UUID")
-          .setValue(this.plugin.settings.principalId ?? "")
-          .onChange(async (v) => {
-            this.plugin.settings.principalId = v;
-            await this.plugin.saveSettings();
-            this.plugin.refreshClient();
-          }),
-      );
+      new Setting(containerEl)
+        .setName(this.t("settingsHttpApiKeyName"))
+        .setDesc(this.t("settingsHttpApiKeyDesc"))
+        .addText((t) =>
+          t
+            .setPlaceholder("Bearer …")
+            .setValue(this.plugin.settings.httpApiKey ?? "")
+            .onChange(async (v) => {
+              this.plugin.settings.httpApiKey = v;
+              await this.plugin.saveSettings();
+              this.plugin.refreshClient();
+            }),
+        );
+    }
 
-    new Setting(containerEl)
-      .setName("KOTONOHA_PROJECT_ID")
-      .addText((t) =>
-        t
-          .setPlaceholder("UUID")
-          .setValue(this.plugin.settings.projectId ?? "")
-          .onChange(async (v) => {
-            this.plugin.settings.projectId = v;
-            await this.plugin.saveSettings();
-            this.plugin.refreshClient();
-          }),
-      );
+    if (this.plugin.settings.backendMode === "cli") {
+      containerEl.createEl("h3", { text: this.t("settingsCliSection") });
+
+      new Setting(containerEl)
+        .setName(this.t("settingsCliCommandName"))
+        .setDesc(this.t("settingsCliCommandDesc"))
+        .addText((t) =>
+          t
+            .setPlaceholder("kotonoha")
+            .setValue(this.plugin.settings.cliCommand ?? "kotonoha")
+            .onChange(async (v) => {
+              this.plugin.settings.cliCommand = v;
+              await this.plugin.saveSettings();
+              this.plugin.refreshClient();
+            }),
+        );
+
+      new Setting(containerEl)
+        .setName(this.t("settingsCliWorkdirName"))
+        .setDesc(this.t("settingsCliWorkdirDesc"))
+        .addText((t) =>
+          t
+            .setPlaceholder(this.t("settingsCliWorkdirPlaceholder"))
+            .setValue(this.plugin.settings.cliWorkdir ?? "")
+            .onChange(async (v) => {
+              this.plugin.settings.cliWorkdir = v;
+              await this.plugin.saveSettings();
+              this.plugin.refreshClient();
+            }),
+        );
+
+      new Setting(containerEl)
+        .setName("DATABASE_URL")
+        .setDesc(this.t("settingsDatabaseUrlDesc"))
+        .addText((t) =>
+          t
+            .setPlaceholder("postgres://…")
+            .setValue(this.plugin.settings.databaseUrl ?? "")
+            .onChange(async (v) => {
+              this.plugin.settings.databaseUrl = v;
+              await this.plugin.saveSettings();
+              this.plugin.refreshClient();
+            }),
+        );
+
+      new Setting(containerEl)
+        .setName("KOTONOHA_PRINCIPAL_ID")
+        .addText((t) =>
+          t
+            .setPlaceholder("UUID")
+            .setValue(this.plugin.settings.principalId ?? "")
+            .onChange(async (v) => {
+              this.plugin.settings.principalId = v;
+              await this.plugin.saveSettings();
+              this.plugin.refreshClient();
+            }),
+        );
+
+      new Setting(containerEl)
+        .setName("KOTONOHA_PROJECT_ID")
+        .addText((t) =>
+          t
+            .setPlaceholder("UUID")
+            .setValue(this.plugin.settings.projectId ?? "")
+            .onChange(async (v) => {
+              this.plugin.settings.projectId = v;
+              await this.plugin.saveSettings();
+              this.plugin.refreshClient();
+            }),
+        );
+    }
 
     new Setting(containerEl)
       .setName(this.t("settingsGitModeName"))

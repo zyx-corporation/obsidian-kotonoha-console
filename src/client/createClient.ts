@@ -4,7 +4,9 @@ import { buildCliEnv } from "../cli/buildCliEnv";
 import { vaultBasePath } from "../util/vaultPath";
 import type { KotonohaClient } from "./KotonohaClient";
 import { CliKotonohaClient } from "./CliKotonohaClient";
+import { HttpKotonohaClient } from "./HttpKotonohaClient";
 import { MockKotonohaClient } from "./MockKotonohaClient";
+import { createObsidianFetch } from "./http/obsidianFetch";
 
 const OBSERVATION_REL = ".kotonoha/cli-observation.json";
 
@@ -38,8 +40,11 @@ export function createKotonohaClient(
     case "mock":
       return new MockKotonohaClient();
     case "http":
-      // Phase 2b: HttpKotonohaClient
-      return new MockKotonohaClient();
+      return new HttpKotonohaClient({
+        endpoint: settings.httpEndpoint?.trim() || "http://127.0.0.1:8000",
+        apiKey: settings.httpApiKey,
+        fetchFn: createObsidianFetch(),
+      });
     default:
       return new MockKotonohaClient();
   }

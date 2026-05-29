@@ -101,6 +101,34 @@ const MSGS = {
       "Local anchors only (path + source_hash). Local rule-based RDE audit attached.",
     cliUncertaintyExportFailed:
       "Git-aware context export failed; using path + source_hash anchors.",
+    settingsHttpSection: "HTTP (orchestrator / gateway / LLM proxy)",
+    settingsHttpEndpointName: "HTTP endpoint",
+    settingsHttpEndpointDesc:
+      "Orchestrator (default :8000), Gateway (:8787), or console LLM proxy. Auto-detects backend.",
+    settingsHttpEndpointPlaceholder: "http://127.0.0.1:8000",
+    settingsHttpApiKeyName: "HTTP API key (optional)",
+    settingsHttpApiKeyDesc: "Bearer token when gateway/orchestrator auth is enabled",
+    settingsBtnTestHttp: "Test connection",
+    noticeHttpOk: "HTTP OK: {status} · {backend} @ {endpoint}",
+    noticeHttpFailed: "HTTP failed @ {endpoint}: {msg}",
+    settingsTestBackendName: "Test backend connection",
+    settingsTestBackendDesc: "mock / CLI version / HTTP health + backend auto-detect",
+    settingsBtnTestBackend: "Run connection test",
+    cmdTestBackend: "Test Kotonoha backend connection",
+    noticeMockBackendOk: "Mock backend — no remote connection required",
+    httpOrchestratorRdeSummary: "[http/orchestrator] RDE audit · {path}",
+    httpGatewaySummary: "[http/gateway] {operation} · {path}",
+    httpLocalSummary: "[http/local] {operation} · {path}",
+    httpUncertaintyOrchestratorRde:
+      "Orchestrator RDE evaluate + local rule-based guardrails (not full LLM RDE).",
+    httpUncertaintyOrchestratorNoLlm:
+      "Orchestrator has no /v1/proposals/generate LLM proxy — local anchors only.",
+    httpUncertaintyGateway:
+      "Gateway context export only — connect /v1/proposals/generate for generative rewrite.",
+    httpUncertaintyGatewayRde:
+      "Gateway mode — local rule-based RDE audit (use orchestrator for /v1/rde/evaluate).",
+    httpProposalEndpointMissing:
+      "POST /v1/proposals/generate not found — deploy an orchestrator LLM proxy or use CLI/mock.",
   },
   ja: {
     viewTitle: "Kotonoha Console",
@@ -193,6 +221,34 @@ const MSGS = {
       "ローカルアンカーのみ（path + source_hash）。local rule-based RDE 監査付き。",
     cliUncertaintyExportFailed:
       "Git 連携 context export 失敗。path + source_hash アンカーを使用。",
+    settingsHttpSection: "HTTP（orchestrator / gateway / LLM proxy）",
+    settingsHttpEndpointName: "HTTP エンドポイント",
+    settingsHttpEndpointDesc:
+      "Orchestrator（既定 :8000）、Gateway（:8787）、または console LLM proxy。バックエンド自動検出。",
+    settingsHttpEndpointPlaceholder: "http://127.0.0.1:8000",
+    settingsHttpApiKeyName: "HTTP API キー（任意）",
+    settingsHttpApiKeyDesc: "gateway/orchestrator 認証有効時の Bearer トークン",
+    settingsBtnTestHttp: "接続テスト",
+    noticeHttpOk: "HTTP OK: {status} · {backend} @ {endpoint}",
+    noticeHttpFailed: "HTTP 失敗 @ {endpoint}: {msg}",
+    settingsTestBackendName: "バックエンド接続テスト",
+    settingsTestBackendDesc: "mock / CLI バージョン / HTTP ヘルス + バックエンド自動検出",
+    settingsBtnTestBackend: "接続テストを実行",
+    cmdTestBackend: "Kotonoha バックエンド接続テスト",
+    noticeMockBackendOk: "Mock バックエンド — リモート接続は不要です",
+    httpOrchestratorRdeSummary: "[http/orchestrator] RDE 監査 · {path}",
+    httpGatewaySummary: "[http/gateway] {operation} · {path}",
+    httpLocalSummary: "[http/local] {operation} · {path}",
+    httpUncertaintyOrchestratorRde:
+      "Orchestrator RDE evaluate + local rule-based guardrails（full LLM RDE ではない）。",
+    httpUncertaintyOrchestratorNoLlm:
+      "Orchestrator に /v1/proposals/generate LLM proxy なし — ローカルアンカーのみ。",
+    httpUncertaintyGateway:
+      "Gateway context export のみ — 生成系は /v1/proposals/generate を接続。",
+    httpUncertaintyGatewayRde:
+      "Gateway モード — local rule-based RDE 監査（orchestrator の /v1/rde/evaluate は別途）。",
+    httpProposalEndpointMissing:
+      "POST /v1/proposals/generate がありません — orchestrator LLM proxy または CLI/mock を使用。",
   },
   zh_CN: {
     viewTitle: "Kotonoha Console",
@@ -285,6 +341,34 @@ const MSGS = {
       "仅本地锚点（path + source_hash）。附带 local rule-based RDE 审计。",
     cliUncertaintyExportFailed:
       "Git 感知 context export 失败；使用 path + source_hash 锚点。",
+    settingsHttpSection: "HTTP（orchestrator / gateway / LLM proxy）",
+    settingsHttpEndpointName: "HTTP 端点",
+    settingsHttpEndpointDesc:
+      "Orchestrator（默认 :8000）、Gateway（:8787）或 console LLM 代理。自动检测后端。",
+    settingsHttpEndpointPlaceholder: "http://127.0.0.1:8000",
+    settingsHttpApiKeyName: "HTTP API 密钥（可选）",
+    settingsHttpApiKeyDesc: "启用 gateway/orchestrator 认证时的 Bearer 令牌",
+    settingsBtnTestHttp: "测试连接",
+    noticeHttpOk: "HTTP 正常: {status} · {backend} @ {endpoint}",
+    noticeHttpFailed: "HTTP 失败 @ {endpoint}: {msg}",
+    settingsTestBackendName: "后端连接测试",
+    settingsTestBackendDesc: "mock / CLI 版本 / HTTP 健康检查 + 后端自动检测",
+    settingsBtnTestBackend: "运行连接测试",
+    cmdTestBackend: "测试 Kotonoha 后端连接",
+    noticeMockBackendOk: "Mock 后端 — 无需远程连接",
+    httpOrchestratorRdeSummary: "[http/orchestrator] RDE 审计 · {path}",
+    httpGatewaySummary: "[http/gateway] {operation} · {path}",
+    httpLocalSummary: "[http/local] {operation} · {path}",
+    httpUncertaintyOrchestratorRde:
+      "Orchestrator RDE evaluate + local rule-based guardrails（非完整 LLM RDE）。",
+    httpUncertaintyOrchestratorNoLlm:
+      "Orchestrator 无 /v1/proposals/generate LLM 代理 — 仅本地锚点。",
+    httpUncertaintyGateway:
+      "仅 Gateway context export — 生成式改写需连接 /v1/proposals/generate。",
+    httpUncertaintyGatewayRde:
+      "Gateway 模式 — local rule-based RDE 审计（orchestrator 的 /v1/rde/evaluate 另行配置）。",
+    httpProposalEndpointMissing:
+      "未找到 POST /v1/proposals/generate — 请部署 orchestrator LLM 代理或使用 CLI/mock。",
   },
 } as const;
 
