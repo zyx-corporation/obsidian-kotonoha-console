@@ -27,11 +27,12 @@ export function performRdeAudit(
 ): RdeAudit {
   const structural =
     options?.sourceReview && !options?.proposalText
-      ? buildSourceReview(request.context.sourceText)
+      ? buildSourceReview(request.context.sourceText, request.language)
       : buildStructuralDiff(
           request.context.sourceText,
           options?.proposalText ?? request.context.sourceText,
           {
+            language: request.language,
             operation: request.operation,
             frontmatter: request.context.frontmatter,
             sourceLinks: request.context.links,

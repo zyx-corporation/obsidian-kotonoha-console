@@ -27,10 +27,14 @@ describe("performRdeAudit", () => {
     const audit = performRdeAudit(request, "p1", { sourceReview: true });
     expect(audit.proposalId).toBe("p1");
     expect(audit.preservedElements.some((e) => e.includes("path:"))).toBe(true);
-    expect(audit.unresolvedElements.some((e) => e.includes("hedging"))).toBe(true);
-    expect(audit.driftRisks.some((r) => r.includes("Git commit boundary"))).toBe(
-      false,
+    expect(audit.unresolvedElements.some((e) => e.includes("未確定") || e.includes("hedging"))).toBe(
+      true,
     );
+    expect(
+      audit.unresolvedElements.some(
+        (r) => r.includes("コミット境界") || r.includes("commit boundary"),
+      ),
+    ).toBe(true);
   });
 
   it("detects drift when proposal strengthens claims", () => {

@@ -130,12 +130,12 @@ describe("CliKotonohaClient", () => {
     expect(calls.some((a) => a[0] === "context")).toBe(false);
     expect(calls.some((a) => a[0] === "rde" && a[1] === "emit")).toBe(true);
     expect(calls.some((a) => a[0] === "rde" && a[1] === "validate")).toBe(true);
-    expect(result.proposal.proposedText).toContain("# RDE audit");
+    expect(result.proposal.proposedText).toContain("# RDE 監査");
     expect(result.audit?.preservedElements.some((e) => e.includes("path:"))).toBe(
       true,
     );
     expect(
-      result.audit?.unresolvedElements.some((e) => e.includes("hedging")),
+      result.audit?.unresolvedElements.some((e) => e.includes("未確定") || e.includes("hedging")),
     ).toBe(true);
   });
 });

@@ -24,6 +24,8 @@ Aligned with [`docs/architecture.ja.md`](docs/architecture.ja.md) phases.
 
 Rule-based checks in `StructuralDiffBuilder`: hedging, frontmatter, links, rewrite length, URL/date introduction, approval-language removal, final-decision tone. **Not** a full RDE engine — UI labels confidence as informative.
 
+**i18n:** `defaultLanguage` / `request.language` (`ja` default) localizes guardrail messages, audit report markdown, and RDE audit panel. Category enums in JSON remain English; Orchestrator responses can override when implemented.
+
 ## Develop
 
 ```bash

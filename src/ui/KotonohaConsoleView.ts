@@ -171,6 +171,8 @@ export class KotonohaConsoleView extends ItemView {
     const wantsAudit = this.plugin.settings.enableRdeAudit || isAuditReport;
     const auditMissing = wantsAudit && !isAuditReport && !this.bundle.audit;
 
+    const lang = this.lastRequest?.language ?? this.plugin.settings.defaultLanguage;
+
     new ProposalView(this.proposalHost, this.bundle.proposal, {
       onApply: () => void this.applyProposal(),
       onReject: () => void this.rejectProposal(),
@@ -180,6 +182,7 @@ export class KotonohaConsoleView extends ItemView {
       onReAudit: () => void this.reAuditEditedProposal(),
       auditReportOnly: isAuditReport,
       auditMissing,
+      language: lang,
       reviseMode: this.reviseMode,
       editedText: this.editedText,
       onEditedTextChange: (text) => {
@@ -188,7 +191,7 @@ export class KotonohaConsoleView extends ItemView {
     });
 
     if (this.bundle.audit && wantsAudit) {
-      new RdeAuditView(this.auditHost, this.bundle.audit);
+      new RdeAuditView(this.auditHost, this.bundle.audit, lang);
     }
   }
 

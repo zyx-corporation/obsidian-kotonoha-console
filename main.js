@@ -218,10 +218,137 @@ var KotonohaSettingsTab = class extends import_obsidian.PluginSettingTab {
 // src/ui/KotonohaConsoleView.ts
 var import_obsidian2 = require("obsidian");
 
+// src/rde/rdeI18n.ts
+function normalizeRdeLang(lang) {
+  return lang === "en" ? "en" : "ja";
+}
+function fmt(template, params) {
+  if (!params) return template;
+  return template.replace(/\{(\w+)\}/g, (_, k) => String(params[k] ?? `{${k}}`));
+}
+var MSGS = {
+  en: {
+    reportTitle: "RDE audit",
+    reportFile: "File",
+    reportSourceHash: "Source hash",
+    reportRecommended: "Recommended",
+    reportCategories: "Categories",
+    reportSourceExcerpt: "Source excerpt",
+    sectionPreserved: "Preserved",
+    sectionTransformed: "Transformed",
+    sectionInferred: "Inferred",
+    sectionUnresolved: "Unresolved",
+    sectionDriftRisks: "Drift risks",
+    categoryNone: "(none)",
+    mvpBanner: "Rule-based MVP audit (not full RDE). See rde-audit-policy \xA714.",
+    decisionApprove: "approve",
+    decisionRevise: "revise",
+    decisionReject: "reject",
+    decisionHumanReview: "human_review",
+    auditPanelTitle: "RDE audit",
+    confidenceNote: "(informative \u2014 not safety score)",
+    sourceReviewLines: "source note review ({count} non-empty lines)",
+    hedgingUnresolved: "source contains {count} hedging marker(s) \u2014 meaning may remain open",
+    strongPreserved: "source contains {count} strong claim marker(s)",
+    limitedSignals: "no hedging or strong-claim markers detected \u2014 rule-based signals limited",
+    linesStructural: "lines +{add} / -{del} (structural)",
+    textMatchStructural: "source and proposal text match (structural)",
+    sourceParagraphs: "source paragraphs: {count}",
+    lengthInferred: "proposal length \xD7{ratio} vs source",
+    insufficientSignal: "insufficient structural signal for classification",
+    claimStrengthDrift: "claim strength may have increased (hedging reduced, certainty markers added)",
+    hedgingRemovedStrong: "hedging removed while strong claims present in proposal",
+    hedgingDropped: "hedging terms dropped: {terms}",
+    frontmatterRemoved: "frontmatter key may be removed or altered: {key}",
+    linkRemoved: "link or wikilink may be removed: {target}",
+    rewriteShortened: "rewrite shortened text to {pct}% of source (threshold {threshold}%)",
+    urlIntroduced: "URL introduced in proposal (not in source): {url}",
+    dateIntroduced: "date introduced in proposal (not in source): {date}",
+    approvalRemoved: "human approval language may be removed: {lost}",
+    finalDecisionDrift: "proposal may convert tentative language to final decision: {introduced}",
+    nonGitVault: "Non-Git vault: no commit boundary; semantic anchors use path + source_hash only",
+    auditUnavailable: "RDE audit is not available for this proposal. Review carefully before applying.",
+    auditLowConfidence: "RDE audit confidence is low. Human review is required."
+  },
+  ja: {
+    reportTitle: "RDE \u76E3\u67FB",
+    reportFile: "\u30D5\u30A1\u30A4\u30EB",
+    reportSourceHash: "\u30BD\u30FC\u30B9\u30CF\u30C3\u30B7\u30E5",
+    reportRecommended: "\u63A8\u5968\u5224\u65AD",
+    reportCategories: "\u30AB\u30C6\u30B4\u30EA",
+    reportSourceExcerpt: "\u30BD\u30FC\u30B9\u629C\u7C8B",
+    sectionPreserved: "\u4FDD\u5B58\u3055\u308C\u305F\u8981\u7D20",
+    sectionTransformed: "\u5909\u63DB\u3055\u308C\u305F\u8981\u7D20",
+    sectionInferred: "\u63A8\u8AD6\u306B\u3088\u308B\u88DC\u5B8C",
+    sectionUnresolved: "\u672A\u89E3\u6C7A",
+    sectionDriftRisks: "\u9038\u8131\u30EA\u30B9\u30AF",
+    categoryNone: "\uFF08\u306A\u3057\uFF09",
+    mvpBanner: "\u30EB\u30FC\u30EB\u30D9\u30FC\u30B9 MVP \u76E3\u67FB\uFF08full RDE \u3067\u306F\u3042\u308A\u307E\u305B\u3093\uFF09\u3002rde-audit-policy \xA714 \u53C2\u7167\u3002",
+    decisionApprove: "\u627F\u8A8D",
+    decisionRevise: "\u6539\u8A02",
+    decisionReject: "\u5374\u4E0B",
+    decisionHumanReview: "\u4EBA\u624B\u30EC\u30D3\u30E5\u30FC",
+    auditPanelTitle: "RDE \u76E3\u67FB",
+    confidenceNote: "\uFF08\u53C2\u8003\u5024 \u2014 \u5B89\u5168\u6027\u30B9\u30B3\u30A2\u3067\u306F\u3042\u308A\u307E\u305B\u3093\uFF09",
+    sourceReviewLines: "\u30BD\u30FC\u30B9\u30CE\u30FC\u30C8\u30EC\u30D3\u30E5\u30FC\uFF08\u975E\u7A7A\u884C {count} \u884C\uFF09",
+    hedgingUnresolved: "\u30BD\u30FC\u30B9\u306B hedging \u8868\u73FE\u304C {count} \u4EF6 \u2014 \u610F\u5473\u306F\u672A\u78BA\u5B9A\u306E\u53EF\u80FD\u6027",
+    strongPreserved: "\u30BD\u30FC\u30B9\u306B\u5F37\u3044\u4E3B\u5F35\u8868\u73FE\u304C {count} \u4EF6",
+    limitedSignals: "hedging / \u5F37\u4E3B\u5F35\u306E\u30DE\u30FC\u30AB\u30FC\u672A\u691C\u51FA \u2014 \u30EB\u30FC\u30EB\u30D9\u30FC\u30B9\u306E\u30B7\u30B0\u30CA\u30EB\u306F\u9650\u5B9A\u7684",
+    linesStructural: "\u884C +{add} / -{del}\uFF08\u69CB\u9020\u5DEE\u5206\uFF09",
+    textMatchStructural: "\u30BD\u30FC\u30B9\u3068\u63D0\u6848\u30C6\u30AD\u30B9\u30C8\u306F\u4E00\u81F4\uFF08\u69CB\u9020\u4E0A\uFF09",
+    sourceParagraphs: "\u30BD\u30FC\u30B9\u6BB5\u843D\u6570: {count}",
+    lengthInferred: "\u63D0\u6848\u306E\u9577\u3055\u306F\u30BD\u30FC\u30B9\u306E \xD7{ratio}",
+    insufficientSignal: "\u5206\u985E\u306B\u5341\u5206\u306A\u69CB\u9020\u30B7\u30B0\u30CA\u30EB\u304C\u3042\u308A\u307E\u305B\u3093",
+    claimStrengthDrift: "\u4E3B\u5F35\u306E\u5F37\u5EA6\u304C\u4E0A\u304C\u3063\u305F\u53EF\u80FD\u6027\uFF08hedging \u6E1B\u5C11\u30FB\u78BA\u5B9A\u6027\u8868\u73FE\u306E\u8FFD\u52A0\uFF09",
+    hedgingRemovedStrong: "\u63D0\u6848\u306B\u5F37\u3044\u4E3B\u5F35\u304C\u3042\u308A hedging \u304C\u9664\u53BB\u3055\u308C\u3066\u3044\u307E\u3059",
+    hedgingDropped: "hedging \u8A9E\u306E\u8131\u843D: {terms}",
+    frontmatterRemoved: "frontmatter \u30AD\u30FC\u304C\u524A\u9664\u307E\u305F\u306F\u5909\u66F4\u3055\u308C\u305F\u53EF\u80FD\u6027: {key}",
+    linkRemoved: "\u30EA\u30F3\u30AF\u307E\u305F\u306F\u30A6\u30A3\u30AD\u30EA\u30F3\u30AF\u304C\u524A\u9664\u3055\u308C\u305F\u53EF\u80FD\u6027: {target}",
+    rewriteShortened: "rewrite \u3067\u30BD\u30FC\u30B9\u306E {pct}% \u306B\u77ED\u7E2E\uFF08\u95BE\u5024 {threshold}%\uFF09",
+    urlIntroduced: "\u30BD\u30FC\u30B9\u306B\u7121\u3044 URL \u304C\u63D0\u6848\u306B\u8FFD\u52A0: {url}",
+    dateIntroduced: "\u30BD\u30FC\u30B9\u306B\u7121\u3044\u65E5\u4ED8\u304C\u63D0\u6848\u306B\u8FFD\u52A0: {date}",
+    approvalRemoved: "\u4EBA\u624B\u627F\u8A8D\u306B\u95A2\u3059\u308B\u8868\u73FE\u304C\u524A\u9664\u3055\u308C\u305F\u53EF\u80FD\u6027: {lost}",
+    finalDecisionDrift: "\u8A66\u884C\u30FB\u8349\u6848\u7684\u306A\u8868\u73FE\u304C\u6700\u7D42\u5224\u65AD\u8ABF\u306B\u5909\u308F\u3063\u305F\u53EF\u80FD\u6027: {introduced}",
+    nonGitVault: "\u975E Git vault: \u30B3\u30DF\u30C3\u30C8\u5883\u754C\u306A\u3057\u3002path + source_hash \u306E\u307F\u3067\u610F\u5473\u30A2\u30F3\u30AB\u30FC",
+    auditUnavailable: "\u3053\u306E\u63D0\u6848\u306B RDE \u76E3\u67FB\u306F\u3042\u308A\u307E\u305B\u3093\u3002\u9069\u7528\u524D\u306B\u614E\u91CD\u306B\u78BA\u8A8D\u3057\u3066\u304F\u3060\u3055\u3044\u3002",
+    auditLowConfidence: "RDE \u76E3\u67FB\u306E\u4FE1\u983C\u5EA6\u304C\u4F4E\u3044\u3067\u3059\u3002\u4EBA\u624B\u306B\u3088\u308B\u30EC\u30D3\u30E5\u30FC\u304C\u5FC5\u8981\u3067\u3059\u3002"
+  }
+};
+function rdeMsg(lang, key, params) {
+  const L = normalizeRdeLang(lang);
+  return fmt(MSGS[L][key], params);
+}
+function formatDecision(lang, decision) {
+  const map = {
+    approve: "decisionApprove",
+    revise: "decisionRevise",
+    reject: "decisionReject",
+    human_review: "decisionHumanReview"
+  };
+  const key = map[decision];
+  return key ? rdeMsg(lang, key) : decision;
+}
+function formatCategory(lang, cat) {
+  if (normalizeRdeLang(lang) === "en") return cat;
+  const ja = {
+    preserved: "\u4FDD\u5B58",
+    authorized_transformation: "\u8A31\u53EF\u3055\u308C\u305F\u5909\u63DB",
+    inferred_extension: "\u63A8\u8AD6\u306B\u3088\u308B\u88DC\u5B8C",
+    unresolved: "\u672A\u89E3\u6C7A",
+    suspicious_drift: "\u7591\u308F\u3057\u3044\u9038\u8131",
+    critical_distortion: "\u91CD\u5927\u306A\u6B6A\u66F2"
+  };
+  return ja[cat] ?? cat;
+}
+
 // src/ui/rdeAuditPolicyMessages.ts
-var RDE_AUDIT_UNAVAILABLE = "RDE audit is not available for this proposal. Review carefully before applying.";
-var RDE_AUDIT_LOW_CONFIDENCE = "RDE audit confidence is low. Human review is required.";
 var LOW_CONFIDENCE_THRESHOLD = 0.55;
+function rdeAuditUnavailableMessage(lang) {
+  return rdeMsg(lang, "auditUnavailable");
+}
+function rdeAuditLowConfidenceMessage(lang) {
+  return rdeMsg(lang, "auditLowConfidence");
+}
 function shouldShowLowConfidenceWarning(audit) {
   return audit.confidence < LOW_CONFIDENCE_THRESHOLD || audit.recommendedDecision === "human_review";
 }
@@ -230,13 +357,17 @@ function shouldShowLowConfidenceWarning(audit) {
 var ProposalView = class {
   constructor(host, proposal, actions) {
     host.createEl("h3", {
+      cls: "kotonoha-console-section-title",
       text: actions.auditReportOnly ? "RDE \u76E3\u67FB\u30EC\u30DD\u30FC\u30C8" : actions.reviseMode ? "Proposal\uFF08\u6539\u8A02\u4E2D\uFF09" : "Proposal"
     });
     if (proposal.summary) {
       host.createEl("p", { cls: "kotonoha-console-muted", text: proposal.summary });
     }
     if (actions.auditMissing) {
-      host.createEl("p", { cls: "kotonoha-console-warn", text: RDE_AUDIT_UNAVAILABLE });
+      host.createEl("p", {
+        cls: "kotonoha-console-warn",
+        text: rdeAuditUnavailableMessage(actions.language)
+      });
     }
     if (proposal.uncertaintyNote) {
       host.createEl("p", {
@@ -254,7 +385,9 @@ var ProposalView = class {
         actions.onEditedTextChange?.(textarea.value);
       });
     } else {
-      const pre = host.createEl("pre", { cls: "kotonoha-console-pre" });
+      const pre = host.createEl("pre", {
+        cls: actions.auditReportOnly ? "kotonoha-console-pre kotonoha-console-pre-audit" : "kotonoha-console-pre"
+      });
       pre.setText(proposal.proposedText);
     }
     const bar = host.createDiv({ cls: "kotonoha-console-actions" });
@@ -280,31 +413,41 @@ var ProposalView = class {
 };
 
 // src/ui/RdeAuditView.ts
+var OPEN_BY_DEFAULT_JA = /* @__PURE__ */ new Set(["\u672A\u89E3\u6C7A", "\u9038\u8131\u30EA\u30B9\u30AF"]);
+var OPEN_BY_DEFAULT_EN = /* @__PURE__ */ new Set(["Unresolved", "Drift risks"]);
 var RdeAuditView = class {
-  constructor(host, audit) {
-    host.createEl("h3", { text: "RDE audit" });
+  constructor(host, audit, language) {
+    const lang = language ?? "ja";
+    host.addClass("kotonoha-console-audit-panel");
+    host.createEl("h3", {
+      cls: "kotonoha-console-section-title",
+      text: rdeMsg(lang, "auditPanelTitle")
+    });
     if (shouldShowLowConfidenceWarning(audit)) {
-      host.createEl("p", { cls: "kotonoha-console-warn", text: RDE_AUDIT_LOW_CONFIDENCE });
+      host.createEl("p", {
+        cls: "kotonoha-console-warn",
+        text: rdeAuditLowConfidenceMessage(lang)
+      });
     }
     host.createEl("p", {
-      text: `Recommended: ${audit.recommendedDecision} \xB7 confidence ${(audit.confidence * 100).toFixed(0)}% (informative \u2014 not safety score)`
+      cls: "kotonoha-console-audit-summary",
+      text: `${formatDecision(lang, audit.recommendedDecision)} \xB7 ${(audit.confidence * 100).toFixed(0)}% \xB7 ${audit.categories.map((c) => formatCategory(lang, c)).join(", ") || rdeMsg(lang, "categoryNone")} ${rdeMsg(lang, "confidenceNote")}`
     });
-    const cats = host.createEl("p", {
-      text: `Categories: ${audit.categories.join(", ")}`
-    });
-    cats.addClass("kotonoha-console-muted");
-    appendList(host, "Preserved", audit.preservedElements);
-    appendList(host, "Transformed", audit.transformedElements);
-    appendList(host, "Inferred", audit.inferredExtensions);
-    appendList(host, "Unresolved", audit.unresolvedElements);
-    appendList(host, "Drift risks", audit.driftRisks);
+    appendList(host, lang, "sectionPreserved", audit.preservedElements);
+    appendList(host, lang, "sectionTransformed", audit.transformedElements);
+    appendList(host, lang, "sectionInferred", audit.inferredExtensions);
+    appendList(host, lang, "sectionUnresolved", audit.unresolvedElements);
+    appendList(host, lang, "sectionDriftRisks", audit.driftRisks);
   }
 };
-function appendList(host, title, items) {
+function appendList(host, lang, sectionKey, items) {
   if (items.length === 0) return;
-  const section = host.createEl("div");
-  section.createEl("strong", { text: title });
-  const ul = section.createEl("ul");
+  const title = rdeMsg(lang, sectionKey);
+  const details = host.createEl("details", { cls: "kotonoha-console-audit-details" });
+  const openSet = lang === "ja" ? OPEN_BY_DEFAULT_JA : OPEN_BY_DEFAULT_EN;
+  if (openSet.has(title)) details.open = true;
+  details.createEl("summary", { text: `${title} (${items.length})` });
+  const ul = details.createEl("ul");
   for (const item of items) {
     ul.createEl("li", { text: item });
   }
@@ -314,7 +457,7 @@ function appendList(host, title, items) {
 var REWRITE_LENGTH_SHRINK_RATIO = 0.5;
 var HEDGING = /\b(may|might|could|possibly|perhaps|likely|probably|かもしれない|可能性|推測)\b/giu;
 var STRONG = /\b(must|will|always|never|certainly|clearly|proves?|確実|必ず|明らか|証明)\b/giu;
-function buildSourceReview(source) {
+function buildSourceReview(source, language) {
   const preservedElements = [];
   const unresolvedElements = [];
   const categories = /* @__PURE__ */ new Set();
@@ -322,20 +465,22 @@ function buildSourceReview(source) {
   const strongCount = (source.match(STRONG) ?? []).length;
   const lineCount = source.split(/\n/).filter((l) => l.trim()).length;
   categories.add("preserved");
-  preservedElements.push(`source note review (${lineCount} non-empty lines)`);
+  preservedElements.push(
+    rdeMsg(language, "sourceReviewLines", { count: lineCount })
+  );
   if (hedgeCount > 0) {
     categories.add("unresolved");
     unresolvedElements.push(
-      `source contains ${hedgeCount} hedging marker(s) \u2014 meaning may remain open`
+      rdeMsg(language, "hedgingUnresolved", { count: hedgeCount })
     );
   }
   if (strongCount > 0) {
-    preservedElements.push(`source contains ${strongCount} strong claim marker(s)`);
+    preservedElements.push(
+      rdeMsg(language, "strongPreserved", { count: strongCount })
+    );
   }
   if (hedgeCount === 0 && strongCount === 0 && source.trim().length > 0) {
-    unresolvedElements.push(
-      "no hedging or strong-claim markers detected \u2014 rule-based signals limited"
-    );
+    unresolvedElements.push(rdeMsg(language, "limitedSignals"));
     categories.add("unresolved");
   }
   return {
@@ -350,6 +495,7 @@ function buildSourceReview(source) {
   };
 }
 function buildStructuralDiff(source, proposal, options) {
+  const lang = options?.language;
   const preservedElements = [];
   const transformedElements = [];
   const inferredExtensions = [];
@@ -373,22 +519,28 @@ function buildStructuralDiff(source, proposal, options) {
     if (lineAdditions > 0 || lineDeletions > 0) {
       categories.add("authorized_transformation");
       transformedElements.push(
-        `lines +${lineAdditions} / -${lineDeletions} (structural)`
+        rdeMsg(lang, "linesStructural", { add: lineAdditions, del: lineDeletions })
       );
     }
   } else {
     categories.add("preserved");
-    preservedElements.push("source and proposal text match (structural)");
+    preservedElements.push(rdeMsg(lang, "textMatchStructural"));
   }
-  scanClaimStrength(source, proposal ?? source, driftRisks, categories);
-  scanHedgingLoss(source, proposal ?? source, driftRisks, categories);
+  scanClaimStrength(source, proposal ?? source, lang, driftRisks, categories);
+  scanHedgingLoss(source, proposal ?? source, lang, driftRisks, categories);
   if (srcLines.length > 3) {
-    preservedElements.push(`source paragraphs: ${srcLines.filter((l) => l.trim()).length}`);
+    preservedElements.push(
+      rdeMsg(lang, "sourceParagraphs", {
+        count: srcLines.filter((l) => l.trim()).length
+      })
+    );
   }
   if (driftRisks.length === 0 && !sameText && proposal) {
     const ratio = proposal.length / Math.max(source.length, 1);
     if (ratio > 1.4) {
-      inferredExtensions.push(`proposal length \xD7${ratio.toFixed(2)} vs source`);
+      inferredExtensions.push(
+        rdeMsg(lang, "lengthInferred", { ratio: ratio.toFixed(2) })
+      );
       categories.add("inferred_extension");
     }
   }
@@ -397,7 +549,7 @@ function buildStructuralDiff(source, proposal, options) {
   }
   if (categories.size === 0) {
     categories.add("unresolved");
-    unresolvedElements.push("insufficient structural signal for classification");
+    unresolvedElements.push(rdeMsg(lang, "insufficientSignal"));
   }
   return {
     categories: [...categories],
@@ -410,35 +562,36 @@ function buildStructuralDiff(source, proposal, options) {
     lineDeletions
   };
 }
-function scanClaimStrength(source, proposal, driftRisks, categories) {
+function scanClaimStrength(source, proposal, lang, driftRisks, categories) {
   const srcHedge = (source.match(HEDGING) ?? []).length;
   const propHedge = (proposal.match(HEDGING) ?? []).length;
   const srcStrong = (source.match(STRONG) ?? []).length;
   const propStrong = (proposal.match(STRONG) ?? []).length;
   if (srcHedge > 0 && propStrong > srcStrong && propHedge < srcHedge) {
-    driftRisks.push("claim strength may have increased (hedging reduced, certainty markers added)");
+    driftRisks.push(rdeMsg(lang, "claimStrengthDrift"));
     categories.add("suspicious_drift");
   }
   if (propStrong > 0 && srcHedge > 0 && propHedge === 0) {
-    driftRisks.push("hedging removed while strong claims present in proposal");
+    driftRisks.push(rdeMsg(lang, "hedgingRemovedStrong"));
     categories.add("suspicious_drift");
   }
 }
-function scanHedgingLoss(source, proposal, driftRisks, categories) {
+function scanHedgingLoss(source, proposal, lang, driftRisks, categories) {
   if (source === proposal) return;
   const lost = ["may", "might", "could", "possibly"].filter(
     (w) => source.toLowerCase().includes(w) && !proposal.toLowerCase().includes(w)
   );
   if (lost.length > 0) {
-    driftRisks.push(`hedging terms dropped: ${lost.join(", ")}`);
+    driftRisks.push(rdeMsg(lang, "hedgingDropped", { terms: lost.join(", ") }));
     categories.add("suspicious_drift");
   }
 }
 function scanMvpGuardrails(source, proposal, options, driftRisks, categories) {
+  const lang = options?.language;
   const fm = options?.frontmatter ?? {};
   for (const key of Object.keys(fm)) {
     if (!proposal.includes(`${key}:`) && !proposal.includes(`${key} `)) {
-      driftRisks.push(`frontmatter key may be removed or altered: ${key}`);
+      driftRisks.push(rdeMsg(lang, "frontmatterRemoved", { key }));
       categories.add("suspicious_drift");
     }
   }
@@ -452,7 +605,7 @@ function scanMvpGuardrails(source, proposal, options, driftRisks, categories) {
   for (const target of linkTargets) {
     const needle = target.replace(/^\[\[/, "").replace(/\]\]$/, "");
     if (needle && !proposal.includes(needle)) {
-      driftRisks.push(`link or wikilink may be removed: ${needle}`);
+      driftRisks.push(rdeMsg(lang, "linkRemoved", { target: needle }));
       categories.add("suspicious_drift");
     }
   }
@@ -460,14 +613,17 @@ function scanMvpGuardrails(source, proposal, options, driftRisks, categories) {
     const ratio = proposal.length / Math.max(source.length, 1);
     if (ratio < REWRITE_LENGTH_SHRINK_RATIO) {
       driftRisks.push(
-        `rewrite shortened text to ${(ratio * 100).toFixed(0)}% of source (threshold ${REWRITE_LENGTH_SHRINK_RATIO * 100}%)`
+        rdeMsg(lang, "rewriteShortened", {
+          pct: (ratio * 100).toFixed(0),
+          threshold: REWRITE_LENGTH_SHRINK_RATIO * 100
+        })
       );
       categories.add("suspicious_drift");
     }
   }
-  scanIntroducedUrlsAndDates(source, proposal, driftRisks, categories);
-  scanApprovalLanguageRemoval(source, proposal, driftRisks, categories);
-  scanFinalDecisionLanguage(source, proposal, driftRisks, categories);
+  scanIntroducedUrlsAndDates(source, proposal, lang, driftRisks, categories);
+  scanApprovalLanguageRemoval(source, proposal, lang, driftRisks, categories);
+  scanFinalDecisionLanguage(source, proposal, lang, driftRisks, categories);
 }
 var URL_PATTERN = /https?:\/\/[^\s)\]>]+/gi;
 var ISO_DATE_PATTERN = /\b\d{4}-\d{2}-\d{2}\b/g;
@@ -477,33 +633,33 @@ var FINAL_DECISION_PATTERN = /\b(approved|rejected|final decision|must proceed|i
 function uniqueMatches(text, pattern) {
   return [...new Set((text.match(pattern) ?? []).map((m) => m.trim()))];
 }
-function scanIntroducedUrlsAndDates(source, proposal, driftRisks, categories) {
+function scanIntroducedUrlsAndDates(source, proposal, lang, driftRisks, categories) {
   const srcUrls = new Set(uniqueMatches(source, URL_PATTERN));
   for (const url of uniqueMatches(proposal, URL_PATTERN)) {
     if (!srcUrls.has(url)) {
-      driftRisks.push(`URL introduced in proposal (not in source): ${url}`);
+      driftRisks.push(rdeMsg(lang, "urlIntroduced", { url }));
       categories.add("inferred_extension");
     }
   }
   const srcDates = new Set(source.match(ISO_DATE_PATTERN) ?? []);
   for (const date of proposal.match(ISO_DATE_PATTERN) ?? []) {
     if (!srcDates.has(date)) {
-      driftRisks.push(`date introduced in proposal (not in source): ${date}`);
+      driftRisks.push(rdeMsg(lang, "dateIntroduced", { date }));
       categories.add("inferred_extension");
     }
   }
 }
-function scanApprovalLanguageRemoval(source, proposal, driftRisks, categories) {
+function scanApprovalLanguageRemoval(source, proposal, lang, driftRisks, categories) {
   const srcMarkers = uniqueMatches(source, HUMAN_APPROVAL_PATTERN);
   if (srcMarkers.length === 0) return;
   const propMarkers = uniqueMatches(proposal, HUMAN_APPROVAL_PATTERN);
   const lost = srcMarkers.filter((m) => !propMarkers.includes(m));
   if (lost.length > 0) {
-    driftRisks.push(`human approval language may be removed: ${lost.join("; ")}`);
+    driftRisks.push(rdeMsg(lang, "approvalRemoved", { lost: lost.join("; ") }));
     categories.add("suspicious_drift");
   }
 }
-function scanFinalDecisionLanguage(source, proposal, driftRisks, categories) {
+function scanFinalDecisionLanguage(source, proposal, lang, driftRisks, categories) {
   const srcFinal = uniqueMatches(source, FINAL_DECISION_PATTERN);
   const propFinal = uniqueMatches(proposal, FINAL_DECISION_PATTERN);
   const introduced = propFinal.filter((m) => !srcFinal.includes(m));
@@ -511,7 +667,7 @@ function scanFinalDecisionLanguage(source, proposal, driftRisks, categories) {
   const srcProposalLang = uniqueMatches(source, PROPOSAL_LANGUAGE_PATTERN);
   if (srcProposalLang.length > 0 || propFinal.length > srcFinal.length) {
     driftRisks.push(
-      `proposal may convert tentative language to final decision: ${introduced.join("; ")}`
+      rdeMsg(lang, "finalDecisionDrift", { introduced: introduced.join("; ") })
     );
     categories.add("suspicious_drift");
   }
@@ -567,12 +723,11 @@ function recommendDecision(categories, driftRisks) {
 
 // src/rde/enrichAuditFromSource.ts
 function enrichAuditFromSource(audit, request) {
+  const lang = normalizeRdeLang(request.language);
   const excerpt2 = request.context.sourceText.slice(0, 200).replace(/\n/g, " ") + (request.context.sourceText.length > 200 ? "\u2026" : "");
   const unresolvedElements = [...audit.unresolvedElements];
   if (!request.context.git) {
-    unresolvedElements.push(
-      "Non-Git vault: no commit boundary; semantic anchors use path + source_hash only"
-    );
+    unresolvedElements.push(rdeMsg(lang, "nonGitVault"));
   }
   return {
     ...audit,
@@ -632,10 +787,11 @@ function rdeAuditFromEmit(stdout, proposalId) {
 
 // src/services/RdeAuditService.ts
 function performRdeAudit(request, proposalId, options) {
-  const structural = options?.sourceReview && !options?.proposalText ? buildSourceReview(request.context.sourceText) : buildStructuralDiff(
+  const structural = options?.sourceReview && !options?.proposalText ? buildSourceReview(request.context.sourceText, request.language) : buildStructuralDiff(
     request.context.sourceText,
     options?.proposalText ?? request.context.sourceText,
     {
+      language: request.language,
       operation: request.operation,
       frontmatter: request.context.frontmatter,
       sourceLinks: request.context.links
@@ -692,26 +848,30 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     const { containerEl } = this;
     containerEl.empty();
     containerEl.addClass("kotonoha-console-root");
-    containerEl.createEl("h2", { text: "Kotonoha Console" });
-    containerEl.createEl("p", {
-      cls: "kotonoha-console-muted",
-      text: "\u63D0\u6848\u306F\u81EA\u52D5\u9069\u7528\u3055\u308C\u307E\u305B\u3093\u3002RDE \u76E3\u67FB\u30EC\u30DD\u30FC\u30C8\u306F\u30CE\u30FC\u30C8\u306B\u66F8\u304D\u8FBC\u307F\u307E\u305B\u3093\u3002"
+    const header = containerEl.createDiv({ cls: "kotonoha-console-header" });
+    header.createEl("h2", { text: "Kotonoha Console" });
+    header.createEl("p", {
+      cls: "kotonoha-console-muted kotonoha-console-tagline",
+      text: "\u63D0\u6848\u306F\u81EA\u52D5\u9069\u7528\u3055\u308C\u307E\u305B\u3093\u3002"
     });
     const ctx = await this.plugin.noteContext.capture();
     if (ctx) {
-      const meta = containerEl.createEl("div", { cls: "kotonoha-console-meta" });
-      meta.createEl("div", { text: `Note: ${ctx.filePath}` });
-      meta.createEl("div", { text: `Source hash: ${ctx.sourceHash.slice(0, 16)}\u2026` });
+      const meta = header.createEl("div", { cls: "kotonoha-console-meta" });
+      meta.createEl("div", {
+        cls: "kotonoha-console-meta-line",
+        text: `${ctx.filePath} \xB7 ${ctx.sourceHash.slice(0, 8)}\u2026`
+      });
       if (ctx.selectionText) {
-        meta.createEl("div", { text: "Scope: selection" });
+        meta.createEl("div", { cls: "kotonoha-console-meta-line", text: "Scope: selection" });
       }
       if (ctx.git) {
         meta.createEl("div", {
-          text: `Git mode: ${this.plugin.settings.gitMode} \xB7 ${ctx.git.repoRelativePath}`
+          cls: "kotonoha-console-meta-line",
+          text: `Git: ${this.plugin.settings.gitMode}`
         });
       }
     } else {
-      containerEl.createEl("p", {
+      header.createEl("p", {
         cls: "kotonoha-console-warn",
         text: "\u30A2\u30AF\u30C6\u30A3\u30D6\u306A Markdown \u30CE\u30FC\u30C8\u3092\u958B\u3044\u3066\u304F\u3060\u3055\u3044\u3002"
       });
@@ -726,7 +886,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     this.operationSelect.value = "rde_audit";
     form.createEl("label", { text: "Instruction" });
     this.instructionInput = form.createEl("textarea", {
-      attr: { rows: "3", placeholder: "\u4EFB\u610F\u306E\u6307\u793A\uFF08\u76E3\u67FB\u306E\u89B3\u70B9\u306A\u3069\uFF09\u2026" }
+      attr: { rows: "2", placeholder: "\u4EFB\u610F\u306E\u6307\u793A\u2026" }
     });
     const actions = form.createDiv({ cls: "kotonoha-console-actions" });
     actions.createEl("button", { text: "RDE \u76E3\u67FB\u3092\u5B9F\u65BD", cls: "mod-cta" }).addEventListener("click", () => void this.runRdeAudit());
@@ -734,8 +894,9 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       "click",
       () => void this.runGenerate()
     );
-    this.proposalHost = containerEl.createDiv({ cls: "kotonoha-console-proposal" });
-    this.auditHost = containerEl.createDiv({ cls: "kotonoha-console-audit" });
+    const results = containerEl.createDiv({ cls: "kotonoha-console-results" });
+    this.proposalHost = results.createDiv({ cls: "kotonoha-console-proposal" });
+    this.auditHost = results.createDiv({ cls: "kotonoha-console-audit" });
   }
   async onClose() {
     this.containerEl.empty();
@@ -795,6 +956,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     const isAuditReport = this.lastOperation === "rde_audit";
     const wantsAudit = this.plugin.settings.enableRdeAudit || isAuditReport;
     const auditMissing = wantsAudit && !isAuditReport && !this.bundle.audit;
+    const lang = this.lastRequest?.language ?? this.plugin.settings.defaultLanguage;
     new ProposalView(this.proposalHost, this.bundle.proposal, {
       onApply: () => void this.applyProposal(),
       onReject: () => void this.rejectProposal(),
@@ -804,6 +966,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       onReAudit: () => void this.reAuditEditedProposal(),
       auditReportOnly: isAuditReport,
       auditMissing,
+      language: lang,
       reviseMode: this.reviseMode,
       editedText: this.editedText,
       onEditedTextChange: (text) => {
@@ -811,7 +974,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       }
     });
     if (this.bundle.audit && wantsAudit) {
-      new RdeAuditView(this.auditHost, this.bundle.audit);
+      new RdeAuditView(this.auditHost, this.bundle.audit, lang);
     }
   }
   async applyProposal() {
@@ -1289,33 +1452,36 @@ function proposalTextFromLocalContext(request) {
 
 // src/rde/rdeAuditReport.ts
 function rdeAuditReportMarkdown(request, audit) {
+  const lang = normalizeRdeLang(request.language);
   const lines = [
     `<!-- kotonoha rde-audit -->`,
     "",
-    `# RDE audit`,
+    `# ${rdeMsg(lang, "reportTitle")}`,
     "",
-    `**File:** \`${request.context.filePath}\``,
-    `**Source hash:** \`${request.context.sourceHash.slice(0, 16)}\u2026\``,
-    `**Recommended:** ${audit.recommendedDecision}`,
+    `> ${rdeMsg(lang, "mvpBanner")}`,
     "",
-    "## Categories",
-    audit.categories.join(", ") || "(none)",
+    `**${rdeMsg(lang, "reportFile")}:** \`${request.context.filePath}\``,
+    `**${rdeMsg(lang, "reportSourceHash")}:** \`${request.context.sourceHash.slice(0, 16)}\u2026\``,
+    `**${rdeMsg(lang, "reportRecommended")}:** ${formatDecision(lang, audit.recommendedDecision)}`,
+    "",
+    `## ${rdeMsg(lang, "reportCategories")}`,
+    audit.categories.map((c) => formatCategory(lang, c)).join(", ") || rdeMsg(lang, "categoryNone"),
     ""
   ];
-  appendSection(lines, "Preserved", audit.preservedElements);
-  appendSection(lines, "Transformed", audit.transformedElements);
-  appendSection(lines, "Inferred", audit.inferredExtensions);
-  appendSection(lines, "Unresolved", audit.unresolvedElements);
-  appendSection(lines, "Drift risks", audit.driftRisks);
-  lines.push("## Source excerpt", "", request.context.sourceText.slice(0, 2e3));
+  appendSection(lines, lang, "sectionPreserved", audit.preservedElements);
+  appendSection(lines, lang, "sectionTransformed", audit.transformedElements);
+  appendSection(lines, lang, "sectionInferred", audit.inferredExtensions);
+  appendSection(lines, lang, "sectionUnresolved", audit.unresolvedElements);
+  appendSection(lines, lang, "sectionDriftRisks", audit.driftRisks);
+  lines.push(`## ${rdeMsg(lang, "reportSourceExcerpt")}`, "", request.context.sourceText.slice(0, 2e3));
   if (request.context.sourceText.length > 2e3) {
     lines.push("", "\u2026");
   }
   return lines.join("\n");
 }
-function appendSection(lines, title, items) {
+function appendSection(lines, lang, sectionKey, items) {
   if (items.length === 0) return;
-  lines.push(`## ${title}`, "");
+  lines.push(`## ${rdeMsg(lang, sectionKey)}`, "");
   for (const item of items) {
     lines.push(`- ${item}`);
   }
