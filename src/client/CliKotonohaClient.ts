@@ -1,4 +1,4 @@
-import type { GenerateResult, KotonohaClient } from "./KotonohaClient";
+import type { GenerateResult, KotonohaClient, AuditProposalResult } from "./KotonohaClient";
 import type { GenerationRequest, GitMode } from "../domain/types";
 import {
   cliErrorMessage,
@@ -56,6 +56,17 @@ export class CliKotonohaClient implements KotonohaClient {
     }
 
     return this.generateLocal(request, proposalId);
+  }
+
+  async auditProposal(
+    request: GenerationRequest,
+    proposalId: string,
+    proposalText: string,
+  ): Promise<AuditProposalResult> {
+    return {
+      audit: performRdeAudit(request, proposalId, { proposalText }),
+      engine: "local",
+    };
   }
 
   /** git-mode-spec §10: non-Git mode must not require Git-aware CLI. */

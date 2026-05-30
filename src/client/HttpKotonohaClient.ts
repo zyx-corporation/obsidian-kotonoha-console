@@ -1,11 +1,15 @@
-import type { GenerateResult, KotonohaClient } from "./KotonohaClient";
+import type { GenerateResult, KotonohaClient, AuditProposalResult } from "./KotonohaClient";
 import type { GenerationRequest } from "../domain/types";
 import { consoleMsg } from "../i18n/consoleI18n";
 import { proposalTextFromContextPack } from "../cli/proposalFromContextPack";
 import { proposalTextFromLocalContext } from "../cli/proposalFromLocal";
 import { performRdeAudit } from "../services/RdeAuditService";
 import { rdeAuditReportMarkdown } from "../rde/rdeAuditReport";
-import { buildSourceReview } from "../rde/StructuralDiffBuilder";
+import {
+  buildSourceReview,
+  buildStructuralDiff,
+  type StructuralDiffResult,
+} from "../rde/StructuralDiffBuilder";
 import { HttpClient, HttpClientError } from "./http/httpClient";
 import { detectHttpBackend, type HttpBackendKind } from "./http/detectBackend";
 import { parseGatewayContextPack } from "./http/gatewayTools";
@@ -54,6 +58,42 @@ export class HttpKotonohaClient implements KotonohaClient {
     }
   }
 
+  async auditProposal(
+    request: GenerationRequest,
+    proposalId: string,
+    proposalText: string,
+  ): Promise<AuditProposalResult> {
+    const structural = buildStructuralDiff(
+      request.context.sourceText,
+      proposalText,
+      {
+        language: request.language,
+        operation: request.operation,
+        frontmatter: request.context.frontmatter,
+        sourceLinks: request.context.links,
+      },
+    );
+    const kind = await this.resolveBackendKind();
+    if (kind === "orchestrator") {
+      try {
+        const emitStdout = await this.orchestratorEvaluate(request, structural);
+        return {
+          audit: performRdeAudit(request, proposalId, {
+            proposalText,
+            cli: { emitStdout },
+          }),
+          engine: "orchestrator",
+        };
+      } catch {
+        /* fall through to local rule-based audit */
+      }
+    }
+    return {
+      audit: performRdeAudit(request, proposalId, { proposalText }),
+      engine: "local",
+    };
+  }
+
   /** Health probe for settings UI. */
   async pingHealth(): Promise<string> {
     const body = await this.http.getJson<{ status?: string }>("/health");
@@ -99,16 +139,10 @@ export class HttpKotonohaClient implements KotonohaClient {
 
     if (request.operation === "rde_audit") {
       const structural = buildSourceReview(request.context.sourceText, request.language);
-      const evaluate = await this.http.postJson<OrchestratorRdeEvaluateResponse>(
-        "/v1/rde/evaluate",
-        {
-          subject_ref: subjectRefForRequest(request),
-          meaning_changes: structuralToMeaningChanges(structural),
-        },
-      );
+      const emitStdout = await this.orchestratorEvaluate(request, structural);
       const audit = performRdeAudit(request, proposalId, {
         sourceReview: true,
-        cli: { emitStdout: orchestratorEvaluateToEmitStdout(evaluate) },
+        cli: { emitStdout },
       });
       const proposedText = rdeAuditReportMarkdown(request, audit);
       return {
@@ -224,5 +258,19 @@ export class HttpKotonohaClient implements KotonohaClient {
       proposalText: request.operation === "rde_audit" ? undefined : proposal.proposedText,
     });
     return { proposal, audit: computed };
+  }
+
+  private async orchestratorEvaluate(
+    request: GenerationRequest,
+    structural: StructuralDiffResult,
+  ): Promise<string> {
+    const evaluate = await this.http.postJson<OrchestratorRdeEvaluateResponse>(
+      "/v1/rde/evaluate",
+      {
+        subject_ref: subjectRefForRequest(request),
+        meaning_changes: structuralToMeaningChanges(structural),
+      },
+    );
+    return orchestratorEvaluateToEmitStdout(evaluate);
   }
 }

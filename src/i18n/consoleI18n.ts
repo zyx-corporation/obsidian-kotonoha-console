@@ -58,6 +58,7 @@ const MSGS = {
     noticeCopied: "Copied to clipboard",
     noticeReviseMode: "Revise mode — edit, then Apply revision or Re-audit",
     noticeReAuditDone: "Re-audit complete (local rule-based)",
+    noticeReAuditDoneOrchestrator: "Re-audit complete (orchestrator /v1/rde/evaluate)",
     confirmSourceChanged:
       "Source has changed. Re-audit or explicit override is required. Continue?",
     confirmGitHeadChanged:
@@ -187,6 +188,7 @@ const MSGS = {
     noticeCopied: "クリップボードにコピーしました",
     noticeReviseMode: "改訂モード — 編集後、改訂を適用または再監査",
     noticeReAuditDone: "再監査完了（local rule-based）",
+    noticeReAuditDoneOrchestrator: "再監査完了（orchestrator /v1/rde/evaluate）",
     confirmSourceChanged:
       "ソースが変更されています。再監査または明示的な上書きが必要です。続行しますか？",
     confirmGitHeadChanged:
@@ -316,6 +318,7 @@ const MSGS = {
     noticeCopied: "已复制到剪贴板",
     noticeReviseMode: "修订模式 — 编辑后应用修订或重新审计",
     noticeReAuditDone: "重新审计完成（local rule-based）",
+    noticeReAuditDoneOrchestrator: "重新审计完成（orchestrator /v1/rde/evaluate）",
     confirmSourceChanged:
       "源已更改。需要重新审计或明确覆盖。是否继续？",
     confirmGitHeadChanged:

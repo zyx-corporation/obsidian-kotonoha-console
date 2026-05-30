@@ -1,4 +1,4 @@
-import type { GenerateResult, KotonohaClient } from "./KotonohaClient";
+import type { GenerateResult, KotonohaClient, AuditProposalResult } from "./KotonohaClient";
 import type { GenerationRequest } from "../domain/types";
 import { consoleMsg } from "../i18n/consoleI18n";
 import { performRdeAudit } from "../services/RdeAuditService";
@@ -55,6 +55,17 @@ export class MockKotonohaClient implements KotonohaClient {
         uncertaintyNote: consoleMsg(lang, "mockUncertainty"),
       },
       audit,
+    };
+  }
+
+  async auditProposal(
+    request: GenerationRequest,
+    proposalId: string,
+    proposalText: string,
+  ): Promise<AuditProposalResult> {
+    return {
+      audit: performRdeAudit(request, proposalId, { proposalText }),
+      engine: "local",
     };
   }
 }
