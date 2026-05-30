@@ -9,6 +9,11 @@ import type { RdeLang } from "../rde/rdeI18n";
 import { localizeBundleForDisplay } from "../services/localizeBundle";
 import { composeAppliedNote } from "../obsidian/applyNoteContent";
 import { readGitContext } from "../obsidian/GitContextReader";
+import {
+  effectiveMetadataWriteMode,
+  mergeKotonohaFrontmatter,
+  shouldWriteMetadata,
+} from "../obsidian/metadataLineage";
 
 export const KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
 
@@ -391,12 +396,44 @@ export class KotonohaConsoleView extends ItemView {
         : this.plugin.approval.approve(this.bundle!.proposal, text);
       await this.plugin.auditLog.logDecision(decision, this.bundle!.audit);
       await this.saveReviewSidecar(decision);
+
+      const afterApply = await this.app.vault.read(file);
+      const withLineage = await this.maybeMergeLineageMetadata(
+        afterApply,
+        lang,
+        decision.decision === "partially_applied" ? "partially_applied" : "applied",
+      );
+      if (withLineage !== afterApply) {
+        await this.plugin.markdownWriter.replaceNoteContent(file, withLineage);
+      }
+
       new Notice(
         decision.decision === "partially_applied"
           ? consoleMsg(lang, "noticeAppliedRevised")
           : consoleMsg(lang, "noticeApplied"),
       );
       this.clearResults();
+    });
+  }
+
+  private async maybeMergeLineageMetadata(
+    content: string,
+    lang: RdeLang,
+    reviewStatus: string,
+  ): Promise<string> {
+    const effective = effectiveMetadataWriteMode(
+      this.plugin.settings.metadataWriteMode,
+      this.plugin.settings.gitMode,
+    );
+    if (!shouldWriteMetadata(effective)) return content;
+    if (effective === "prompt" && !confirm(consoleMsg(lang, "confirmWriteMetadata"))) {
+      return content;
+    }
+    if (!this.bundle) return content;
+    return mergeKotonohaFrontmatter(content, {
+      review_status: reviewStatus,
+      latest_proposal_id: this.bundle.proposal.id,
+      project_id: this.plugin.settings.projectId,
     });
   }
 

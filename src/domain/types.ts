@@ -15,6 +15,9 @@ export type GitMode =
   | "passive-observing"
   | "obsidian-git-aware";
 
+/** git-mode-spec §8 — frontmatter lineage writes on apply. */
+export type MetadataWriteMode = "off" | "prompt" | "always";
+
 export type AuditLogMode = "hash_only" | "summary" | "full_text";
 
 export type RdeCategory =
