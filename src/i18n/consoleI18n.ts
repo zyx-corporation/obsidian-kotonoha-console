@@ -19,6 +19,8 @@ const MSGS = {
     gitPassiveSnapshot: "{branch} @ {commit} · {dirty}",
     gitDirty: "dirty",
     gitClean: "clean",
+    gitObsidianGitActive: "Obsidian Git: active",
+    gitObsidianGitAbsent: "Obsidian Git: not detected (read-only Git context only)",
     gitRepoPath: "path: {path}",
     labelOperation: "Operation",
     labelInstruction: "Instruction",
@@ -58,6 +60,8 @@ const MSGS = {
     noticeReAuditDone: "Re-audit complete (local rule-based)",
     confirmSourceChanged:
       "Source has changed. Re-audit or explicit override is required. Continue?",
+    confirmGitHeadChanged:
+      "Git HEAD changed since generation (Obsidian Git may have synced). Re-audit recommended. Continue?",
     confirmApply: "Apply this proposal to the note? Original text will be overwritten.",
     noticeOpenEditor: "Open the note in the editor to apply selection",
     mockRdeSummary: "[mock] RDE audit · {title}",
@@ -144,6 +148,8 @@ const MSGS = {
     gitPassiveSnapshot: "{branch} @ {commit} · {dirty}",
     gitDirty: "変更あり",
     gitClean: "クリーン",
+    gitObsidianGitActive: "Obsidian Git: 有効",
+    gitObsidianGitAbsent: "Obsidian Git: 未検出（Git context のみ読取）",
     gitRepoPath: "パス: {path}",
     labelOperation: "操作",
     labelInstruction: "指示",
@@ -183,6 +189,8 @@ const MSGS = {
     noticeReAuditDone: "再監査完了（local rule-based）",
     confirmSourceChanged:
       "ソースが変更されています。再監査または明示的な上書きが必要です。続行しますか？",
+    confirmGitHeadChanged:
+      "生成後に Git HEAD が変わっています（Obsidian Git の同期の可能性）。再監査を推奨します。続行しますか？",
     confirmApply: "この提案をノートに適用しますか？元のテキストは上書きされます。",
     noticeOpenEditor: "エディタでノートを開いてから選択範囲に適用してください",
     mockRdeSummary: "[mock] RDE 監査 · {title}",
@@ -269,6 +277,8 @@ const MSGS = {
     gitPassiveSnapshot: "{branch} @ {commit} · {dirty}",
     gitDirty: "有变更",
     gitClean: "干净",
+    gitObsidianGitActive: "Obsidian Git: 已启用",
+    gitObsidianGitAbsent: "Obsidian Git: 未检测到（仅读取 Git 上下文）",
     gitRepoPath: "路径: {path}",
     labelOperation: "操作",
     labelInstruction: "指示",
@@ -308,6 +318,8 @@ const MSGS = {
     noticeReAuditDone: "重新审计完成（local rule-based）",
     confirmSourceChanged:
       "源已更改。需要重新审计或明确覆盖。是否继续？",
+    confirmGitHeadChanged:
+      "生成后 Git HEAD 已变化（可能由 Obsidian Git 同步引起）。建议重新审计。是否继续？",
     confirmApply: "将此提案应用到笔记？原始文本将被覆盖。",
     noticeOpenEditor: "请在编辑器中打开笔记后再应用到选区",
     mockRdeSummary: "[mock] RDE 审计 · {title}",
@@ -427,6 +439,14 @@ export function gitContextLines(
       );
     } else {
       lines.push(consoleMsg(lang, "gitMode", { mode }));
+    }
+    if (mode === "obsidian-git-aware") {
+      lines.push(
+        consoleMsg(
+          lang,
+          git.obsidianGitDetected ? "gitObsidianGitActive" : "gitObsidianGitAbsent",
+        ),
+      );
     }
   } else if (mode !== "off") {
     lines.push(consoleMsg(lang, "gitMode", { mode }));

@@ -62,6 +62,6 @@ Headless pre-check: `npm run demo:rde-audit`
 
 ## Next
 
-- End-to-end: summarize → **再監査** (source vs proposal diff) → 却下 / 適用
-- Git `obsidian-git-aware` mode (Obsidian Git plugin integration)
+- Git `obsidian-git-aware` manual acceptance with Obsidian Git plugin installed
 - Orchestrator RDE evaluate on proposal re-audit (optional enhancement)
+- `metadataWriteMode` setting (off | prompt | always) when frontmatter lineage writes land

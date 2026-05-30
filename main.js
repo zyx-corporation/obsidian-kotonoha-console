@@ -293,6 +293,8 @@ var MSGS2 = {
     gitPassiveSnapshot: "{branch} @ {commit} \xB7 {dirty}",
     gitDirty: "dirty",
     gitClean: "clean",
+    gitObsidianGitActive: "Obsidian Git: active",
+    gitObsidianGitAbsent: "Obsidian Git: not detected (read-only Git context only)",
     gitRepoPath: "path: {path}",
     labelOperation: "Operation",
     labelInstruction: "Instruction",
@@ -331,6 +333,7 @@ var MSGS2 = {
     noticeReviseMode: "Revise mode \u2014 edit, then Apply revision or Re-audit",
     noticeReAuditDone: "Re-audit complete (local rule-based)",
     confirmSourceChanged: "Source has changed. Re-audit or explicit override is required. Continue?",
+    confirmGitHeadChanged: "Git HEAD changed since generation (Obsidian Git may have synced). Re-audit recommended. Continue?",
     confirmApply: "Apply this proposal to the note? Original text will be overwritten.",
     noticeOpenEditor: "Open the note in the editor to apply selection",
     mockRdeSummary: "[mock] RDE audit \xB7 {title}",
@@ -404,6 +407,8 @@ var MSGS2 = {
     gitPassiveSnapshot: "{branch} @ {commit} \xB7 {dirty}",
     gitDirty: "\u5909\u66F4\u3042\u308A",
     gitClean: "\u30AF\u30EA\u30FC\u30F3",
+    gitObsidianGitActive: "Obsidian Git: \u6709\u52B9",
+    gitObsidianGitAbsent: "Obsidian Git: \u672A\u691C\u51FA\uFF08Git context \u306E\u307F\u8AAD\u53D6\uFF09",
     gitRepoPath: "\u30D1\u30B9: {path}",
     labelOperation: "\u64CD\u4F5C",
     labelInstruction: "\u6307\u793A",
@@ -442,6 +447,7 @@ var MSGS2 = {
     noticeReviseMode: "\u6539\u8A02\u30E2\u30FC\u30C9 \u2014 \u7DE8\u96C6\u5F8C\u3001\u6539\u8A02\u3092\u9069\u7528\u307E\u305F\u306F\u518D\u76E3\u67FB",
     noticeReAuditDone: "\u518D\u76E3\u67FB\u5B8C\u4E86\uFF08local rule-based\uFF09",
     confirmSourceChanged: "\u30BD\u30FC\u30B9\u304C\u5909\u66F4\u3055\u308C\u3066\u3044\u307E\u3059\u3002\u518D\u76E3\u67FB\u307E\u305F\u306F\u660E\u793A\u7684\u306A\u4E0A\u66F8\u304D\u304C\u5FC5\u8981\u3067\u3059\u3002\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F",
+    confirmGitHeadChanged: "\u751F\u6210\u5F8C\u306B Git HEAD \u304C\u5909\u308F\u3063\u3066\u3044\u307E\u3059\uFF08Obsidian Git \u306E\u540C\u671F\u306E\u53EF\u80FD\u6027\uFF09\u3002\u518D\u76E3\u67FB\u3092\u63A8\u5968\u3057\u307E\u3059\u3002\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F",
     confirmApply: "\u3053\u306E\u63D0\u6848\u3092\u30CE\u30FC\u30C8\u306B\u9069\u7528\u3057\u307E\u3059\u304B\uFF1F\u5143\u306E\u30C6\u30AD\u30B9\u30C8\u306F\u4E0A\u66F8\u304D\u3055\u308C\u307E\u3059\u3002",
     noticeOpenEditor: "\u30A8\u30C7\u30A3\u30BF\u3067\u30CE\u30FC\u30C8\u3092\u958B\u3044\u3066\u304B\u3089\u9078\u629E\u7BC4\u56F2\u306B\u9069\u7528\u3057\u3066\u304F\u3060\u3055\u3044",
     mockRdeSummary: "[mock] RDE \u76E3\u67FB \xB7 {title}",
@@ -515,6 +521,8 @@ var MSGS2 = {
     gitPassiveSnapshot: "{branch} @ {commit} \xB7 {dirty}",
     gitDirty: "\u6709\u53D8\u66F4",
     gitClean: "\u5E72\u51C0",
+    gitObsidianGitActive: "Obsidian Git: \u5DF2\u542F\u7528",
+    gitObsidianGitAbsent: "Obsidian Git: \u672A\u68C0\u6D4B\u5230\uFF08\u4EC5\u8BFB\u53D6 Git \u4E0A\u4E0B\u6587\uFF09",
     gitRepoPath: "\u8DEF\u5F84: {path}",
     labelOperation: "\u64CD\u4F5C",
     labelInstruction: "\u6307\u793A",
@@ -553,6 +561,7 @@ var MSGS2 = {
     noticeReviseMode: "\u4FEE\u8BA2\u6A21\u5F0F \u2014 \u7F16\u8F91\u540E\u5E94\u7528\u4FEE\u8BA2\u6216\u91CD\u65B0\u5BA1\u8BA1",
     noticeReAuditDone: "\u91CD\u65B0\u5BA1\u8BA1\u5B8C\u6210\uFF08local rule-based\uFF09",
     confirmSourceChanged: "\u6E90\u5DF2\u66F4\u6539\u3002\u9700\u8981\u91CD\u65B0\u5BA1\u8BA1\u6216\u660E\u786E\u8986\u76D6\u3002\u662F\u5426\u7EE7\u7EED\uFF1F",
+    confirmGitHeadChanged: "\u751F\u6210\u540E Git HEAD \u5DF2\u53D8\u5316\uFF08\u53EF\u80FD\u7531 Obsidian Git \u540C\u6B65\u5F15\u8D77\uFF09\u3002\u5EFA\u8BAE\u91CD\u65B0\u5BA1\u8BA1\u3002\u662F\u5426\u7EE7\u7EED\uFF1F",
     confirmApply: "\u5C06\u6B64\u63D0\u6848\u5E94\u7528\u5230\u7B14\u8BB0\uFF1F\u539F\u59CB\u6587\u672C\u5C06\u88AB\u8986\u76D6\u3002",
     noticeOpenEditor: "\u8BF7\u5728\u7F16\u8F91\u5668\u4E2D\u6253\u5F00\u7B14\u8BB0\u540E\u518D\u5E94\u7528\u5230\u9009\u533A",
     mockRdeSummary: "[mock] RDE \u5BA1\u8BA1 \xB7 {title}",
@@ -645,6 +654,14 @@ function gitContextLines(lang, git, mode) {
       );
     } else {
       lines.push(consoleMsg(lang, "gitMode", { mode }));
+    }
+    if (mode === "obsidian-git-aware") {
+      lines.push(
+        consoleMsg(
+          lang,
+          git.obsidianGitDetected ? "gitObsidianGitActive" : "gitObsidianGitAbsent"
+        )
+      );
     }
   } else if (mode !== "off") {
     lines.push(consoleMsg(lang, "gitMode", { mode }));
@@ -1392,6 +1409,74 @@ function composeAppliedNote(originalContent, proposedText, options) {
   return fm[0] + proposedText;
 }
 
+// src/util/gitReadonly.ts
+var import_child_process2 = require("child_process");
+var import_util = require("util");
+var import_path = require("path");
+var execFileAsync = (0, import_util.promisify)(import_child_process2.execFile);
+var GIT_TIMEOUT_MS = 5e3;
+async function defaultGitExec(args, cwd) {
+  try {
+    const { stdout } = await execFileAsync("git", args, {
+      cwd,
+      timeout: GIT_TIMEOUT_MS,
+      maxBuffer: 256 * 1024
+    });
+    return stdout.trim() || void 0;
+  } catch {
+    return void 0;
+  }
+}
+async function buildGitContext(vaultPath, filePath, mode, exec = defaultGitExec) {
+  if (mode === "off" || !vaultPath.trim()) return void 0;
+  const root = await exec(["rev-parse", "--show-toplevel"], vaultPath);
+  if (!root) {
+    return {
+      root: vaultPath,
+      repoRelativePath: filePath,
+      dirty: false
+    };
+  }
+  const absFile = (0, import_path.join)(vaultPath, filePath);
+  const repoRelativePath = (0, import_path.relative)(root, absFile).split("\\").join("/") || filePath;
+  if (mode === "external") {
+    return { root, repoRelativePath, dirty: false };
+  }
+  const branch = await exec(["rev-parse", "--abbrev-ref", "HEAD"], root);
+  const commit = await exec(["rev-parse", "--short", "HEAD"], root);
+  const fileStatus = await exec(["status", "--porcelain", "--", repoRelativePath], root);
+  const repoStatus = await exec(["status", "--porcelain"], root);
+  return {
+    root,
+    branch,
+    commit,
+    repoRelativePath,
+    dirty: Boolean(fileStatus?.length || repoStatus?.length)
+  };
+}
+
+// src/obsidian/obsidianGitDetect.ts
+var OBSIDIAN_GIT_PLUGIN_ID = "obsidian-git";
+function isObsidianGitPluginEnabled(app) {
+  const plugins = app.plugins;
+  return plugins.enabledPlugins.has(OBSIDIAN_GIT_PLUGIN_ID) && plugins.getPlugin(OBSIDIAN_GIT_PLUGIN_ID) != null;
+}
+
+// src/obsidian/GitContextReader.ts
+async function readGitContext(app, file, mode) {
+  const vaultPath = vaultBasePath(app);
+  if (!vaultPath) return void 0;
+  const snapshot = await buildGitContext(vaultPath, file.path, mode);
+  if (!snapshot) return void 0;
+  if (mode === "obsidian-git-aware") {
+    return {
+      ...snapshot,
+      obsidianGitDetected: isObsidianGitPluginEnabled(app)
+    };
+  }
+  return snapshot;
+}
+
 // src/ui/KotonohaConsoleView.ts
 var KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
 var KotonohaConsoleView = class extends import_obsidian2.ItemView {
@@ -1404,6 +1489,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
   lastOperation = "rde_audit";
   targetFilePath = null;
   sourceHashAtGeneration = null;
+  gitCommitAtGeneration = null;
   reviseMode = false;
   editedText = "";
   proposalHost;
@@ -1521,6 +1607,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     this.lastRequest = null;
     this.targetFilePath = null;
     this.sourceHashAtGeneration = null;
+    this.gitCommitAtGeneration = null;
     this.reviseMode = false;
     this.editedText = "";
     this.proposalHost?.empty();
@@ -1580,6 +1667,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     try {
       await this.withBusy(async () => {
         this.sourceHashAtGeneration = ctx.sourceHash;
+        this.gitCommitAtGeneration = ctx.git?.commit ?? null;
         this.targetFilePath = ctx.filePath;
         this.lastRequest = request;
         this.reviseMode = false;
@@ -1649,23 +1737,37 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       new import_obsidian2.Notice(consoleMsg(lang, "noticeAuditNoApply"));
       return;
     }
-    const ctx = await this.plugin.noteContext.capture();
-    if (!ctx) {
+    const file = this.resolveTargetFile();
+    if (!file) {
       new import_obsidian2.Notice(consoleMsg(lang, "noticeNoNote"));
       return;
     }
-    const current = await this.plugin.noteContext.capture();
+    const current = await this.plugin.activeNoteReader.readNoteContextForFile(
+      file,
+      this.lastRequest?.context.selectionText
+    );
     if (this.sourceHashAtGeneration && current && current.sourceHash !== this.sourceHashAtGeneration) {
       const ok = confirm(consoleMsg(lang, "confirmSourceChanged"));
       if (!ok) return;
+    }
+    if (this.plugin.settings.gitMode === "obsidian-git-aware" && this.gitCommitAtGeneration) {
+      const gitNow = await readGitContext(
+        this.app,
+        file,
+        this.plugin.settings.gitMode
+      );
+      if (gitNow?.commit && gitNow.commit !== this.gitCommitAtGeneration) {
+        const ok = confirm(consoleMsg(lang, "confirmGitHeadChanged"));
+        if (!ok) return;
+      }
     }
     if (this.plugin.settings.requireHumanApproval) {
       const ok = confirm(consoleMsg(lang, "confirmApply"));
       if (!ok) return;
     }
     await this.withBusy(async () => {
-      const file = this.resolveTargetFile();
-      if (!file) {
+      const file2 = this.resolveTargetFile();
+      if (!file2) {
         new import_obsidian2.Notice(
           consoleMsg(lang, "noticeTargetFileMissing", {
             path: this.targetFilePath ?? "?"
@@ -1674,7 +1776,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
         return;
       }
       const proposedText = this.reviseMode ? this.editedText : this.bundle.proposal.proposedText;
-      const original = await this.app.vault.read(file);
+      const original = await this.app.vault.read(file2);
       const finalText = composeAppliedNote(original, proposedText, {
         preserveFrontmatter: this.plugin.settings.preserveFrontmatter,
         selectionText: this.lastRequest?.context.selectionText
@@ -1682,13 +1784,13 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       if (this.lastRequest?.context.selectionText) {
         const view = this.app.workspace.getActiveViewOfType(import_obsidian2.MarkdownView);
         const editor = view?.editor;
-        if (editor && view.file?.path === file.path) {
+        if (editor && view.file?.path === file2.path) {
           editor.replaceSelection(proposedText);
         } else {
-          await this.plugin.markdownWriter.replaceNoteContent(file, finalText);
+          await this.plugin.markdownWriter.replaceNoteContent(file2, finalText);
         }
       } else {
-        await this.plugin.markdownWriter.replaceNoteContent(file, finalText);
+        await this.plugin.markdownWriter.replaceNoteContent(file2, finalText);
       }
       const text = proposedText;
       const decision = this.reviseMode ? this.plugin.approval.approveRevised(
@@ -1786,59 +1888,6 @@ async function sha256Hex(text) {
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-// src/util/gitReadonly.ts
-var import_child_process2 = require("child_process");
-var import_util = require("util");
-var import_path = require("path");
-var execFileAsync = (0, import_util.promisify)(import_child_process2.execFile);
-var GIT_TIMEOUT_MS = 5e3;
-async function defaultGitExec(args, cwd) {
-  try {
-    const { stdout } = await execFileAsync("git", args, {
-      cwd,
-      timeout: GIT_TIMEOUT_MS,
-      maxBuffer: 256 * 1024
-    });
-    return stdout.trim() || void 0;
-  } catch {
-    return void 0;
-  }
-}
-async function buildGitContext(vaultPath, filePath, mode, exec = defaultGitExec) {
-  if (mode === "off" || !vaultPath.trim()) return void 0;
-  const root = await exec(["rev-parse", "--show-toplevel"], vaultPath);
-  if (!root) {
-    return {
-      root: vaultPath,
-      repoRelativePath: filePath,
-      dirty: false
-    };
-  }
-  const absFile = (0, import_path.join)(vaultPath, filePath);
-  const repoRelativePath = (0, import_path.relative)(root, absFile).split("\\").join("/") || filePath;
-  if (mode === "external") {
-    return { root, repoRelativePath, dirty: false };
-  }
-  const branch = await exec(["rev-parse", "--abbrev-ref", "HEAD"], root);
-  const commit = await exec(["rev-parse", "--short", "HEAD"], root);
-  const fileStatus = await exec(["status", "--porcelain", "--", repoRelativePath], root);
-  const repoStatus = await exec(["status", "--porcelain"], root);
-  return {
-    root,
-    branch,
-    commit,
-    repoRelativePath,
-    dirty: Boolean(fileStatus?.length || repoStatus?.length)
-  };
-}
-
-// src/obsidian/GitContextReader.ts
-async function readGitContext(app, file, mode) {
-  const vaultPath = vaultBasePath(app);
-  if (!vaultPath) return void 0;
-  return buildGitContext(vaultPath, file.path, mode);
-}
-
 // src/obsidian/ActiveNoteReader.ts
 var ActiveNoteReader = class {
   constructor(app, gitMode) {
@@ -1852,6 +1901,9 @@ var ActiveNoteReader = class {
   async readNoteContext(selectionText) {
     const file = this.getActiveFile();
     if (!file) return null;
+    return this.readNoteContextForFile(file, selectionText);
+  }
+  async readNoteContextForFile(file, selectionText) {
     const sourceText = await this.app.vault.read(file);
     const targetText = selectionText !== void 0 && selectionText.length > 0 ? selectionText : sourceText;
     const cache = this.app.metadataCache.getFileCache(file);
