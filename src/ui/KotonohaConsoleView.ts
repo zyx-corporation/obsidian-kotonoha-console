@@ -1,4 +1,4 @@
-import { ItemView, MarkdownView, Notice, WorkspaceLeaf } from "obsidian";
+import { ItemView, MarkdownView, Notice, WorkspaceLeaf, TFile } from "obsidian";
 import type KotonohaConsolePlugin from "../main";
 import type { GenerationRequest, OperationType, ApprovalDecision } from "../domain/types";
 import type { ProposalBundle } from "../services/ProposalService";
@@ -8,6 +8,7 @@ import { consoleMsg, operationLabel, gitContextLines } from "../i18n/consoleI18n
 import type { RdeLang } from "../rde/rdeI18n";
 import { performRdeAudit } from "../services/RdeAuditService";
 import { localizeBundleForDisplay } from "../services/localizeBundle";
+import { composeAppliedNote } from "../obsidian/applyNoteContent";
 
 export const KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
 
@@ -15,6 +16,7 @@ export class KotonohaConsoleView extends ItemView {
   private bundle: ProposalBundle | null = null;
   private lastRequest: GenerationRequest | null = null;
   private lastOperation: OperationType = "rde_audit";
+  private targetFilePath: string | null = null;
   private sourceHashAtGeneration: string | null = null;
   private reviseMode = false;
   private editedText = "";
@@ -24,6 +26,7 @@ export class KotonohaConsoleView extends ItemView {
   private instructionBlock!: HTMLElement;
   private operationSelect!: HTMLSelectElement;
   private primaryActionButton!: HTMLButtonElement;
+  private busyCount = 0;
 
   constructor(leaf: WorkspaceLeaf, private readonly plugin: KotonohaConsolePlugin) {
     super(leaf);
@@ -156,6 +159,7 @@ export class KotonohaConsoleView extends ItemView {
   private clearResults(): void {
     this.bundle = null;
     this.lastRequest = null;
+    this.targetFilePath = null;
     this.sourceHashAtGeneration = null;
     this.reviseMode = false;
     this.editedText = "";
@@ -163,8 +167,40 @@ export class KotonohaConsoleView extends ItemView {
     this.auditHost?.empty();
   }
 
+  /** Target note at generation time — Console focus must not break apply. */
+  private resolveTargetFile(): TFile | null {
+    const active = this.plugin.activeNoteReader.getActiveFile();
+    if (active && (!this.targetFilePath || active.path === this.targetFilePath)) {
+      return active;
+    }
+    if (this.targetFilePath) {
+      const file = this.app.vault.getAbstractFileByPath(this.targetFilePath);
+      if (file instanceof TFile) return file;
+    }
+    return active;
+  }
+
   private uiLang(): RdeLang {
     return this.plugin.settings.defaultLanguage;
+  }
+
+  /** Local busy state — wait cursor within Console panel only. */
+  private setBusy(on: boolean): void {
+    this.busyCount = Math.max(0, this.busyCount + (on ? 1 : -1));
+    const busy = this.busyCount > 0;
+    this.containerEl.classList.toggle("kotonoha-console-busy", busy);
+    if (this.primaryActionButton) {
+      this.primaryActionButton.disabled = busy;
+    }
+  }
+
+  private async withBusy<T>(work: () => Promise<T>): Promise<T> {
+    this.setBusy(true);
+    try {
+      return await work();
+    } finally {
+      this.setBusy(false);
+    }
   }
 
   private async runGenerate(): Promise<void> {
@@ -189,25 +225,28 @@ export class KotonohaConsoleView extends ItemView {
     );
 
     try {
-      this.sourceHashAtGeneration = ctx.sourceHash;
-      this.lastRequest = request;
-      this.reviseMode = false;
-      this.editedText = "";
-      this.bundle = await this.plugin.proposals.generate(request);
-      await this.plugin.auditLog.logProposal(
-        this.bundle.proposal,
-        ctx.sourceText,
-      );
-      if (this.plugin.settings.sidecarMode) {
-        await this.plugin.sidecar.saveProposalRecord(request, this.bundle.proposal);
-        if (this.bundle.audit) {
-          await this.plugin.sidecar.saveRdeAuditRecord(
-            request,
-            this.bundle.proposal,
-            this.bundle.audit,
-          );
+      await this.withBusy(async () => {
+        this.sourceHashAtGeneration = ctx.sourceHash;
+        this.targetFilePath = ctx.filePath;
+        this.lastRequest = request;
+        this.reviseMode = false;
+        this.editedText = "";
+        this.bundle = await this.plugin.proposals.generate(request);
+        await this.plugin.auditLog.logProposal(
+          this.bundle.proposal,
+          ctx.sourceText,
+        );
+        if (this.plugin.settings.sidecarMode) {
+          await this.plugin.sidecar.saveProposalRecord(request, this.bundle.proposal);
+          if (this.bundle.audit) {
+            await this.plugin.sidecar.saveRdeAuditRecord(
+              request,
+              this.bundle.proposal,
+              this.bundle.audit,
+            );
+          }
         }
-      }
+      });
       this.renderBundle();
       const saved = this.plugin.settings.sidecarMode
         ? consoleMsg(lang, "noticeSavedSidecar")
@@ -246,7 +285,7 @@ export class KotonohaConsoleView extends ItemView {
       onCopy: () => void this.copyProposal(),
       onRevise: isAuditReport ? undefined : () => void this.startRevise(),
       onCancelRevise: () => this.cancelRevise(),
-      onReAudit: () => void this.reAuditEditedProposal(),
+      onReAudit: isAuditReport ? undefined : () => void this.reAuditProposal(),
       auditReportOnly: isAuditReport,
       auditMissing,
       language: lang,
@@ -291,54 +330,72 @@ export class KotonohaConsoleView extends ItemView {
       if (!ok) return;
     }
 
-    const file = this.plugin.activeNoteReader.getActiveFile();
-    if (!file) return;
-
-    const text = this.reviseMode
-      ? this.editedText
-      : this.bundle.proposal.proposedText;
-    if (ctx.selectionText) {
-      const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-      const editor = view?.editor;
-      if (editor) {
-        editor.replaceSelection(text);
-      } else {
-        new Notice(consoleMsg(lang, "noticeOpenEditor"));
+    await this.withBusy(async () => {
+      const file = this.resolveTargetFile();
+      if (!file) {
+        new Notice(
+          consoleMsg(lang, "noticeTargetFileMissing", {
+            path: this.targetFilePath ?? "?",
+          }),
+        );
         return;
       }
-    } else {
-      await this.plugin.markdownWriter.replaceNoteContent(file, text);
-    }
 
-    const decision = this.reviseMode
-      ? this.plugin.approval.approveRevised(
-          this.bundle.proposal,
-          text,
-          this.bundle.proposal.proposedText,
-        )
-      : this.plugin.approval.approve(this.bundle.proposal, text);
-    await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
-    await this.saveReviewSidecar(decision);
-    new Notice(
-      decision.decision === "partially_applied"
-        ? consoleMsg(lang, "noticeAppliedRevised")
-        : consoleMsg(lang, "noticeApplied"),
-    );
-    this.clearResults();
+      const proposedText = this.reviseMode
+        ? this.editedText
+        : this.bundle!.proposal.proposedText;
+      const original = await this.app.vault.read(file);
+      const finalText = composeAppliedNote(original, proposedText, {
+        preserveFrontmatter: this.plugin.settings.preserveFrontmatter,
+        selectionText: this.lastRequest?.context.selectionText,
+      });
+
+      if (this.lastRequest?.context.selectionText) {
+        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+        const editor = view?.editor;
+        if (editor && view.file?.path === file.path) {
+          editor.replaceSelection(proposedText);
+        } else {
+          await this.plugin.markdownWriter.replaceNoteContent(file, finalText);
+        }
+      } else {
+        await this.plugin.markdownWriter.replaceNoteContent(file, finalText);
+      }
+
+      const text = proposedText;
+
+      const decision = this.reviseMode
+        ? this.plugin.approval.approveRevised(
+            this.bundle!.proposal,
+            text,
+            this.bundle!.proposal.proposedText,
+          )
+        : this.plugin.approval.approve(this.bundle!.proposal, text);
+      await this.plugin.auditLog.logDecision(decision, this.bundle!.audit);
+      await this.saveReviewSidecar(decision);
+      new Notice(
+        decision.decision === "partially_applied"
+          ? consoleMsg(lang, "noticeAppliedRevised")
+          : consoleMsg(lang, "noticeApplied"),
+      );
+      this.clearResults();
+    });
   }
 
   private async rejectProposal(): Promise<void> {
     if (!this.bundle) return;
     const lang = this.uiLang();
-    const decision = this.plugin.approval.reject(this.bundle.proposal);
-    await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
-    await this.saveReviewSidecar(decision);
-    new Notice(
-      this.lastOperation === "rde_audit"
-        ? consoleMsg(lang, "noticeAuditDismissed")
-        : consoleMsg(lang, "noticeRejected"),
-    );
-    this.clearResults();
+    await this.withBusy(async () => {
+      const decision = this.plugin.approval.reject(this.bundle!.proposal);
+      await this.plugin.auditLog.logDecision(decision, this.bundle!.audit);
+      await this.saveReviewSidecar(decision);
+      new Notice(
+        this.lastOperation === "rde_audit"
+          ? consoleMsg(lang, "noticeAuditDismissed")
+          : consoleMsg(lang, "noticeRejected"),
+      );
+      this.clearResults();
+    });
   }
 
   private async copyProposal(): Promise<void> {
@@ -353,12 +410,14 @@ export class KotonohaConsoleView extends ItemView {
     const lang = this.uiLang();
     this.reviseMode = true;
     this.editedText = this.bundle.proposal.proposedText;
-    const decision = this.plugin.approval.hold(
-      this.bundle.proposal,
-      "user opened revise editor",
-    );
-    await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
-    await this.saveReviewSidecar(decision);
+    await this.withBusy(async () => {
+      const decision = this.plugin.approval.hold(
+        this.bundle!.proposal,
+        "user opened revise editor",
+      );
+      await this.plugin.auditLog.logDecision(decision, this.bundle!.audit);
+      await this.saveReviewSidecar(decision);
+    });
     new Notice(consoleMsg(lang, "noticeReviseMode"));
     this.renderBundle();
   }
@@ -369,21 +428,26 @@ export class KotonohaConsoleView extends ItemView {
     this.renderBundle();
   }
 
-  private async reAuditEditedProposal(): Promise<void> {
+  private async reAuditProposal(): Promise<void> {
     if (!this.bundle || !this.lastRequest) return;
-    const audit = performRdeAudit(this.lastRequest, this.bundle.proposal.id, {
-      proposalText: this.editedText,
+    await this.withBusy(async () => {
+      const proposalText = this.reviseMode
+        ? this.editedText
+        : this.bundle!.proposal.proposedText;
+      const audit = performRdeAudit(this.lastRequest!, this.bundle!.proposal.id, {
+        proposalText,
+      });
+      this.bundle = { ...this.bundle!, audit };
+      if (this.plugin.settings.sidecarMode) {
+        await this.plugin.sidecar.saveRdeAuditRecord(
+          this.lastRequest!,
+          this.bundle.proposal,
+          audit,
+        );
+      }
+      new Notice(consoleMsg(this.uiLang(), "noticeReAuditDone"));
+      this.renderBundle();
     });
-    this.bundle = { ...this.bundle, audit };
-    if (this.plugin.settings.sidecarMode) {
-      await this.plugin.sidecar.saveRdeAuditRecord(
-        this.lastRequest,
-        this.bundle.proposal,
-        audit,
-      );
-    }
-    new Notice(consoleMsg(this.uiLang(), "noticeReAuditDone"));
-    this.renderBundle();
   }
 
   private async saveReviewSidecar(decision: ApprovalDecision): Promise<void> {

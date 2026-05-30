@@ -62,5 +62,6 @@ Headless pre-check: `npm run demo:rde-audit`
 
 ## Next
 
-- Orchestrator **LLM proxy** — set `OPENAI_API_KEY` for generative rewrite via `POST /v1/proposals/generate`
-- Git passive mode via read-only subprocess
+- End-to-end: summarize → **再監査** (source vs proposal diff) → 却下 / 適用
+- Git `obsidian-git-aware` mode (Obsidian Git plugin integration)
+- Orchestrator RDE evaluate on proposal re-audit (optional enhancement)
