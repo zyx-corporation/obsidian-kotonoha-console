@@ -85,6 +85,11 @@ const MSGS = {
     settingsDatabaseUrlDesc: "Optional; required for DB-backed CLI commands later",
     settingsGitModeName: "Git mode",
     settingsGitModeDesc: "Git-aware but never mutates the repo (git-mode-spec)",
+    settingsMetadataWriteModeName: "Metadata write mode",
+    settingsMetadataWriteModeDesc:
+      "Optional `kotonoha:` YAML in frontmatter on apply (git-mode-spec §8). Sidecar records are always kept.",
+    confirmWriteMetadata:
+      "Add Kotonoha lineage fields to note frontmatter (review_status, proposal id)?",
     settingsDefaultLanguageName: "Default language",
     settingsLangJa: "Japanese (ja)",
     settingsLangEn: "English (en)",
@@ -215,6 +220,11 @@ const MSGS = {
     settingsDatabaseUrlDesc: "任意。将来の DB 連携 CLI コマンドで必要",
     settingsGitModeName: "Git モード",
     settingsGitModeDesc: "Git 連携（リポジトリは変更しません — git-mode-spec）",
+    settingsMetadataWriteModeName: "メタデータ書き込み",
+    settingsMetadataWriteModeDesc:
+      "適用時に frontmatter へ任意の `kotonoha:` YAML を追記（git-mode-spec §8）。sidecar は常に保存されます。",
+    confirmWriteMetadata:
+      "ノートの frontmatter に Kotonoha 系譜フィールド（review_status、proposal id）を追記しますか？",
     settingsDefaultLanguageName: "表示言語",
     settingsLangJa: "日本語 (ja)",
     settingsLangEn: "English (en)",
@@ -345,6 +355,11 @@ const MSGS = {
     settingsDatabaseUrlDesc: "可选；后续 DB 相关 CLI 命令需要",
     settingsGitModeName: "Git 模式",
     settingsGitModeDesc: "Git 感知但不修改仓库（git-mode-spec）",
+    settingsMetadataWriteModeName: "元数据写入模式",
+    settingsMetadataWriteModeDesc:
+      "应用时在 frontmatter 中可选写入 `kotonoha:` YAML（git-mode-spec §8）。sidecar 记录始终保留。",
+    confirmWriteMetadata:
+      "是否在笔记 frontmatter 中添加 Kotonoha 系谱字段（review_status、proposal id）？",
     settingsDefaultLanguageName: "显示语言",
     settingsLangJa: "日语 (ja)",
     settingsLangEn: "English (en)",

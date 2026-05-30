@@ -355,6 +355,9 @@ var MSGS2 = {
     settingsDatabaseUrlDesc: "Optional; required for DB-backed CLI commands later",
     settingsGitModeName: "Git mode",
     settingsGitModeDesc: "Git-aware but never mutates the repo (git-mode-spec)",
+    settingsMetadataWriteModeName: "Metadata write mode",
+    settingsMetadataWriteModeDesc: "Optional `kotonoha:` YAML in frontmatter on apply (git-mode-spec \xA78). Sidecar records are always kept.",
+    confirmWriteMetadata: "Add Kotonoha lineage fields to note frontmatter (review_status, proposal id)?",
     settingsDefaultLanguageName: "Default language",
     settingsLangJa: "Japanese (ja)",
     settingsLangEn: "English (en)",
@@ -470,6 +473,9 @@ var MSGS2 = {
     settingsDatabaseUrlDesc: "\u4EFB\u610F\u3002\u5C06\u6765\u306E DB \u9023\u643A CLI \u30B3\u30DE\u30F3\u30C9\u3067\u5FC5\u8981",
     settingsGitModeName: "Git \u30E2\u30FC\u30C9",
     settingsGitModeDesc: "Git \u9023\u643A\uFF08\u30EA\u30DD\u30B8\u30C8\u30EA\u306F\u5909\u66F4\u3057\u307E\u305B\u3093 \u2014 git-mode-spec\uFF09",
+    settingsMetadataWriteModeName: "\u30E1\u30BF\u30C7\u30FC\u30BF\u66F8\u304D\u8FBC\u307F",
+    settingsMetadataWriteModeDesc: "\u9069\u7528\u6642\u306B frontmatter \u3078\u4EFB\u610F\u306E `kotonoha:` YAML \u3092\u8FFD\u8A18\uFF08git-mode-spec \xA78\uFF09\u3002sidecar \u306F\u5E38\u306B\u4FDD\u5B58\u3055\u308C\u307E\u3059\u3002",
+    confirmWriteMetadata: "\u30CE\u30FC\u30C8\u306E frontmatter \u306B Kotonoha \u7CFB\u8B5C\u30D5\u30A3\u30FC\u30EB\u30C9\uFF08review_status\u3001proposal id\uFF09\u3092\u8FFD\u8A18\u3057\u307E\u3059\u304B\uFF1F",
     settingsDefaultLanguageName: "\u8868\u793A\u8A00\u8A9E",
     settingsLangJa: "\u65E5\u672C\u8A9E (ja)",
     settingsLangEn: "English (en)",
@@ -585,6 +591,9 @@ var MSGS2 = {
     settingsDatabaseUrlDesc: "\u53EF\u9009\uFF1B\u540E\u7EED DB \u76F8\u5173 CLI \u547D\u4EE4\u9700\u8981",
     settingsGitModeName: "Git \u6A21\u5F0F",
     settingsGitModeDesc: "Git \u611F\u77E5\u4F46\u4E0D\u4FEE\u6539\u4ED3\u5E93\uFF08git-mode-spec\uFF09",
+    settingsMetadataWriteModeName: "\u5143\u6570\u636E\u5199\u5165\u6A21\u5F0F",
+    settingsMetadataWriteModeDesc: "\u5E94\u7528\u65F6\u5728 frontmatter \u4E2D\u53EF\u9009\u5199\u5165 `kotonoha:` YAML\uFF08git-mode-spec \xA78\uFF09\u3002sidecar \u8BB0\u5F55\u59CB\u7EC8\u4FDD\u7559\u3002",
+    confirmWriteMetadata: "\u662F\u5426\u5728\u7B14\u8BB0 frontmatter \u4E2D\u6DFB\u52A0 Kotonoha \u7CFB\u8C31\u5B57\u6BB5\uFF08review_status\u3001proposal id\uFF09\uFF1F",
     settingsDefaultLanguageName: "\u663E\u793A\u8BED\u8A00",
     settingsLangJa: "\u65E5\u8BED (ja)",
     settingsLangEn: "English (en)",
@@ -682,6 +691,7 @@ var DEFAULT_SETTINGS = {
   auditLogMode: "summary",
   enableRdeAudit: true,
   gitMode: "off",
+  metadataWriteMode: "prompt",
   sidecarMode: true,
   cliCommand: "kotonoha",
   httpEndpoint: "http://127.0.0.1:8000"
@@ -798,6 +808,16 @@ var KotonohaSettingsTab = class extends import_obsidian.PluginSettingTab {
         this.plugin.settings.gitMode = v;
         await this.plugin.saveSettings();
         this.plugin.refreshNoteReader();
+      })
+    );
+    new import_obsidian.Setting(containerEl).setName(this.t("settingsMetadataWriteModeName")).setDesc(this.t("settingsMetadataWriteModeDesc")).addDropdown(
+      (d) => d.addOptions({
+        off: "off",
+        prompt: "prompt",
+        always: "always"
+      }).setValue(this.plugin.settings.metadataWriteMode).onChange(async (v) => {
+        this.plugin.settings.metadataWriteMode = v;
+        await this.plugin.saveSettings();
       })
     );
     new import_obsidian.Setting(containerEl).setName(this.t("settingsDefaultLanguageName")).addDropdown(
@@ -1480,6 +1500,69 @@ async function readGitContext(app, file, mode) {
   return snapshot;
 }
 
+// src/obsidian/metadataLineage.ts
+var FRONTMATTER_RE2 = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
+function effectiveMetadataWriteMode(mode, gitMode) {
+  if (mode === "off") return "off";
+  if (gitMode === "obsidian-git-aware" && mode === "always") return "prompt";
+  return mode;
+}
+function shouldWriteMetadata(mode) {
+  return mode !== "off";
+}
+function mergeKotonohaFrontmatter(content, fields) {
+  const lines = [
+    `  review_status: ${quoteYaml(fields.review_status)}`,
+    `  latest_proposal_id: ${quoteYaml(fields.latest_proposal_id)}`
+  ];
+  if (fields.project_id?.trim()) {
+    lines.push(`  project_id: ${quoteYaml(fields.project_id.trim())}`);
+  }
+  const kotonohaBlock = `kotonoha:
+${lines.join("\n")}`;
+  const match = content.match(FRONTMATTER_RE2);
+  if (!match) {
+    return `---
+${kotonohaBlock}
+---
+
+${content}`;
+  }
+  let body = match[1];
+  const rest = content.slice(match[0].length);
+  body = stripKotonohaSection(body);
+  body = `${body.trimEnd()}
+${kotonohaBlock}
+`;
+  return `---
+${body}
+---
+${rest}`;
+}
+function stripKotonohaSection(fmBody) {
+  const lines = fmBody.split("\n");
+  const out = [];
+  let skipping = false;
+  for (const line of lines) {
+    if (/^kotonoha:/.test(line)) {
+      skipping = true;
+      continue;
+    }
+    if (skipping && /^[^\s#]/.test(line)) {
+      skipping = false;
+    }
+    if (skipping) continue;
+    out.push(line);
+  }
+  return out.join("\n");
+}
+function quoteYaml(value) {
+  if (/[:#\n\r]/.test(value) || value.startsWith(" ") || value.endsWith(" ")) {
+    return `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+  }
+  return value;
+}
+
 // src/ui/KotonohaConsoleView.ts
 var KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
 var KotonohaConsoleView = class extends import_obsidian2.ItemView {
@@ -1803,10 +1886,35 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       ) : this.plugin.approval.approve(this.bundle.proposal, text);
       await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
       await this.saveReviewSidecar(decision);
+      const afterApply = await this.app.vault.read(file2);
+      const withLineage = await this.maybeMergeLineageMetadata(
+        afterApply,
+        lang,
+        decision.decision === "partially_applied" ? "partially_applied" : "applied"
+      );
+      if (withLineage !== afterApply) {
+        await this.plugin.markdownWriter.replaceNoteContent(file2, withLineage);
+      }
       new import_obsidian2.Notice(
         decision.decision === "partially_applied" ? consoleMsg(lang, "noticeAppliedRevised") : consoleMsg(lang, "noticeApplied")
       );
       this.clearResults();
+    });
+  }
+  async maybeMergeLineageMetadata(content, lang, reviewStatus) {
+    const effective = effectiveMetadataWriteMode(
+      this.plugin.settings.metadataWriteMode,
+      this.plugin.settings.gitMode
+    );
+    if (!shouldWriteMetadata(effective)) return content;
+    if (effective === "prompt" && !confirm(consoleMsg(lang, "confirmWriteMetadata"))) {
+      return content;
+    }
+    if (!this.bundle) return content;
+    return mergeKotonohaFrontmatter(content, {
+      review_status: reviewStatus,
+      latest_proposal_id: this.bundle.proposal.id,
+      project_id: this.plugin.settings.projectId
     });
   }
   async rejectProposal() {

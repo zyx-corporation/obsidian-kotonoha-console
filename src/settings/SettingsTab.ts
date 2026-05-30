@@ -1,6 +1,6 @@
 import { App, Notice, PluginSettingTab, Setting } from "obsidian";
 import type KotonohaConsolePlugin from "../main";
-import type { BackendMode, GitMode } from "../domain/types";
+import type { BackendMode, GitMode, MetadataWriteMode } from "../domain/types";
 import { consoleMsg } from "../i18n/consoleI18n";
 import type { RdeLang } from "../rde/rdeI18n";
 
@@ -184,6 +184,23 @@ export class KotonohaSettingsTab extends PluginSettingTab {
             this.plugin.settings.gitMode = v as GitMode;
             await this.plugin.saveSettings();
             this.plugin.refreshNoteReader();
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName(this.t("settingsMetadataWriteModeName"))
+      .setDesc(this.t("settingsMetadataWriteModeDesc"))
+      .addDropdown((d) =>
+        d
+          .addOptions({
+            off: "off",
+            prompt: "prompt",
+            always: "always",
+          })
+          .setValue(this.plugin.settings.metadataWriteMode)
+          .onChange(async (v) => {
+            this.plugin.settings.metadataWriteMode = v as MetadataWriteMode;
+            await this.plugin.saveSettings();
           }),
       );
 
