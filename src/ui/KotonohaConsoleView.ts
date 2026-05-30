@@ -6,7 +6,6 @@ import { ProposalView } from "./ProposalView";
 import { RdeAuditView } from "./RdeAuditView";
 import { consoleMsg, operationLabel, gitContextLines } from "../i18n/consoleI18n";
 import type { RdeLang } from "../rde/rdeI18n";
-import { performRdeAudit } from "../services/RdeAuditService";
 import { localizeBundleForDisplay } from "../services/localizeBundle";
 import { composeAppliedNote } from "../obsidian/applyNoteContent";
 import { readGitContext } from "../obsidian/GitContextReader";
@@ -453,9 +452,11 @@ export class KotonohaConsoleView extends ItemView {
       const proposalText = this.reviseMode
         ? this.editedText
         : this.bundle!.proposal.proposedText;
-      const audit = performRdeAudit(this.lastRequest!, this.bundle!.proposal.id, {
+      const { audit, engine } = await this.plugin.proposals.auditProposal(
+        this.lastRequest!,
+        this.bundle!.proposal.id,
         proposalText,
-      });
+      );
       this.bundle = { ...this.bundle!, audit };
       if (this.plugin.settings.sidecarMode) {
         await this.plugin.sidecar.saveRdeAuditRecord(
@@ -464,7 +465,12 @@ export class KotonohaConsoleView extends ItemView {
           audit,
         );
       }
-      new Notice(consoleMsg(this.uiLang(), "noticeReAuditDone"));
+      new Notice(
+        consoleMsg(
+          this.uiLang(),
+          engine === "orchestrator" ? "noticeReAuditDoneOrchestrator" : "noticeReAuditDone",
+        ),
+      );
       this.renderBundle();
     });
   }

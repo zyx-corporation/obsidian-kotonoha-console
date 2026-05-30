@@ -87,6 +87,50 @@ describe("HttpKotonohaClient", () => {
     expect(result.audit?.preservedElements.some((e) => e.includes("intent"))).toBe(true);
   });
 
+  it("orchestrator mode: re-audit via /v1/rde/evaluate on proposal diff", async () => {
+    let evaluateCalls = 0;
+    const fetchFn = mockFetch({
+      "/v1/proposals/generate": () =>
+        new Response(
+          JSON.stringify({
+            proposal: { proposedText: "Rewritten summary.", summary: "[llm]" },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      "/v1/rde/evaluate": () => {
+        evaluateCalls += 1;
+        return new Response(
+          JSON.stringify({
+            rde_review_output: {
+              spec_version: "0.1",
+              subject_ref: "obsidian://note.md#abc",
+              categories: {
+                transformed: [{ summary: "condensed phrasing" }],
+              },
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      },
+    });
+
+    const client = new HttpKotonohaClient({
+      endpoint: "http://127.0.0.1:8000",
+      fetchFn,
+      backendKind: "orchestrator",
+    });
+    const { audit, engine } = await client.auditProposal(
+      request,
+      "p-reaudit",
+      "Rewritten summary.",
+    );
+    expect(engine).toBe("orchestrator");
+    expect(evaluateCalls).toBe(1);
+    expect(
+      audit.transformedElements.some((e) => e.includes("condensed phrasing")),
+    ).toBe(true);
+  });
+
   it("gateway mode: context export for summarize", async () => {
     const pack = {
       format: "kotonoha.context_pack.v0.1",

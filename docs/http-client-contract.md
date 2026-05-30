@@ -59,7 +59,7 @@ Orchestrator deployments can expose this route as an **LLM orchestrator proxy** 
 
 ## Orchestrator — `POST /v1/rde/evaluate`
 
-Used when `operation === "rde_audit"` and orchestrator is detected.
+Used when `operation === "rde_audit"` and orchestrator is detected, and when the user clicks **Re-audit** on a proposal (source vs `proposedText` structural diff).
 
 ```json
 {
