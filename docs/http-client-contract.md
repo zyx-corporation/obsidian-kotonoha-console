@@ -4,7 +4,7 @@
 
 | Detected backend | Probe | Generative ops | RDE audit |
 | --- | --- | --- | --- |
-| **Orchestrator** | `GET /v1/agents` → 200 | `POST /v1/proposals/generate` (LLM proxy) or local fallback | `POST /v1/rde/evaluate` + local guardrails |
+| **Orchestrator** | `GET /v1/agents` → 200 | `POST /v1/proposals/generate` (LLM proxy) or local fallback | `POST /v1/rde/evaluate` on generate (when audit omitted) and on **Re-audit** |
 | **Gateway** | `GET /v1/tools` → 200 | `POST /v1/tools/kotonoha_context_export` + local audit | Local rule-based audit |
 | **Console proxy** | (default) | `POST /v1/proposals/generate` | Same endpoint or local audit |
 
@@ -59,7 +59,7 @@ Orchestrator deployments can expose this route as an **LLM orchestrator proxy** 
 
 ## Orchestrator — `POST /v1/rde/evaluate`
 
-Used when `operation === "rde_audit"` and orchestrator is detected, and when the user clicks **Re-audit** on a proposal (source vs `proposedText` structural diff).
+Used when `operation === "rde_audit"` and orchestrator is detected, when generative responses omit `audit`, and when the user clicks **Re-audit** on a proposal (source vs `proposedText` structural diff).
 
 ```json
 {

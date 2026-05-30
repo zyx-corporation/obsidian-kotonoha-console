@@ -121,7 +121,7 @@ export class HttpKotonohaClient implements KotonohaClient {
         toHttpGenerateBody(request),
       );
       const { proposal, audit } = toGenerateResult(request, proposalId, body);
-      return this.withAudit(request, proposalId, proposal, audit);
+      return await this.withAudit(request, proposalId, proposal, audit);
     } catch (e) {
       if (e instanceof HttpClientError && e.status === 404) {
         throw new HttpClientError(
@@ -246,17 +246,24 @@ export class HttpKotonohaClient implements KotonohaClient {
     };
   }
 
-  private withAudit(
+  private async withAudit(
     request: GenerationRequest,
     proposalId: string,
     proposal: GenerateResult["proposal"],
     audit?: GenerateResult["audit"],
-  ): GenerateResult {
+  ): Promise<GenerateResult> {
     if (audit) return { proposal, audit };
-    const computed = performRdeAudit(request, proposalId, {
-      sourceReview: request.operation === "rde_audit",
-      proposalText: request.operation === "rde_audit" ? undefined : proposal.proposedText,
-    });
+    if (request.operation === "rde_audit") {
+      return {
+        proposal,
+        audit: performRdeAudit(request, proposalId, { sourceReview: true }),
+      };
+    }
+    const { audit: computed } = await this.auditProposal(
+      request,
+      proposalId,
+      proposal.proposedText,
+    );
     return { proposal, audit: computed };
   }
 
