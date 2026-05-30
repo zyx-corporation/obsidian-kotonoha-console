@@ -59,6 +59,45 @@ describe("HttpKotonohaClient", () => {
     expect(result.audit).toBeDefined();
   });
 
+  it("orchestrator mode: summarize uses /v1/rde/evaluate when audit omitted", async () => {
+    let evaluateCalls = 0;
+    const fetchFn = mockFetch({
+      "/v1/proposals/generate": () =>
+        new Response(
+          JSON.stringify({
+            proposal: { proposedText: "Rewritten summary.", summary: "[llm]" },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      "/v1/rde/evaluate": () => {
+        evaluateCalls += 1;
+        return new Response(
+          JSON.stringify({
+            rde_review_output: {
+              spec_version: "0.1",
+              subject_ref: "obsidian://note.md#abc",
+              categories: {
+                preserved: [{ summary: "core intent kept" }],
+              },
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      },
+    });
+
+    const client = new HttpKotonohaClient({
+      endpoint: "http://127.0.0.1:8000",
+      fetchFn,
+      backendKind: "orchestrator",
+    });
+    const result = await client.generate(request);
+    expect(evaluateCalls).toBe(1);
+    expect(
+      result.audit?.preservedElements.some((e) => e.includes("core intent kept")),
+    ).toBe(true);
+  });
+
   it("orchestrator mode: rde_audit via /v1/rde/evaluate", async () => {
     const fetchFn = mockFetch({
       "/v1/rde/evaluate": () =>

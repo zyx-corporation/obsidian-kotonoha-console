@@ -62,6 +62,6 @@ Headless pre-check: `npm run demo:rde-audit`
 
 ## Next
 
-- Manual acceptance: summarize → **再監査** with orchestrator (`noticeReAuditDoneOrchestrator`)
+- Manual acceptance: summarize → orchestrator RDE on first generate + **再監査**
 - Git `obsidian-git-aware` manual acceptance with Obsidian Git plugin installed
 - `metadataWriteMode` setting (off | prompt | always) when frontmatter lineage writes land
