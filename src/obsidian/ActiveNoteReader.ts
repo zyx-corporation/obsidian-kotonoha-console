@@ -19,7 +19,13 @@ export class ActiveNoteReader {
   async readNoteContext(selectionText?: string): Promise<NoteContext | null> {
     const file = this.getActiveFile();
     if (!file) return null;
+    return this.readNoteContextForFile(file, selectionText);
+  }
 
+  async readNoteContextForFile(
+    file: TFile,
+    selectionText?: string,
+  ): Promise<NoteContext | null> {
     const sourceText = await this.app.vault.read(file);
     const targetText =
       selectionText !== undefined && selectionText.length > 0

@@ -44,6 +44,8 @@ export interface GitContextSnapshot {
   commit?: string;
   dirty: boolean;
   repoRelativePath: string;
+  /** Set in `obsidian-git-aware` mode when Obsidian Git plugin is active. */
+  obsidianGitDetected?: boolean;
 }
 
 export interface GenerationRequest {

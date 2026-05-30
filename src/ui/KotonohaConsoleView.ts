@@ -9,6 +9,7 @@ import type { RdeLang } from "../rde/rdeI18n";
 import { performRdeAudit } from "../services/RdeAuditService";
 import { localizeBundleForDisplay } from "../services/localizeBundle";
 import { composeAppliedNote } from "../obsidian/applyNoteContent";
+import { readGitContext } from "../obsidian/GitContextReader";
 
 export const KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
 
@@ -18,6 +19,7 @@ export class KotonohaConsoleView extends ItemView {
   private lastOperation: OperationType = "rde_audit";
   private targetFilePath: string | null = null;
   private sourceHashAtGeneration: string | null = null;
+  private gitCommitAtGeneration: string | null = null;
   private reviseMode = false;
   private editedText = "";
   private proposalHost!: HTMLElement;
@@ -161,6 +163,7 @@ export class KotonohaConsoleView extends ItemView {
     this.lastRequest = null;
     this.targetFilePath = null;
     this.sourceHashAtGeneration = null;
+    this.gitCommitAtGeneration = null;
     this.reviseMode = false;
     this.editedText = "";
     this.proposalHost?.empty();
@@ -227,6 +230,7 @@ export class KotonohaConsoleView extends ItemView {
     try {
       await this.withBusy(async () => {
         this.sourceHashAtGeneration = ctx.sourceHash;
+        this.gitCommitAtGeneration = ctx.git?.commit ?? null;
         this.targetFilePath = ctx.filePath;
         this.lastRequest = request;
         this.reviseMode = false;
@@ -309,13 +313,16 @@ export class KotonohaConsoleView extends ItemView {
       return;
     }
 
-    const ctx = await this.plugin.noteContext.capture();
-    if (!ctx) {
+    const file = this.resolveTargetFile();
+    if (!file) {
       new Notice(consoleMsg(lang, "noticeNoNote"));
       return;
     }
 
-    const current = await this.plugin.noteContext.capture();
+    const current = await this.plugin.activeNoteReader.readNoteContextForFile(
+      file,
+      this.lastRequest?.context.selectionText,
+    );
     if (
       this.sourceHashAtGeneration &&
       current &&
@@ -323,6 +330,18 @@ export class KotonohaConsoleView extends ItemView {
     ) {
       const ok = confirm(consoleMsg(lang, "confirmSourceChanged"));
       if (!ok) return;
+    }
+
+    if (this.plugin.settings.gitMode === "obsidian-git-aware" && this.gitCommitAtGeneration) {
+      const gitNow = await readGitContext(
+        this.app,
+        file,
+        this.plugin.settings.gitMode,
+      );
+      if (gitNow?.commit && gitNow.commit !== this.gitCommitAtGeneration) {
+        const ok = confirm(consoleMsg(lang, "confirmGitHeadChanged"));
+        if (!ok) return;
+      }
     }
 
     if (this.plugin.settings.requireHumanApproval) {

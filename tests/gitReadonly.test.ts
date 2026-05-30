@@ -55,4 +55,23 @@ describe("buildGitContext", () => {
     const ctx = await buildGitContext("/vault", "a.md", "off", exec);
     expect(ctx).toBeUndefined();
   });
+
+  it("obsidian-git-aware: same snapshot fields as passive-observing", async () => {
+    const root = "/repo";
+    const exec = mockExec({
+      [`${root}::rev-parse --show-toplevel`]: root,
+      [`${root}::rev-parse --abbrev-ref HEAD`]: "main",
+      [`${root}::rev-parse --short HEAD`]: "def5678",
+      [`${root}::status --porcelain -- notes/a.md`]: "",
+      [`${root}::status --porcelain`]: "",
+    });
+    const ctx = await buildGitContext(root, "notes/a.md", "obsidian-git-aware", exec);
+    expect(ctx).toMatchObject({
+      root,
+      branch: "main",
+      commit: "def5678",
+      repoRelativePath: "notes/a.md",
+      dirty: false,
+    });
+  });
 });
