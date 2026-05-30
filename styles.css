@@ -8,6 +8,21 @@
   box-sizing: border-box;
 }
 
+/* Processing — wait cursor scoped to Console panel only */
+.kotonoha-console-root.kotonoha-console-busy {
+  cursor: wait;
+}
+
+.kotonoha-console-root.kotonoha-console-busy,
+.kotonoha-console-root.kotonoha-console-busy * {
+  cursor: wait !important;
+}
+
+.kotonoha-console-root.kotonoha-console-busy button {
+  pointer-events: none;
+  opacity: 0.75;
+}
+
 .kotonoha-console-header {
   flex-shrink: 0;
 }

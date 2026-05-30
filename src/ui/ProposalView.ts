@@ -92,6 +92,11 @@ export class ProposalView {
           .createEl("button", { text: consoleMsg(lang, "btnRevise") })
           .addEventListener("click", actions.onRevise);
       }
+      if (actions.onReAudit) {
+        bar
+          .createEl("button", { text: consoleMsg(lang, "btnReAudit") })
+          .addEventListener("click", actions.onReAudit);
+      }
       bar
         .createEl("button", { text: consoleMsg(lang, "btnReject") })
         .addEventListener("click", actions.onReject);

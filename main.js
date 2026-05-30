@@ -316,6 +316,7 @@ var MSGS2 = {
     opExpand: "Expand",
     opCustom: "Custom",
     noticeNoNote: "No active note",
+    noticeTargetFileMissing: "Target note not found: {path}",
     noticeAuditDone: "RDE audit complete{saved}",
     noticeSavedSidecar: " (saved to .kotonoha/)",
     noticeSavedUiOnly: " (UI only \u2014 sidecarMode off)",
@@ -426,6 +427,7 @@ var MSGS2 = {
     opExpand: "\u62E1\u5F35",
     opCustom: "\u30AB\u30B9\u30BF\u30E0",
     noticeNoNote: "\u30A2\u30AF\u30C6\u30A3\u30D6\u306A\u30CE\u30FC\u30C8\u304C\u3042\u308A\u307E\u305B\u3093",
+    noticeTargetFileMissing: "\u5BFE\u8C61\u30CE\u30FC\u30C8\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093: {path}",
     noticeAuditDone: "RDE \u76E3\u67FB\u5B8C\u4E86{saved}",
     noticeSavedSidecar: "\uFF08.kotonoha/ \u306B\u4FDD\u5B58\uFF09",
     noticeSavedUiOnly: "\uFF08sidecarMode off \u2014 UI \u306E\u307F\uFF09",
@@ -536,6 +538,7 @@ var MSGS2 = {
     opExpand: "\u6269\u5C55",
     opCustom: "\u81EA\u5B9A\u4E49",
     noticeNoNote: "\u6CA1\u6709\u6D3B\u52A8\u7B14\u8BB0",
+    noticeTargetFileMissing: "\u627E\u4E0D\u5230\u76EE\u6807\u7B14\u8BB0: {path}",
     noticeAuditDone: "RDE \u5BA1\u8BA1\u5B8C\u6210{saved}",
     noticeSavedSidecar: "\uFF08\u5DF2\u4FDD\u5B58\u81F3 .kotonoha/\uFF09",
     noticeSavedUiOnly: "\uFF08sidecarMode \u5173\u95ED \u2014 \u4EC5 UI\uFF09",
@@ -890,6 +893,9 @@ var ProposalView = class {
       bar.createEl("button", { text: consoleMsg(lang, "btnApply") }).addEventListener("click", actions.onApply);
       if (actions.onRevise) {
         bar.createEl("button", { text: consoleMsg(lang, "btnRevise") }).addEventListener("click", actions.onRevise);
+      }
+      if (actions.onReAudit) {
+        bar.createEl("button", { text: consoleMsg(lang, "btnReAudit") }).addEventListener("click", actions.onReAudit);
       }
       bar.createEl("button", { text: consoleMsg(lang, "btnReject") }).addEventListener("click", actions.onReject);
       bar.createEl("button", { text: consoleMsg(lang, "btnCopy") }).addEventListener("click", actions.onCopy);
@@ -1366,6 +1372,26 @@ function localizeBundleForDisplay(bundle, request, operation, lang) {
   };
 }
 
+// src/obsidian/applyNoteContent.ts
+var FRONTMATTER_RE = /^---\r?\n[\s\S]*?\r?\n---\r?\n?/;
+function composeAppliedNote(originalContent, proposedText, options) {
+  const selection = options.selectionText?.trim();
+  if (selection) {
+    const idx = originalContent.indexOf(selection);
+    if (idx >= 0) {
+      return originalContent.slice(0, idx) + proposedText + originalContent.slice(idx + selection.length);
+    }
+  }
+  if (!options.preserveFrontmatter) {
+    return proposedText;
+  }
+  const fm = originalContent.match(FRONTMATTER_RE);
+  if (!fm || proposedText.trimStart().startsWith("---")) {
+    return proposedText;
+  }
+  return fm[0] + proposedText;
+}
+
 // src/ui/KotonohaConsoleView.ts
 var KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
 var KotonohaConsoleView = class extends import_obsidian2.ItemView {
@@ -1376,6 +1402,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
   bundle = null;
   lastRequest = null;
   lastOperation = "rde_audit";
+  targetFilePath = null;
   sourceHashAtGeneration = null;
   reviseMode = false;
   editedText = "";
@@ -1385,6 +1412,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
   instructionBlock;
   operationSelect;
   primaryActionButton;
+  busyCount = 0;
   getViewType() {
     return KOTONOHA_CONSOLE_VIEW;
   }
@@ -1491,14 +1519,44 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
   clearResults() {
     this.bundle = null;
     this.lastRequest = null;
+    this.targetFilePath = null;
     this.sourceHashAtGeneration = null;
     this.reviseMode = false;
     this.editedText = "";
     this.proposalHost?.empty();
     this.auditHost?.empty();
   }
+  /** Target note at generation time — Console focus must not break apply. */
+  resolveTargetFile() {
+    const active = this.plugin.activeNoteReader.getActiveFile();
+    if (active && (!this.targetFilePath || active.path === this.targetFilePath)) {
+      return active;
+    }
+    if (this.targetFilePath) {
+      const file = this.app.vault.getAbstractFileByPath(this.targetFilePath);
+      if (file instanceof import_obsidian2.TFile) return file;
+    }
+    return active;
+  }
   uiLang() {
     return this.plugin.settings.defaultLanguage;
+  }
+  /** Local busy state — wait cursor within Console panel only. */
+  setBusy(on) {
+    this.busyCount = Math.max(0, this.busyCount + (on ? 1 : -1));
+    const busy = this.busyCount > 0;
+    this.containerEl.classList.toggle("kotonoha-console-busy", busy);
+    if (this.primaryActionButton) {
+      this.primaryActionButton.disabled = busy;
+    }
+  }
+  async withBusy(work) {
+    this.setBusy(true);
+    try {
+      return await work();
+    } finally {
+      this.setBusy(false);
+    }
   }
   async runGenerate() {
     const lang = this.plugin.settings.defaultLanguage;
@@ -1520,25 +1578,28 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       this.plugin.settings.defaultLanguage
     );
     try {
-      this.sourceHashAtGeneration = ctx.sourceHash;
-      this.lastRequest = request;
-      this.reviseMode = false;
-      this.editedText = "";
-      this.bundle = await this.plugin.proposals.generate(request);
-      await this.plugin.auditLog.logProposal(
-        this.bundle.proposal,
-        ctx.sourceText
-      );
-      if (this.plugin.settings.sidecarMode) {
-        await this.plugin.sidecar.saveProposalRecord(request, this.bundle.proposal);
-        if (this.bundle.audit) {
-          await this.plugin.sidecar.saveRdeAuditRecord(
-            request,
-            this.bundle.proposal,
-            this.bundle.audit
-          );
+      await this.withBusy(async () => {
+        this.sourceHashAtGeneration = ctx.sourceHash;
+        this.targetFilePath = ctx.filePath;
+        this.lastRequest = request;
+        this.reviseMode = false;
+        this.editedText = "";
+        this.bundle = await this.plugin.proposals.generate(request);
+        await this.plugin.auditLog.logProposal(
+          this.bundle.proposal,
+          ctx.sourceText
+        );
+        if (this.plugin.settings.sidecarMode) {
+          await this.plugin.sidecar.saveProposalRecord(request, this.bundle.proposal);
+          if (this.bundle.audit) {
+            await this.plugin.sidecar.saveRdeAuditRecord(
+              request,
+              this.bundle.proposal,
+              this.bundle.audit
+            );
+          }
         }
-      }
+      });
       this.renderBundle();
       const saved = this.plugin.settings.sidecarMode ? consoleMsg(lang, "noticeSavedSidecar") : consoleMsg(lang, "noticeSavedUiOnly");
       const msg = operation === "rde_audit" ? consoleMsg(lang, "noticeAuditDone", { saved }) : consoleMsg(lang, "noticeProposalReady");
@@ -1567,7 +1628,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       onCopy: () => void this.copyProposal(),
       onRevise: isAuditReport ? void 0 : () => void this.startRevise(),
       onCancelRevise: () => this.cancelRevise(),
-      onReAudit: () => void this.reAuditEditedProposal(),
+      onReAudit: isAuditReport ? void 0 : () => void this.reAuditProposal(),
       auditReportOnly: isAuditReport,
       auditMissing,
       language: lang,
@@ -1602,43 +1663,59 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       const ok = confirm(consoleMsg(lang, "confirmApply"));
       if (!ok) return;
     }
-    const file = this.plugin.activeNoteReader.getActiveFile();
-    if (!file) return;
-    const text = this.reviseMode ? this.editedText : this.bundle.proposal.proposedText;
-    if (ctx.selectionText) {
-      const view = this.app.workspace.getActiveViewOfType(import_obsidian2.MarkdownView);
-      const editor = view?.editor;
-      if (editor) {
-        editor.replaceSelection(text);
-      } else {
-        new import_obsidian2.Notice(consoleMsg(lang, "noticeOpenEditor"));
+    await this.withBusy(async () => {
+      const file = this.resolveTargetFile();
+      if (!file) {
+        new import_obsidian2.Notice(
+          consoleMsg(lang, "noticeTargetFileMissing", {
+            path: this.targetFilePath ?? "?"
+          })
+        );
         return;
       }
-    } else {
-      await this.plugin.markdownWriter.replaceNoteContent(file, text);
-    }
-    const decision = this.reviseMode ? this.plugin.approval.approveRevised(
-      this.bundle.proposal,
-      text,
-      this.bundle.proposal.proposedText
-    ) : this.plugin.approval.approve(this.bundle.proposal, text);
-    await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
-    await this.saveReviewSidecar(decision);
-    new import_obsidian2.Notice(
-      decision.decision === "partially_applied" ? consoleMsg(lang, "noticeAppliedRevised") : consoleMsg(lang, "noticeApplied")
-    );
-    this.clearResults();
+      const proposedText = this.reviseMode ? this.editedText : this.bundle.proposal.proposedText;
+      const original = await this.app.vault.read(file);
+      const finalText = composeAppliedNote(original, proposedText, {
+        preserveFrontmatter: this.plugin.settings.preserveFrontmatter,
+        selectionText: this.lastRequest?.context.selectionText
+      });
+      if (this.lastRequest?.context.selectionText) {
+        const view = this.app.workspace.getActiveViewOfType(import_obsidian2.MarkdownView);
+        const editor = view?.editor;
+        if (editor && view.file?.path === file.path) {
+          editor.replaceSelection(proposedText);
+        } else {
+          await this.plugin.markdownWriter.replaceNoteContent(file, finalText);
+        }
+      } else {
+        await this.plugin.markdownWriter.replaceNoteContent(file, finalText);
+      }
+      const text = proposedText;
+      const decision = this.reviseMode ? this.plugin.approval.approveRevised(
+        this.bundle.proposal,
+        text,
+        this.bundle.proposal.proposedText
+      ) : this.plugin.approval.approve(this.bundle.proposal, text);
+      await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
+      await this.saveReviewSidecar(decision);
+      new import_obsidian2.Notice(
+        decision.decision === "partially_applied" ? consoleMsg(lang, "noticeAppliedRevised") : consoleMsg(lang, "noticeApplied")
+      );
+      this.clearResults();
+    });
   }
   async rejectProposal() {
     if (!this.bundle) return;
     const lang = this.uiLang();
-    const decision = this.plugin.approval.reject(this.bundle.proposal);
-    await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
-    await this.saveReviewSidecar(decision);
-    new import_obsidian2.Notice(
-      this.lastOperation === "rde_audit" ? consoleMsg(lang, "noticeAuditDismissed") : consoleMsg(lang, "noticeRejected")
-    );
-    this.clearResults();
+    await this.withBusy(async () => {
+      const decision = this.plugin.approval.reject(this.bundle.proposal);
+      await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
+      await this.saveReviewSidecar(decision);
+      new import_obsidian2.Notice(
+        this.lastOperation === "rde_audit" ? consoleMsg(lang, "noticeAuditDismissed") : consoleMsg(lang, "noticeRejected")
+      );
+      this.clearResults();
+    });
   }
   async copyProposal() {
     if (!this.bundle) return;
@@ -1651,12 +1728,14 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     const lang = this.uiLang();
     this.reviseMode = true;
     this.editedText = this.bundle.proposal.proposedText;
-    const decision = this.plugin.approval.hold(
-      this.bundle.proposal,
-      "user opened revise editor"
-    );
-    await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
-    await this.saveReviewSidecar(decision);
+    await this.withBusy(async () => {
+      const decision = this.plugin.approval.hold(
+        this.bundle.proposal,
+        "user opened revise editor"
+      );
+      await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
+      await this.saveReviewSidecar(decision);
+    });
     new import_obsidian2.Notice(consoleMsg(lang, "noticeReviseMode"));
     this.renderBundle();
   }
@@ -1665,21 +1744,24 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     this.editedText = "";
     this.renderBundle();
   }
-  async reAuditEditedProposal() {
+  async reAuditProposal() {
     if (!this.bundle || !this.lastRequest) return;
-    const audit = performRdeAudit(this.lastRequest, this.bundle.proposal.id, {
-      proposalText: this.editedText
+    await this.withBusy(async () => {
+      const proposalText = this.reviseMode ? this.editedText : this.bundle.proposal.proposedText;
+      const audit = performRdeAudit(this.lastRequest, this.bundle.proposal.id, {
+        proposalText
+      });
+      this.bundle = { ...this.bundle, audit };
+      if (this.plugin.settings.sidecarMode) {
+        await this.plugin.sidecar.saveRdeAuditRecord(
+          this.lastRequest,
+          this.bundle.proposal,
+          audit
+        );
+      }
+      new import_obsidian2.Notice(consoleMsg(this.uiLang(), "noticeReAuditDone"));
+      this.renderBundle();
     });
-    this.bundle = { ...this.bundle, audit };
-    if (this.plugin.settings.sidecarMode) {
-      await this.plugin.sidecar.saveRdeAuditRecord(
-        this.lastRequest,
-        this.bundle.proposal,
-        audit
-      );
-    }
-    new import_obsidian2.Notice(consoleMsg(this.uiLang(), "noticeReAuditDone"));
-    this.renderBundle();
   }
   async saveReviewSidecar(decision) {
     if (!this.plugin.settings.sidecarMode || !this.lastRequest || !this.bundle) {
