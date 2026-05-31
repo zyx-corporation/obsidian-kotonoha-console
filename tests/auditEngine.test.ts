@@ -37,6 +37,13 @@ describe("auditEngine", () => {
     expect(line).not.toMatch(/full RDE evaluation/i);
   });
 
+  it("cli panel line includes interchange skeleton caution", () => {
+    const audit = attachAuditEngine(baseAudit, "cli");
+    const line = formatAuditEnginePanelLine("ja", audit);
+    expect(line).toContain("cli / rde emit + validate");
+    expect(line).toContain("full RDE ではありません");
+  });
+
   it("orchestrator panel line does not claim full RDE via local caution", () => {
     const audit = attachAuditEngine(baseAudit, "orchestrator");
     const line = formatAuditEnginePanelLine("en", audit);

@@ -7,6 +7,10 @@ import {
   type RunKotonohaOptions,
 } from "../cli/runKotonoha";
 import {
+  checkKotonohaCliVersion,
+  KOTONOHA_CLI_MIN_VERSION,
+} from "../cli/kotonohaVersion";
+import {
   parseContextPack,
   proposalTextFromContextPack,
 } from "../cli/proposalFromContextPack";
@@ -64,13 +68,16 @@ export class CliKotonohaClient implements KotonohaClient {
     proposalId: string,
     proposalText: string,
   ): Promise<AuditProposalResult> {
-    return {
-      audit: attachAuditEngine(
-        performRdeAudit(request, proposalId, { proposalText }),
-        "local",
-      ),
-      engine: "local",
-    };
+    await this.assertCliAvailable();
+    const emitStdout = await this.runRdeEmitValidate();
+    const audit = attachAuditEngine(
+      performRdeAudit(request, proposalId, {
+        proposalText,
+        cli: { emitStdout },
+      }),
+      "cli",
+    );
+    return { audit, engine: "cli" };
   }
 
   /** git-mode-spec §10: non-Git mode must not require Git-aware CLI. */
@@ -82,22 +89,10 @@ export class CliKotonohaClient implements KotonohaClient {
     request: GenerationRequest,
     proposalId: string,
   ): Promise<GenerateResult> {
-    const emitResult = await this.run({ args: ["rde", "emit"] });
-    if (emitResult.exitCode !== 0) {
-      throw new Error(cliErrorMessage(emitResult));
-    }
-
-    const validateResult = await this.run({
-      args: ["rde", "validate", "--strict"],
-      stdin: emitResult.stdout,
-    });
-    if (validateResult.exitCode !== 0) {
-      throw new Error(cliErrorMessage(validateResult));
-    }
-
+    const emitStdout = await this.runRdeEmitValidate();
     const audit = attachAuditEngine(
       performRdeAudit(request, proposalId, {
-        cli: { emitStdout: emitResult.stdout },
+        cli: { emitStdout },
         sourceReview: true,
       }),
       "cli",
@@ -117,6 +112,23 @@ export class CliKotonohaClient implements KotonohaClient {
       },
       audit,
     };
+  }
+
+  private async runRdeEmitValidate(): Promise<string> {
+    const emitResult = await this.run({ args: ["rde", "emit"] });
+    if (emitResult.exitCode !== 0) {
+      throw new Error(cliErrorMessage(emitResult));
+    }
+
+    const validateResult = await this.run({
+      args: ["rde", "validate", "--strict"],
+      stdin: emitResult.stdout,
+    });
+    if (validateResult.exitCode !== 0) {
+      throw new Error(cliErrorMessage(validateResult));
+    }
+
+    return emitResult.stdout;
   }
 
   private async generateWithContextExport(
@@ -181,10 +193,20 @@ export class CliKotonohaClient implements KotonohaClient {
 
   private async assertCliAvailable(): Promise<void> {
     const result = await this.run({ args: ["version"] });
-    if (result.exitCode !== 0) {
-      throw new Error(
-        `kotonoha not available (${this.options.bin}): ${cliErrorMessage(result)}`,
-      );
+    const check = checkKotonohaCliVersion(result);
+    if (check.ok) return;
+    const prefix = `kotonoha (${this.options.bin}, cwd=${this.options.cwd})`;
+    switch (check.reason) {
+      case "exit_error":
+        throw new Error(`${prefix}: CLI exited with non-zero status — ${check.detail}`);
+      case "unparseable":
+        throw new Error(
+          `${prefix}: could not parse version from stdout — ${check.detail}`,
+        );
+      case "too_old":
+        throw new Error(
+          `${prefix}: CLI version too old — ${check.detail} (need >= ${KOTONOHA_CLI_MIN_VERSION})`,
+        );
     }
   }
 

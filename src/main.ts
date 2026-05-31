@@ -1,6 +1,10 @@
 import { Notice, Plugin, type App } from "obsidian";
-import { cliErrorMessage, runKotonoha } from "./cli/runKotonoha";
+import { runKotonoha } from "./cli/runKotonoha";
 import { buildCliEnv } from "./cli/buildCliEnv";
+import {
+  checkKotonohaCliVersion,
+  KOTONOHA_CLI_MIN_VERSION,
+} from "./cli/kotonohaVersion";
 import { vaultBasePath } from "./util/vaultPath";
 import { consoleMsg } from "./i18n/consoleI18n";
 import {
@@ -218,15 +222,39 @@ export default class KotonohaConsolePlugin extends Plugin {
         args: ["version"],
         env: buildCliEnv(this.settings),
       });
-      if (result.exitCode === 0) {
-        new Notice(result.stdout.trim().split("\n")[0] ?? consoleMsg(lang, "noticeCliOk"));
-      } else {
-        new Notice(consoleMsg(lang, "noticeCliError", { msg: cliErrorMessage(result) }));
+      const check = checkKotonohaCliVersion(result);
+      if (check.ok) {
+        new Notice(
+          consoleMsg(lang, "noticeCliVersionOk", {
+            line: check.line,
+            version: check.version,
+          }),
+        );
+        return;
       }
-    } catch (e) {
+      const msgKey =
+        check.reason === "too_old"
+          ? "noticeCliVersionTooOld"
+          : check.reason === "unparseable"
+            ? "noticeCliVersionUnparseable"
+            : "noticeCliError";
       new Notice(
-        consoleMsg(lang, "noticeCliSpawnFailed", {
-          msg: e instanceof Error ? e.message : String(e),
+        consoleMsg(lang, msgKey, {
+          msg: check.detail,
+          line: check.line ?? "",
+          version: check.version ?? "",
+          min: KOTONOHA_CLI_MIN_VERSION,
+          cwd,
+        }),
+      );
+    } catch (e) {
+      const err = e instanceof Error ? e.message : String(e);
+      const isNotFound = /ENOENT|not found/i.test(err);
+      new Notice(
+        consoleMsg(lang, isNotFound ? "noticeCliCommandNotFound" : "noticeCliSpawnFailed", {
+          msg: err,
+          bin,
+          cwd,
         }),
       );
     }
