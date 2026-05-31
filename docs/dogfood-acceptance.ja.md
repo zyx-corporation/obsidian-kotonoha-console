@@ -4,6 +4,7 @@
 **目的:** Obsidian Kotonoha Console を、Kotonoha のコンテキストレビューと RDE 監査ワークフローの **最初の usable UI** として扱う。
 
 規範的正本: `[kotonoha-spec](https://github.com/zyx-corporation/kotonoha-spec)`。  
+Sidecar 方針（v0.3）: [`sidecar-spec-alignment.ja.md`](sidecar-spec-alignment.ja.md)。  
 English: `[dogfood-acceptance.md](dogfood-acceptance.md)`。
 
 ## 受け入れ基準

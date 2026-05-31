@@ -2333,6 +2333,157 @@ function excerpt(text, mode) {
   return text.length <= max ? text : `${text.slice(0, max)}\u2026`;
 }
 
+// src/sidecar/validateSidecar.ts
+var REVIEW_STATUSES = /* @__PURE__ */ new Set([
+  "approved",
+  "rejected",
+  "partially_applied",
+  "hold",
+  "pending"
+]);
+var RDE_DECISIONS = /* @__PURE__ */ new Set([
+  "approve",
+  "revise",
+  "reject",
+  "human_review"
+]);
+var AUDIT_ENGINES = /* @__PURE__ */ new Set([
+  "orchestrator",
+  "local",
+  "mock",
+  "cli",
+  "gateway"
+]);
+function isRecord(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function isNonEmptyString(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+function isStringArray(value) {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+function pushTypeError(errors, field, expected, actual) {
+  errors.push(`${field}: expected ${expected}, got ${typeof actual}`);
+}
+function logSidecarValidation(kind, path, result) {
+  for (const error of result.errors) {
+    console.warn(`[kotonoha-console] ${kind} sidecar validation error (${path}): ${error}`);
+  }
+  for (const warning of result.warnings) {
+    console.warn(`[kotonoha-console] ${kind} sidecar validation warning (${path}): ${warning}`);
+  }
+}
+function validateProposalSidecar(value) {
+  const errors = [];
+  const warnings = [];
+  if (!isRecord(value)) {
+    return { ok: false, errors: ["root: expected object"], warnings };
+  }
+  for (const field of [
+    "proposalId",
+    "requestId",
+    "createdAt",
+    "operation",
+    "filePath",
+    "sourceHash",
+    "proposalHash"
+  ]) {
+    if (!isNonEmptyString(value[field])) {
+      errors.push(`${field}: required non-empty string`);
+    }
+  }
+  if (value.decision !== void 0 && !isRecord(value.decision)) {
+    pushTypeError(errors, "decision", "object", value.decision);
+  } else if (isRecord(value.decision) && value.decision.status !== void 0) {
+    if (!REVIEW_STATUSES.has(String(value.decision.status))) {
+      errors.push(`decision.status: unknown value "${String(value.decision.status)}"`);
+    }
+  }
+  return { ok: errors.length === 0, errors, warnings };
+}
+function validateRdeAuditPayload(value, prefix = "rde") {
+  const errors = [];
+  const warnings = [];
+  if (!isRecord(value)) {
+    return { ok: false, errors: [`${prefix}: expected object`], warnings };
+  }
+  if (!isNonEmptyString(value.proposalId)) {
+    errors.push(`${prefix}.proposalId: required non-empty string`);
+  }
+  if (!isNonEmptyString(value.createdAt)) {
+    errors.push(`${prefix}.createdAt: required non-empty string`);
+  }
+  if (!Array.isArray(value.categories)) {
+    pushTypeError(errors, `${prefix}.categories`, "array", value.categories);
+  }
+  for (const field of [
+    "preservedElements",
+    "transformedElements",
+    "inferredExtensions",
+    "unresolvedElements",
+    "driftRisks"
+  ]) {
+    if (!isStringArray(value[field])) {
+      pushTypeError(errors, `${prefix}.${field}`, "string[]", value[field]);
+    }
+  }
+  if (!isNonEmptyString(value.recommendedDecision)) {
+    errors.push(`${prefix}.recommendedDecision: required non-empty string`);
+  } else if (!RDE_DECISIONS.has(value.recommendedDecision)) {
+    errors.push(`${prefix}.recommendedDecision: unknown value "${value.recommendedDecision}"`);
+  }
+  if (typeof value.confidence !== "number" || Number.isNaN(value.confidence)) {
+    pushTypeError(errors, `${prefix}.confidence`, "number", value.confidence);
+  }
+  if (value.engine !== void 0 && !AUDIT_ENGINES.has(String(value.engine))) {
+    errors.push(`${prefix}.engine: unknown value "${String(value.engine)}"`);
+  }
+  return { ok: errors.length === 0, errors, warnings };
+}
+function validateAuditSidecar(value) {
+  const errors = [];
+  const warnings = [];
+  if (!isRecord(value)) {
+    return { ok: false, errors: ["root: expected object"], warnings };
+  }
+  for (const field of ["proposalId", "filePath", "sourceHash", "createdAt"]) {
+    if (!isNonEmptyString(value[field])) {
+      errors.push(`${field}: required non-empty string`);
+    }
+  }
+  const rdeResult = validateRdeAuditPayload(value.rde, "rde");
+  errors.push(...rdeResult.errors);
+  warnings.push(...rdeResult.warnings);
+  if (value.engine !== void 0 && !AUDIT_ENGINES.has(String(value.engine))) {
+    errors.push(`engine: unknown value "${String(value.engine)}"`);
+  }
+  return { ok: errors.length === 0, errors, warnings };
+}
+function validateReviewSidecar(value) {
+  const errors = [];
+  const warnings = [];
+  if (!isRecord(value)) {
+    return { ok: false, errors: ["root: expected object"], warnings };
+  }
+  if (!isNonEmptyString(value.proposalId)) {
+    errors.push("proposalId: required non-empty string");
+  }
+  if (!isRecord(value.decision)) {
+    errors.push("decision: required object");
+  } else {
+    if (!isNonEmptyString(value.decision.status)) {
+      errors.push("decision.status: required non-empty string");
+    } else if (!REVIEW_STATUSES.has(String(value.decision.status))) {
+      errors.push(`decision.status: unknown value "${String(value.decision.status)}"`);
+    }
+    if (!isNonEmptyString(value.decision.decidedAt)) {
+      errors.push("decision.decidedAt: required non-empty string");
+    }
+  }
+  return { ok: errors.length === 0, errors, warnings };
+}
+
 // src/services/SidecarStore.ts
 var ROOT = ".kotonoha";
 var PROPOSALS = `${ROOT}/proposals`;
@@ -2361,6 +2512,7 @@ var SidecarStore = class {
       summary: proposal.summary,
       decision: { status: "pending" }
     };
+    logSidecarValidation("proposal", path, validateProposalSidecar(body));
     await this.app.vault.adapter.write(path, JSON.stringify(body, null, 2));
   }
   async saveRdeAuditRecord(request, proposal, audit) {
@@ -2383,6 +2535,7 @@ var SidecarStore = class {
       rde: audit,
       decision: { status: "pending" }
     };
+    logSidecarValidation("audit", path, validateAuditSidecar(body));
     await this.app.vault.adapter.write(path, JSON.stringify(body, null, 2));
   }
   /** git-mode-spec §9.1 step 10 — human review decision sidecar. */
@@ -2405,6 +2558,7 @@ var SidecarStore = class {
       rdeRecommended: audit?.recommendedDecision,
       rdeCategories: audit?.categories
     };
+    logSidecarValidation("review", path, validateReviewSidecar(body));
     await this.app.vault.adapter.write(path, JSON.stringify(body, null, 2));
     await this.patchSidecarDecision(proposal.id, decision.decision);
   }
