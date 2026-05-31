@@ -27,7 +27,7 @@ __export(main_exports, {
   default: () => KotonohaConsolePlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian5 = require("obsidian");
+var import_obsidian6 = require("obsidian");
 
 // src/cli/runKotonoha.ts
 var import_child_process = require("child_process");
@@ -399,6 +399,7 @@ var MSGS2 = {
     confirmGitHeadChanged: "Git HEAD changed since generation (Obsidian Git may have synced). Re-audit recommended. Continue?",
     confirmApply: "Apply this proposal to the note? Original text will be overwritten.",
     noticeOpenEditor: "Open the note in the editor to apply selection",
+    noticeSelectionNotFound: "Selection text was not found in the note \u2014 apply blocked to avoid whole-note overwrite",
     mockRdeSummary: "[mock] RDE audit \xB7 {title}",
     mockOpSummary: "[mock] {operation} \xB7 {title}",
     mockUncertainty: "Mock backend \u2014 connect HTTP or CLI in settings for real Kotonoha output.",
@@ -546,6 +547,7 @@ var MSGS2 = {
     confirmGitHeadChanged: "\u751F\u6210\u5F8C\u306B Git HEAD \u304C\u5909\u308F\u3063\u3066\u3044\u307E\u3059\uFF08Obsidian Git \u306E\u540C\u671F\u306E\u53EF\u80FD\u6027\uFF09\u3002\u518D\u76E3\u67FB\u3092\u63A8\u5968\u3057\u307E\u3059\u3002\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F",
     confirmApply: "\u3053\u306E\u63D0\u6848\u3092\u30CE\u30FC\u30C8\u306B\u9069\u7528\u3057\u307E\u3059\u304B\uFF1F\u5143\u306E\u30C6\u30AD\u30B9\u30C8\u306F\u4E0A\u66F8\u304D\u3055\u308C\u307E\u3059\u3002",
     noticeOpenEditor: "\u30A8\u30C7\u30A3\u30BF\u3067\u30CE\u30FC\u30C8\u3092\u958B\u3044\u3066\u304B\u3089\u9078\u629E\u7BC4\u56F2\u306B\u9069\u7528\u3057\u3066\u304F\u3060\u3055\u3044",
+    noticeSelectionNotFound: "\u9078\u629E\u30C6\u30AD\u30B9\u30C8\u304C\u30CE\u30FC\u30C8\u5185\u306B\u898B\u3064\u304B\u308A\u307E\u305B\u3093 \u2014 \u30CE\u30FC\u30C8\u5168\u4F53\u306E\u8AA4\u4E0A\u66F8\u304D\u3092\u9632\u3050\u305F\u3081\u9069\u7528\u3092\u4E2D\u6B62\u3057\u307E\u3057\u305F",
     mockRdeSummary: "[mock] RDE \u76E3\u67FB \xB7 {title}",
     mockOpSummary: "[mock] {operation} \xB7 {title}",
     mockUncertainty: "Mock \u30D0\u30C3\u30AF\u30A8\u30F3\u30C9 \u2014 \u8A2D\u5B9A\u3067 HTTP \u307E\u305F\u306F CLI \u306B\u63A5\u7D9A\u3057\u3066\u304F\u3060\u3055\u3044\u3002",
@@ -693,6 +695,7 @@ var MSGS2 = {
     confirmGitHeadChanged: "\u751F\u6210\u540E Git HEAD \u5DF2\u53D8\u5316\uFF08\u53EF\u80FD\u7531 Obsidian Git \u540C\u6B65\u5F15\u8D77\uFF09\u3002\u5EFA\u8BAE\u91CD\u65B0\u5BA1\u8BA1\u3002\u662F\u5426\u7EE7\u7EED\uFF1F",
     confirmApply: "\u5C06\u6B64\u63D0\u6848\u5E94\u7528\u5230\u7B14\u8BB0\uFF1F\u539F\u59CB\u6587\u672C\u5C06\u88AB\u8986\u76D6\u3002",
     noticeOpenEditor: "\u8BF7\u5728\u7F16\u8F91\u5668\u4E2D\u6253\u5F00\u7B14\u8BB0\u540E\u518D\u5E94\u7528\u5230\u9009\u533A",
+    noticeSelectionNotFound: "\u9009\u533A\u6587\u672C\u5728\u7B14\u8BB0\u4E2D\u672A\u627E\u5230 \u2014 \u5DF2\u963B\u6B62\u5E94\u7528\u4EE5\u907F\u514D\u6574\u7BC7\u8986\u76D6",
     mockRdeSummary: "[mock] RDE \u5BA1\u8BA1 \xB7 {title}",
     mockOpSummary: "[mock] {operation} \xB7 {title}",
     mockUncertainty: "Mock \u540E\u7AEF \u2014 \u8BF7\u5728\u8BBE\u7F6E\u4E2D\u8FDE\u63A5 HTTP \u6216 CLI \u4EE5\u83B7\u53D6\u771F\u5B9E Kotonoha \u8F93\u51FA\u3002",
@@ -1703,18 +1706,22 @@ function composeAppliedNote(originalContent, proposedText, options) {
   const selection = options.selectionText?.trim();
   if (selection) {
     const idx = originalContent.indexOf(selection);
-    if (idx >= 0) {
-      return originalContent.slice(0, idx) + proposedText + originalContent.slice(idx + selection.length);
+    if (idx < 0) {
+      return { kind: "selection_not_found" };
     }
+    return {
+      kind: "selection",
+      content: originalContent.slice(0, idx) + proposedText + originalContent.slice(idx + selection.length)
+    };
   }
   if (!options.preserveFrontmatter) {
-    return proposedText;
+    return { kind: "whole", content: proposedText };
   }
   const fm = originalContent.match(FRONTMATTER_RE);
   if (!fm || proposedText.trimStart().startsWith("---")) {
-    return proposedText;
+    return { kind: "whole", content: proposedText };
   }
-  return fm[0] + proposedText;
+  return { kind: "whole", content: fm[0] + proposedText };
 }
 
 // src/util/gitReadonly.ts
@@ -1783,6 +1790,21 @@ async function readGitContext(app, file, mode) {
     };
   }
   return snapshot;
+}
+
+// src/obsidian/noteIoGuards.ts
+function resolveTargetFilePath(activePath, storedTargetPath, vaultHasPath) {
+  if (activePath && (!storedTargetPath || activePath === storedTargetPath)) {
+    return activePath;
+  }
+  if (storedTargetPath && vaultHasPath(storedTargetPath)) {
+    return storedTargetPath;
+  }
+  return activePath;
+}
+function sourceHashMismatch(hashAtGeneration, currentHash) {
+  if (!hashAtGeneration || !currentHash) return false;
+  return hashAtGeneration !== currentHash;
 }
 
 // src/obsidian/metadataLineage.ts
@@ -1987,14 +2009,17 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
   /** Target note at generation time — Console focus must not break apply. */
   resolveTargetFile() {
     const active = this.plugin.activeNoteReader.getActiveFile();
-    if (active && (!this.targetFilePath || active.path === this.targetFilePath)) {
-      return active;
-    }
-    if (this.targetFilePath) {
-      const file = this.app.vault.getAbstractFileByPath(this.targetFilePath);
-      if (file instanceof import_obsidian2.TFile) return file;
-    }
-    return active;
+    const path = resolveTargetFilePath(
+      active?.path ?? null,
+      this.targetFilePath,
+      (p) => {
+        const f = this.app.vault.getAbstractFileByPath(p);
+        return f instanceof import_obsidian2.TFile;
+      }
+    );
+    if (!path) return null;
+    const file = this.app.vault.getAbstractFileByPath(path);
+    return file instanceof import_obsidian2.TFile ? file : null;
   }
   uiLang() {
     return this.plugin.settings.defaultLanguage;
@@ -2120,7 +2145,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       file,
       this.lastRequest?.context.selectionText
     );
-    if (this.sourceHashAtGeneration && current && current.sourceHash !== this.sourceHashAtGeneration) {
+    if (sourceHashMismatch(this.sourceHashAtGeneration, current?.sourceHash)) {
       const ok = confirm(consoleMsg(lang, "confirmSourceChanged"));
       if (!ok) return;
     }
@@ -2135,10 +2160,8 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
         if (!ok) return;
       }
     }
-    if (this.plugin.settings.requireHumanApproval) {
-      const ok = confirm(consoleMsg(lang, "confirmApply"));
-      if (!ok) return;
-    }
+    const okApply = confirm(consoleMsg(lang, "confirmApply"));
+    if (!okApply) return;
     await this.withBusy(async () => {
       const file2 = this.resolveTargetFile();
       if (!file2) {
@@ -2151,21 +2174,15 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       }
       const proposedText = this.reviseMode ? this.editedText : this.bundle.proposal.proposedText;
       const original = await this.app.vault.read(file2);
-      const finalText = composeAppliedNote(original, proposedText, {
+      const composed = composeAppliedNote(original, proposedText, {
         preserveFrontmatter: this.plugin.settings.preserveFrontmatter,
         selectionText: this.lastRequest?.context.selectionText
       });
-      if (this.lastRequest?.context.selectionText) {
-        const view = this.app.workspace.getActiveViewOfType(import_obsidian2.MarkdownView);
-        const editor = view?.editor;
-        if (editor && view.file?.path === file2.path) {
-          editor.replaceSelection(proposedText);
-        } else {
-          await this.plugin.markdownWriter.replaceNoteContent(file2, finalText);
-        }
-      } else {
-        await this.plugin.markdownWriter.replaceNoteContent(file2, finalText);
+      if (composed.kind === "selection_not_found") {
+        new import_obsidian2.Notice(consoleMsg(lang, "noticeSelectionNotFound"));
+        return;
       }
+      await this.plugin.markdownWriter.replaceNoteContent(file2, composed.content);
       const text = proposedText;
       const decision = this.reviseMode ? this.plugin.approval.approveRevised(
         this.bundle.proposal,
@@ -2287,11 +2304,51 @@ function message(e) {
   return e instanceof Error ? e.message : String(e);
 }
 
+// src/obsidian/ActiveNoteReader.ts
+var import_obsidian3 = require("obsidian");
+
 // src/util/hash.ts
 async function sha256Hex(text) {
   const data = new TextEncoder().encode(text);
   const digest = await crypto.subtle.digest("SHA-256", data);
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// src/obsidian/buildNoteContext.ts
+async function buildNoteContext(input) {
+  const selection = input.selectionText !== void 0 && input.selectionText.length > 0 ? input.selectionText : void 0;
+  const targetText = selection ?? input.fullSourceText;
+  return {
+    vaultPath: input.vaultPath,
+    filePath: input.filePath,
+    title: input.title,
+    sourceText: targetText,
+    selectionText: selection,
+    sourceHash: await sha256Hex(targetText),
+    tags: input.tags,
+    links: input.links,
+    frontmatter: input.frontmatter,
+    git: input.git
+  };
+}
+
+// src/obsidian/markdownViewLookup.ts
+function findMarkdownViewForFile(app, filePath) {
+  const leaves = app.workspace.getLeavesOfType("markdown");
+  for (const leaf of leaves) {
+    const view = leaf.view;
+    if (view.file?.path === filePath && view.editor) {
+      return view;
+    }
+  }
+  return null;
+}
+
+// src/obsidian/SelectionReader.ts
+function readSelection(editor) {
+  const sel = editor.getSelection();
+  const trimmed = sel.trim();
+  return trimmed.length > 0 ? trimmed : void 0;
 }
 
 // src/obsidian/ActiveNoteReader.ts
@@ -2304,31 +2361,46 @@ var ActiveNoteReader = class {
     const file = this.app.workspace.getActiveFile();
     return file ?? null;
   }
+  /** Editor selection for `file`, including when another view (e.g. Console) is focused. */
+  readSelectionForFile(file) {
+    const active = this.app.workspace.getActiveViewOfType(import_obsidian3.MarkdownView);
+    if (active?.file?.path === file.path && active.editor) {
+      return readSelection(active.editor);
+    }
+    const view = findMarkdownViewForFile(this.app, file.path);
+    if (view?.editor) return readSelection(view.editor);
+    return void 0;
+  }
+  /** Editor selection from active Markdown view, if any. */
+  readActiveSelection() {
+    const file = this.getActiveFile();
+    if (!file) return void 0;
+    return this.readSelectionForFile(file);
+  }
   async readNoteContext(selectionText) {
     const file = this.getActiveFile();
     if (!file) return null;
-    return this.readNoteContextForFile(file, selectionText);
+    const selection = selectionText ?? this.readActiveSelection();
+    return this.readNoteContextForFile(file, selection);
   }
   async readNoteContextForFile(file, selectionText) {
-    const sourceText = await this.app.vault.read(file);
-    const targetText = selectionText !== void 0 && selectionText.length > 0 ? selectionText : sourceText;
+    const fullSourceText = await this.app.vault.read(file);
     const cache = this.app.metadataCache.getFileCache(file);
     const frontmatter = cache?.frontmatter ?? {};
     const tags = (cache?.tags ?? []).map((t) => t.tag);
     const links = (cache?.links ?? []).map((l) => l.link);
     const git = this.gitMode === "off" ? void 0 : await readGitContext(this.app, file, this.gitMode);
-    return {
+    return buildNoteContext({
       vaultPath: vaultBasePath(this.app),
       filePath: file.path,
       title: file.basename,
-      sourceText: targetText,
-      selectionText: selectionText && selectionText.length > 0 ? selectionText : void 0,
-      sourceHash: await sha256Hex(targetText),
+      fullSourceText,
+      selectionText,
+      frontmatter,
       tags,
       links,
-      frontmatter,
       git
-    };
+    });
   }
 };
 
@@ -2730,7 +2802,7 @@ async function hash(text) {
 }
 
 // src/client/http/obsidianHttp.ts
-var import_obsidian3 = require("obsidian");
+var import_obsidian4 = require("obsidian");
 
 // src/client/http/httpEndpoint.ts
 function endpointCandidates(endpoint) {
@@ -2746,7 +2818,7 @@ function endpointCandidates(endpoint) {
 
 // src/client/http/obsidianHttp.ts
 async function obsidianHttpRequest(url, init) {
-  const res = await (0, import_obsidian3.requestUrl)({
+  const res = await (0, import_obsidian4.requestUrl)({
     url,
     method: init?.method ?? "GET",
     headers: init?.headers,
@@ -3501,11 +3573,11 @@ var MockKotonohaClient = class {
 };
 
 // src/client/http/obsidianFetch.ts
-var import_obsidian4 = require("obsidian");
+var import_obsidian5 = require("obsidian");
 function createObsidianFetch() {
   return async (input, init) => {
     const url = typeof input === "string" ? input : input.toString();
-    const res = await (0, import_obsidian4.requestUrl)({
+    const res = await (0, import_obsidian5.requestUrl)({
       url,
       method: init?.method ?? "GET",
       headers: init?.headers,
@@ -3562,7 +3634,7 @@ function createKotonohaClient(settings, app) {
 }
 
 // src/main.ts
-var KotonohaConsolePlugin = class extends import_obsidian5.Plugin {
+var KotonohaConsolePlugin = class extends import_obsidian6.Plugin {
   settings = { ...DEFAULT_SETTINGS };
   activeNoteReader;
   markdownWriter;
@@ -3674,13 +3746,13 @@ var KotonohaConsolePlugin = class extends import_obsidian5.Plugin {
     const plugins = this.app.plugins;
     await plugins.disablePlugin(id2);
     await plugins.enablePlugin(id2);
-    new import_obsidian5.Notice(consoleMsg(this.settings.defaultLanguage, "noticePluginReloaded", { version }));
+    new import_obsidian6.Notice(consoleMsg(this.settings.defaultLanguage, "noticePluginReloaded", { version }));
   }
   async testBackendConnection() {
     const lang = this.settings.defaultLanguage;
     switch (this.settings.backendMode) {
       case "mock":
-        new import_obsidian5.Notice(formatMockProbeNotice(lang));
+        new import_obsidian6.Notice(formatMockProbeNotice(lang));
         return;
       case "cli":
         await this.testCliVersion();
@@ -3700,10 +3772,10 @@ var KotonohaConsolePlugin = class extends import_obsidian5.Plugin {
         await this.saveSettings();
         this.refreshClient();
       }
-      new import_obsidian5.Notice(formatHttpProbeNotice(lang, result));
+      new import_obsidian6.Notice(formatHttpProbeNotice(lang, result));
     } catch (e) {
       const detail = e instanceof HttpProbeError ? e.message : e instanceof Error ? e.message : String(e);
-      new import_obsidian5.Notice(
+      new import_obsidian6.Notice(
         consoleMsg(lang, "noticeHttpFailed", {
           msg: detail,
           endpoint
@@ -3724,11 +3796,11 @@ var KotonohaConsolePlugin = class extends import_obsidian5.Plugin {
       });
       const check = checkKotonohaCliVersion(result);
       if (check.ok) {
-        new import_obsidian5.Notice(formatCliProbeNotice(lang, check.line, check.version));
+        new import_obsidian6.Notice(formatCliProbeNotice(lang, check.line, check.version));
         return;
       }
       const msgKey = check.reason === "too_old" ? "noticeCliVersionTooOld" : check.reason === "unparseable" ? "noticeCliVersionUnparseable" : "noticeCliError";
-      new import_obsidian5.Notice(
+      new import_obsidian6.Notice(
         consoleMsg(lang, msgKey, {
           msg: check.detail,
           line: check.line ?? "",
@@ -3740,7 +3812,7 @@ var KotonohaConsolePlugin = class extends import_obsidian5.Plugin {
     } catch (e) {
       const err = e instanceof Error ? e.message : String(e);
       const isNotFound = /ENOENT|not found/i.test(err);
-      new import_obsidian5.Notice(
+      new import_obsidian6.Notice(
         consoleMsg(lang, isNotFound ? "noticeCliCommandNotFound" : "noticeCliSpawnFailed", {
           msg: err,
           bin,

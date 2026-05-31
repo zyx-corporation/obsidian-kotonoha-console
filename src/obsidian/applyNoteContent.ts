@@ -1,3 +1,5 @@
+import type { ApplyComposeResult } from "./noteIoApply";
+
 const FRONTMATTER_RE = /^---\r?\n[\s\S]*?\r?\n---\r?\n?/;
 
 export interface ApplyNoteOptions {
@@ -11,26 +13,29 @@ export function composeAppliedNote(
   originalContent: string,
   proposedText: string,
   options: ApplyNoteOptions,
-): string {
+): ApplyComposeResult {
   const selection = options.selectionText?.trim();
   if (selection) {
     const idx = originalContent.indexOf(selection);
-    if (idx >= 0) {
-      return (
+    if (idx < 0) {
+      return { kind: "selection_not_found" };
+    }
+    return {
+      kind: "selection",
+      content:
         originalContent.slice(0, idx) +
         proposedText +
-        originalContent.slice(idx + selection.length)
-      );
-    }
+        originalContent.slice(idx + selection.length),
+    };
   }
 
   if (!options.preserveFrontmatter) {
-    return proposedText;
+    return { kind: "whole", content: proposedText };
   }
 
   const fm = originalContent.match(FRONTMATTER_RE);
   if (!fm || proposedText.trimStart().startsWith("---")) {
-    return proposedText;
+    return { kind: "whole", content: proposedText };
   }
-  return fm[0] + proposedText;
+  return { kind: "whole", content: fm[0] + proposedText };
 }
