@@ -2182,17 +2182,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
         new import_obsidian2.Notice(consoleMsg(lang, "noticeSelectionNotFound"));
         return;
       }
-      if (this.lastRequest?.context.selectionText) {
-        const view = this.app.workspace.getActiveViewOfType(import_obsidian2.MarkdownView);
-        const editor = view?.editor;
-        if (editor && view.file?.path === file2.path) {
-          editor.replaceSelection(proposedText);
-        } else {
-          await this.plugin.markdownWriter.replaceNoteContent(file2, composed.content);
-        }
-      } else {
-        await this.plugin.markdownWriter.replaceNoteContent(file2, composed.content);
-      }
+      await this.plugin.markdownWriter.replaceNoteContent(file2, composed.content);
       const text = proposedText;
       const decision = this.reviseMode ? this.plugin.approval.approveRevised(
         this.bundle.proposal,
@@ -2342,6 +2332,18 @@ async function buildNoteContext(input) {
   };
 }
 
+// src/obsidian/markdownViewLookup.ts
+function findMarkdownViewForFile(app, filePath) {
+  const leaves = app.workspace.getLeavesOfType("markdown");
+  for (const leaf of leaves) {
+    const view = leaf.view;
+    if (view.file?.path === filePath && view.editor) {
+      return view;
+    }
+  }
+  return null;
+}
+
 // src/obsidian/SelectionReader.ts
 function readSelection(editor) {
   const sel = editor.getSelection();
@@ -2359,11 +2361,21 @@ var ActiveNoteReader = class {
     const file = this.app.workspace.getActiveFile();
     return file ?? null;
   }
+  /** Editor selection for `file`, including when another view (e.g. Console) is focused. */
+  readSelectionForFile(file) {
+    const active = this.app.workspace.getActiveViewOfType(import_obsidian3.MarkdownView);
+    if (active?.file?.path === file.path && active.editor) {
+      return readSelection(active.editor);
+    }
+    const view = findMarkdownViewForFile(this.app, file.path);
+    if (view?.editor) return readSelection(view.editor);
+    return void 0;
+  }
   /** Editor selection from active Markdown view, if any. */
   readActiveSelection() {
-    const view = this.app.workspace.getActiveViewOfType(import_obsidian3.MarkdownView);
-    if (!view?.editor) return void 0;
-    return readSelection(view.editor);
+    const file = this.getActiveFile();
+    if (!file) return void 0;
+    return this.readSelectionForFile(file);
   }
   async readNoteContext(selectionText) {
     const file = this.getActiveFile();

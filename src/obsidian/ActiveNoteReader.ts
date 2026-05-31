@@ -1,10 +1,11 @@
-import type { App, TFile } from "obsidian";
+import type { App, Editor, TFile } from "obsidian";
 import { MarkdownView } from "obsidian";
 import type { NoteContext } from "../domain/types";
 import { buildNoteContext } from "./buildNoteContext";
 import { readGitContext } from "./GitContextReader";
 import type { GitMode } from "../domain/types";
 import { vaultBasePath } from "../util/vaultPath";
+import { findMarkdownViewForFile } from "./markdownViewLookup";
 import { readSelection } from "./SelectionReader";
 
 export class ActiveNoteReader {
@@ -18,11 +19,22 @@ export class ActiveNoteReader {
     return file ?? null;
   }
 
+  /** Editor selection for `file`, including when another view (e.g. Console) is focused. */
+  readSelectionForFile(file: TFile): string | undefined {
+    const active = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (active?.file?.path === file.path && active.editor) {
+      return readSelection(active.editor);
+    }
+    const view = findMarkdownViewForFile(this.app, file.path);
+    if (view?.editor) return readSelection(view.editor as Editor);
+    return undefined;
+  }
+
   /** Editor selection from active Markdown view, if any. */
   readActiveSelection(): string | undefined {
-    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-    if (!view?.editor) return undefined;
-    return readSelection(view.editor);
+    const file = this.getActiveFile();
+    if (!file) return undefined;
+    return this.readSelectionForFile(file);
   }
 
   async readNoteContext(selectionText?: string): Promise<NoteContext | null> {

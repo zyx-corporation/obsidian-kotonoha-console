@@ -11,7 +11,7 @@
 | 項目 | v0.3 方針 |
 | --- | --- |
 | Active note read | filePath / title / sourceText / sourceHash / tags / links / frontmatter |
-| Selection | 選択範囲がある場合 `selectionText` を context に含める |
+| Selection | 選択範囲がある場合 `selectionText` を context に含める。Console フォーカス中も対象ノートの open editor から取得 |
 | Selection apply | 選択範囲のみ置換。未検出時は whole-note 誤上書きを **ブロック** |
 | Frontmatter | apply 後も既存 frontmatter を保持 |
 | metadataWriteMode | off / prompt / always（git-aware + always → prompt） |

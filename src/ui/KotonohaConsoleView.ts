@@ -1,4 +1,4 @@
-import { ItemView, MarkdownView, Notice, WorkspaceLeaf, TFile } from "obsidian";
+import { ItemView, Notice, WorkspaceLeaf, TFile } from "obsidian";
 import type KotonohaConsolePlugin from "../main";
 import type { GenerationRequest, OperationType, ApprovalDecision } from "../domain/types";
 import type { ProposalBundle } from "../services/ProposalService";
@@ -387,17 +387,7 @@ export class KotonohaConsoleView extends ItemView {
         return;
       }
 
-      if (this.lastRequest?.context.selectionText) {
-        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-        const editor = view?.editor;
-        if (editor && view.file?.path === file.path) {
-          editor.replaceSelection(proposedText);
-        } else {
-          await this.plugin.markdownWriter.replaceNoteContent(file, composed.content);
-        }
-      } else {
-        await this.plugin.markdownWriter.replaceNoteContent(file, composed.content);
-      }
+      await this.plugin.markdownWriter.replaceNoteContent(file, composed.content);
 
       const text = proposedText;
 
