@@ -407,14 +407,30 @@ var MSGS2 = {
     settingsTitle: "Kotonoha Console",
     settingsBackendModeName: "Backend mode",
     settingsBackendModeDesc: "cli = kotonoha CLI; RDE audit works without Git; context export only when gitMode \u2260 off",
+    settingsBackendMockInfo: "Backend: mock / test backend\nNo remote connection is required.\nOutput is for UI/dev testing only.",
+    settingsBackendHttpInfo: "Backend: http\nAuto-detects orchestrator / gateway / console proxy.\nStable adapter: /v1/rde/evaluate when orchestrator is detected.\nExperimental: /v1/proposals/generate.",
+    settingsBackendCliInfo: "Backend: cli / first stable runtime\nRequires kotonoha >= 0.3.1.\nCLI is runtime, not the normative specification.",
+    settingsCliRuntimeWarning: "CLI is the first stable runtime \u2014 not the normative kotonoha-spec source.",
+    settingsHttpStableOrchestrator: "/v1/rde/evaluate (stable adapter)",
+    settingsHttpStableGateway: "tool / context export where supported",
+    settingsHttpStableConsole: "health / console proxy detection",
+    settingsHttpExperimentalOrchestrator: "/v1/proposals/generate (experimental / best-effort)",
+    settingsHttpExperimentalGateway: "generative rewrite via external orchestrator; RDE: local rule-based guardrails only",
+    settingsHttpExperimentalConsole: "proposal generation may be available; RDE may fall back to local guardrails",
+    settingsHttpProposalExperimentalWarning: "/v1/proposals/generate is experimental and best-effort. Do not treat generated proposals as accepted lineage.",
+    settingsHttpEndpointPortNote: "Default example: http://127.0.0.1:8000 \u2014 dogfood/local dev may use http://127.0.0.1:8001.",
+    noticeHttpCapabilitiesStable: "Stable: {line}",
+    noticeHttpCapabilitiesExperimental: "Experimental: {line}",
     settingsCliSection: "CLI (kotonoha \u2265 0.3.1)",
     settingsCliCommandName: "CLI command",
-    settingsCliCommandDesc: "Path to kotonoha binary",
+    settingsCliCommandDesc: "Path to the kotonoha binary (absolute path if not on PATH)",
     settingsBtnTestVersion: "Test version",
     settingsCliWorkdirName: "CLI workdir",
-    settingsCliWorkdirDesc: "Git repo root for --path (empty = vault folder)",
+    settingsCliWorkdirDesc: "Vault path or project root used as cwd / --path (empty = vault folder)",
     settingsCliWorkdirPlaceholder: "(vault path)",
-    settingsDatabaseUrlDesc: "Optional; required for DB-backed CLI commands later",
+    settingsDatabaseUrlDesc: "Optional; passed to CLI env for DB-backed commands",
+    settingsCliPrincipalDesc: "Optional; passed to CLI as KOTONOHA_PRINCIPAL_ID",
+    settingsCliProjectDesc: "Optional; passed to CLI as KOTONOHA_PROJECT_ID",
     settingsGitModeName: "Git mode",
     settingsGitModeDesc: "Git-aware but never mutates the repo (git-mode-spec)",
     settingsMetadataWriteModeName: "Metadata write mode",
@@ -458,7 +474,7 @@ var MSGS2 = {
     settingsTestBackendDesc: "mock / CLI version / HTTP health + backend auto-detect",
     settingsBtnTestBackend: "Run connection test",
     cmdTestBackend: "Test Kotonoha backend connection",
-    noticeMockBackendOk: "Mock backend \u2014 no remote connection required",
+    noticeMockBackendOk: "Mock backend / test backend \u2014 no remote connection required",
     httpOrchestratorRdeSummary: "[http/orchestrator] RDE audit \xB7 {path}",
     httpGatewaySummary: "[http/gateway] {operation} \xB7 {path}",
     httpLocalSummary: "[http/local] {operation} \xB7 {path}",
@@ -538,14 +554,30 @@ var MSGS2 = {
     settingsTitle: "Kotonoha Console",
     settingsBackendModeName: "\u30D0\u30C3\u30AF\u30A8\u30F3\u30C9\u30E2\u30FC\u30C9",
     settingsBackendModeDesc: "cli = kotonoha CLI\u3002RDE \u76E3\u67FB\u306F Git \u306A\u3057\u3067\u52D5\u4F5C\u3002context export \u306F gitMode \u2260 off \u306E\u3068\u304D\u306E\u307F",
+    settingsBackendMockInfo: "Backend: mock / test backend\n\u30EA\u30E2\u30FC\u30C8\u63A5\u7D9A\u306F\u4E0D\u8981\u3067\u3059\u3002\n\u51FA\u529B\u306F UI / \u958B\u767A\u30C6\u30B9\u30C8\u7528\u3067\u3059\u3002",
+    settingsBackendHttpInfo: "Backend: http\norchestrator / gateway / console proxy \u3092\u81EA\u52D5\u691C\u51FA\u3057\u307E\u3059\u3002\nStable adapter: orchestrator \u691C\u51FA\u6642\u306E /v1/rde/evaluate\u3002\nExperimental: /v1/proposals/generate\u3002",
+    settingsBackendCliInfo: "Backend: cli / first stable runtime\nkotonoha >= 0.3.1 \u304C\u5FC5\u8981\u3067\u3059\u3002\nCLI \u306F runtime \u3067\u3042\u308A\u3001\u4ED5\u69D8\u6B63\u672C\u3067\u306F\u3042\u308A\u307E\u305B\u3093\u3002",
+    settingsCliRuntimeWarning: "CLI \u306F first stable runtime \u3067\u3059 \u2014 kotonoha-spec \u306E\u6B63\u672C\u3067\u306F\u3042\u308A\u307E\u305B\u3093\u3002",
+    settingsHttpStableOrchestrator: "/v1/rde/evaluate\uFF08stable adapter\uFF09",
+    settingsHttpStableGateway: "tool / context export\uFF08\u5BFE\u5FDC\u6642\uFF09",
+    settingsHttpStableConsole: "health / console proxy \u691C\u51FA",
+    settingsHttpExperimentalOrchestrator: "/v1/proposals/generate\uFF08experimental / best-effort\uFF09",
+    settingsHttpExperimentalGateway: "\u751F\u6210\u7CFB rewrite \u306F\u5916\u90E8 orchestrator \u7D4C\u7531\uFF1BRDE \u306F local rule-based guardrails \u306E\u307F",
+    settingsHttpExperimentalConsole: "proposal \u751F\u6210\u304C\u5229\u7528\u53EF\u80FD\u306A\u5834\u5408\u3042\u308A\uFF1BRDE \u306F local guardrails \u306B\u30D5\u30A9\u30FC\u30EB\u30D0\u30C3\u30AF\u53EF",
+    settingsHttpProposalExperimentalWarning: "/v1/proposals/generate \u306F experimental / best-effort \u3067\u3059\u3002\u751F\u6210 proposal \u3092\u627F\u8A8D\u6E08\u307F lineage \u3068\u3057\u3066\u6271\u3063\u3066\u306F\u3044\u3051\u307E\u305B\u3093\u3002",
+    settingsHttpEndpointPortNote: "\u65E2\u5B9A\u4F8B: http://127.0.0.1:8000 \u2014 dogfood / local dev \u3067\u306F http://127.0.0.1:8001 \u3092\u4F7F\u3046\u5834\u5408\u304C\u3042\u308A\u307E\u3059\u3002",
+    noticeHttpCapabilitiesStable: "Stable: {line}",
+    noticeHttpCapabilitiesExperimental: "Experimental: {line}",
     settingsCliSection: "CLI\uFF08kotonoha \u2265 0.3.1\uFF09",
     settingsCliCommandName: "CLI \u30B3\u30DE\u30F3\u30C9",
-    settingsCliCommandDesc: "kotonoha \u30D0\u30A4\u30CA\u30EA\u306E\u30D1\u30B9",
+    settingsCliCommandDesc: "kotonoha \u30D0\u30A4\u30CA\u30EA\u306E\u30D1\u30B9\uFF08PATH \u306B\u7121\u3044\u5834\u5408\u306F\u7D76\u5BFE\u30D1\u30B9\uFF09",
     settingsBtnTestVersion: "\u30D0\u30FC\u30B8\u30E7\u30F3\u78BA\u8A8D",
     settingsCliWorkdirName: "CLI \u4F5C\u696D\u30C7\u30A3\u30EC\u30AF\u30C8\u30EA",
-    settingsCliWorkdirDesc: "--path \u7528 Git \u30EA\u30DD\u30B8\u30C8\u30EA\u30EB\u30FC\u30C8\uFF08\u7A7A = vault \u30D5\u30A9\u30EB\u30C0\uFF09",
+    settingsCliWorkdirDesc: "cwd / --path \u306B\u4F7F\u3046 vault \u307E\u305F\u306F\u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u30EB\u30FC\u30C8\uFF08\u7A7A = vault \u30D5\u30A9\u30EB\u30C0\uFF09",
     settingsCliWorkdirPlaceholder: "\uFF08vault \u30D1\u30B9\uFF09",
-    settingsDatabaseUrlDesc: "\u4EFB\u610F\u3002\u5C06\u6765\u306E DB \u9023\u643A CLI \u30B3\u30DE\u30F3\u30C9\u3067\u5FC5\u8981",
+    settingsDatabaseUrlDesc: "\u4EFB\u610F\u3002CLI \u74B0\u5883\u5909\u6570\u3068\u3057\u3066 DB \u9023\u643A\u30B3\u30DE\u30F3\u30C9\u306B\u6E21\u3055\u308C\u307E\u3059",
+    settingsCliPrincipalDesc: "\u4EFB\u610F\u3002CLI \u74B0\u5883\u5909\u6570 KOTONOHA_PRINCIPAL_ID \u3068\u3057\u3066\u6E21\u3055\u308C\u307E\u3059",
+    settingsCliProjectDesc: "\u4EFB\u610F\u3002CLI \u74B0\u5883\u5909\u6570 KOTONOHA_PROJECT_ID \u3068\u3057\u3066\u6E21\u3055\u308C\u307E\u3059",
     settingsGitModeName: "Git \u30E2\u30FC\u30C9",
     settingsGitModeDesc: "Git \u9023\u643A\uFF08\u30EA\u30DD\u30B8\u30C8\u30EA\u306F\u5909\u66F4\u3057\u307E\u305B\u3093 \u2014 git-mode-spec\uFF09",
     settingsMetadataWriteModeName: "\u30E1\u30BF\u30C7\u30FC\u30BF\u66F8\u304D\u8FBC\u307F",
@@ -589,7 +621,7 @@ var MSGS2 = {
     settingsTestBackendDesc: "mock / CLI \u30D0\u30FC\u30B8\u30E7\u30F3 / HTTP \u30D8\u30EB\u30B9 + \u30D0\u30C3\u30AF\u30A8\u30F3\u30C9\u81EA\u52D5\u691C\u51FA",
     settingsBtnTestBackend: "\u63A5\u7D9A\u30C6\u30B9\u30C8\u3092\u5B9F\u884C",
     cmdTestBackend: "Kotonoha \u30D0\u30C3\u30AF\u30A8\u30F3\u30C9\u63A5\u7D9A\u30C6\u30B9\u30C8",
-    noticeMockBackendOk: "Mock \u30D0\u30C3\u30AF\u30A8\u30F3\u30C9 \u2014 \u30EA\u30E2\u30FC\u30C8\u63A5\u7D9A\u306F\u4E0D\u8981\u3067\u3059",
+    noticeMockBackendOk: "Mock backend / test backend \u2014 \u30EA\u30E2\u30FC\u30C8\u63A5\u7D9A\u306F\u4E0D\u8981\u3067\u3059",
     httpOrchestratorRdeSummary: "[http/orchestrator] RDE \u76E3\u67FB \xB7 {path}",
     httpGatewaySummary: "[http/gateway] {operation} \xB7 {path}",
     httpLocalSummary: "[http/local] {operation} \xB7 {path}",
@@ -669,14 +701,30 @@ var MSGS2 = {
     settingsTitle: "Kotonoha Console",
     settingsBackendModeName: "\u540E\u7AEF\u6A21\u5F0F",
     settingsBackendModeDesc: "cli = kotonoha CLI\uFF1BRDE \u5BA1\u8BA1\u65E0\u9700 Git\uFF1Bcontext export \u4EC5\u5728 gitMode \u2260 off \u65F6\u53EF\u7528",
+    settingsBackendMockInfo: "Backend: mock / test backend\n\u65E0\u9700\u8FDC\u7A0B\u8FDE\u63A5\u3002\n\u8F93\u51FA\u4EC5\u7528\u4E8E UI/\u5F00\u53D1\u6D4B\u8BD5\u3002",
+    settingsBackendHttpInfo: "Backend: http\n\u81EA\u52A8\u68C0\u6D4B orchestrator / gateway / console proxy\u3002\nStable adapter: \u68C0\u6D4B\u5230 orchestrator \u65F6\u7684 /v1/rde/evaluate\u3002\nExperimental: /v1/proposals/generate\u3002",
+    settingsBackendCliInfo: "Backend: cli / first stable runtime\n\u9700\u8981 kotonoha >= 0.3.1\u3002\nCLI \u662F runtime\uFF0C\u4E0D\u662F\u89C4\u8303\u6B63\u672C\u3002",
+    settingsCliRuntimeWarning: "CLI \u662F first stable runtime \u2014 \u4E0D\u662F kotonoha-spec \u89C4\u8303\u6B63\u672C\u3002",
+    settingsHttpStableOrchestrator: "/v1/rde/evaluate\uFF08stable adapter\uFF09",
+    settingsHttpStableGateway: "tool / context export\uFF08\u5982\u652F\u6301\uFF09",
+    settingsHttpStableConsole: "health / console proxy \u68C0\u6D4B",
+    settingsHttpExperimentalOrchestrator: "/v1/proposals/generate\uFF08experimental / best-effort\uFF09",
+    settingsHttpExperimentalGateway: "\u751F\u6210\u5F0F rewrite \u9700\u5916\u90E8 orchestrator\uFF1BRDE \u4EC5 local rule-based guardrails",
+    settingsHttpExperimentalConsole: "\u53EF\u80FD\u63D0\u4F9B proposal \u751F\u6210\uFF1BRDE \u53EF\u80FD\u56DE\u9000\u5230 local guardrails",
+    settingsHttpProposalExperimentalWarning: "/v1/proposals/generate \u4E3A experimental / best-effort\u3002\u52FF\u5C06\u751F\u6210 proposal \u89C6\u4E3A\u5DF2\u63A5\u53D7 lineage\u3002",
+    settingsHttpEndpointPortNote: "\u9ED8\u8BA4\u793A\u4F8B: http://127.0.0.1:8000 \u2014 dogfood/\u672C\u5730\u5F00\u53D1\u53EF\u80FD\u4F7F\u7528 http://127.0.0.1:8001\u3002",
+    noticeHttpCapabilitiesStable: "Stable: {line}",
+    noticeHttpCapabilitiesExperimental: "Experimental: {line}",
     settingsCliSection: "CLI\uFF08kotonoha \u2265 0.3.1\uFF09",
     settingsCliCommandName: "CLI \u547D\u4EE4",
-    settingsCliCommandDesc: "kotonoha \u53EF\u6267\u884C\u6587\u4EF6\u8DEF\u5F84",
+    settingsCliCommandDesc: "kotonoha \u53EF\u6267\u884C\u6587\u4EF6\u8DEF\u5F84\uFF08\u4E0D\u5728 PATH \u65F6\u8BF7\u7528\u7EDD\u5BF9\u8DEF\u5F84\uFF09",
     settingsBtnTestVersion: "\u6D4B\u8BD5\u7248\u672C",
     settingsCliWorkdirName: "CLI \u5DE5\u4F5C\u76EE\u5F55",
-    settingsCliWorkdirDesc: "--path \u7684 Git \u4ED3\u5E93\u6839\u76EE\u5F55\uFF08\u7A7A = vault \u6587\u4EF6\u5939\uFF09",
+    settingsCliWorkdirDesc: "\u7528\u4F5C cwd / --path \u7684 vault \u6216\u9879\u76EE\u6839\u76EE\u5F55\uFF08\u7A7A = vault \u6587\u4EF6\u5939\uFF09",
     settingsCliWorkdirPlaceholder: "\uFF08vault \u8DEF\u5F84\uFF09",
-    settingsDatabaseUrlDesc: "\u53EF\u9009\uFF1B\u540E\u7EED DB \u76F8\u5173 CLI \u547D\u4EE4\u9700\u8981",
+    settingsDatabaseUrlDesc: "\u53EF\u9009\uFF1B\u4F5C\u4E3A CLI \u73AF\u5883\u53D8\u91CF\u4F20\u9012\u7ED9 DB \u76F8\u5173\u547D\u4EE4",
+    settingsCliPrincipalDesc: "\u53EF\u9009\uFF1B\u4F5C\u4E3A KOTONOHA_PRINCIPAL_ID \u4F20\u9012\u7ED9 CLI",
+    settingsCliProjectDesc: "\u53EF\u9009\uFF1B\u4F5C\u4E3A KOTONOHA_PROJECT_ID \u4F20\u9012\u7ED9 CLI",
     settingsGitModeName: "Git \u6A21\u5F0F",
     settingsGitModeDesc: "Git \u611F\u77E5\u4F46\u4E0D\u4FEE\u6539\u4ED3\u5E93\uFF08git-mode-spec\uFF09",
     settingsMetadataWriteModeName: "\u5143\u6570\u636E\u5199\u5165\u6A21\u5F0F",
@@ -720,7 +768,7 @@ var MSGS2 = {
     settingsTestBackendDesc: "mock / CLI \u7248\u672C / HTTP \u5065\u5EB7\u68C0\u67E5 + \u540E\u7AEF\u81EA\u52A8\u68C0\u6D4B",
     settingsBtnTestBackend: "\u8FD0\u884C\u8FDE\u63A5\u6D4B\u8BD5",
     cmdTestBackend: "\u6D4B\u8BD5 Kotonoha \u540E\u7AEF\u8FDE\u63A5",
-    noticeMockBackendOk: "Mock \u540E\u7AEF \u2014 \u65E0\u9700\u8FDC\u7A0B\u8FDE\u63A5",
+    noticeMockBackendOk: "Mock backend / test backend \u2014 \u65E0\u9700\u8FDC\u7A0B\u8FDE\u63A5",
     httpOrchestratorRdeSummary: "[http/orchestrator] RDE \u5BA1\u8BA1 \xB7 {path}",
     httpGatewaySummary: "[http/gateway] {operation} \xB7 {path}",
     httpLocalSummary: "[http/local] {operation} \xB7 {path}",
@@ -791,6 +839,77 @@ var DEFAULT_SETTINGS = {
 
 // src/settings/SettingsTab.ts
 var import_obsidian = require("obsidian");
+
+// src/settings/backendConnectionUx.ts
+function backendModeInfoKey(mode) {
+  switch (mode) {
+    case "mock":
+      return "settingsBackendMockInfo";
+    case "http":
+      return "settingsBackendHttpInfo";
+    case "cli":
+      return "settingsBackendCliInfo";
+  }
+}
+function httpStableCapabilityKey(backend) {
+  switch (backend) {
+    case "orchestrator":
+      return "settingsHttpStableOrchestrator";
+    case "gateway":
+      return "settingsHttpStableGateway";
+    default:
+      return "settingsHttpStableConsole";
+  }
+}
+function httpExperimentalCapabilityKey(backend) {
+  switch (backend) {
+    case "orchestrator":
+      return "settingsHttpExperimentalOrchestrator";
+    case "gateway":
+      return "settingsHttpExperimentalGateway";
+    default:
+      return "settingsHttpExperimentalConsole";
+  }
+}
+function httpShowsProposalExperimentalWarning(backend) {
+  return backend === "orchestrator" || backend === "console";
+}
+function formatHttpStableCapability(lang, backend) {
+  return consoleMsg(lang, httpStableCapabilityKey(backend));
+}
+function formatHttpExperimentalCapability(lang, backend) {
+  return consoleMsg(lang, httpExperimentalCapabilityKey(backend));
+}
+function formatHttpProbeNotice(lang, result) {
+  const lines = [
+    consoleMsg(lang, "noticeHttpOk", {
+      status: result.health,
+      backend: result.backend,
+      endpoint: result.endpoint
+    }),
+    consoleMsg(lang, "noticeHttpCapabilitiesStable", {
+      line: formatHttpStableCapability(lang, result.backend)
+    }),
+    consoleMsg(lang, "noticeHttpCapabilitiesExperimental", {
+      line: formatHttpExperimentalCapability(lang, result.backend)
+    })
+  ];
+  if (httpShowsProposalExperimentalWarning(result.backend)) {
+    lines.push(consoleMsg(lang, "settingsHttpProposalExperimentalWarning"));
+  }
+  return lines.join("\n");
+}
+function formatCliProbeNotice(lang, line, version) {
+  return [
+    consoleMsg(lang, "noticeCliVersionOk", { line, version }),
+    consoleMsg(lang, "settingsCliRuntimeWarning")
+  ].join("\n");
+}
+function formatMockProbeNotice(lang) {
+  return consoleMsg(lang, "noticeMockBackendOk");
+}
+
+// src/settings/SettingsTab.ts
 var LANG_LABEL = {
   ja: "ja",
   en: "en",
@@ -830,6 +949,10 @@ var KotonohaSettingsTab = class extends import_obsidian.PluginSettingTab {
         this.display();
       })
     );
+    containerEl.createEl("p", {
+      cls: "kotonoha-console-muted kotonoha-console-backend-info",
+      text: this.t(backendModeInfoKey(this.plugin.settings.backendMode))
+    });
     new import_obsidian.Setting(containerEl).setName(this.t("settingsTestBackendName")).setDesc(this.t("settingsTestBackendDesc")).addButton(
       (b) => b.setButtonText(this.t("settingsBtnTestBackend")).onClick(() => {
         void this.plugin.testBackendConnection();
@@ -837,6 +960,14 @@ var KotonohaSettingsTab = class extends import_obsidian.PluginSettingTab {
     );
     if (this.plugin.settings.backendMode === "http") {
       containerEl.createEl("h3", { text: this.t("settingsHttpSection") });
+      containerEl.createEl("p", {
+        cls: "kotonoha-console-muted",
+        text: this.t("settingsHttpEndpointPortNote")
+      });
+      containerEl.createEl("p", {
+        cls: "kotonoha-console-muted kotonoha-console-warn",
+        text: this.t("settingsHttpProposalExperimentalWarning")
+      });
       new import_obsidian.Setting(containerEl).setName(this.t("settingsHttpEndpointName")).setDesc(this.t("settingsHttpEndpointDesc")).addText(
         (t) => t.setPlaceholder(this.t("settingsHttpEndpointPlaceholder")).setValue(this.plugin.settings.httpEndpoint ?? "").onChange(async (v) => {
           this.plugin.settings.httpEndpoint = v;
@@ -854,6 +985,10 @@ var KotonohaSettingsTab = class extends import_obsidian.PluginSettingTab {
     }
     if (this.plugin.settings.backendMode === "cli") {
       containerEl.createEl("h3", { text: this.t("settingsCliSection") });
+      containerEl.createEl("p", {
+        cls: "kotonoha-console-muted kotonoha-console-warn",
+        text: this.t("settingsCliRuntimeWarning")
+      });
       new import_obsidian.Setting(containerEl).setName(this.t("settingsCliCommandName")).setDesc(this.t("settingsCliCommandDesc")).addText(
         (t) => t.setPlaceholder("kotonoha").setValue(this.plugin.settings.cliCommand ?? "kotonoha").onChange(async (v) => {
           this.plugin.settings.cliCommand = v;
@@ -875,14 +1010,14 @@ var KotonohaSettingsTab = class extends import_obsidian.PluginSettingTab {
           this.plugin.refreshClient();
         })
       );
-      new import_obsidian.Setting(containerEl).setName("KOTONOHA_PRINCIPAL_ID").addText(
+      new import_obsidian.Setting(containerEl).setName("KOTONOHA_PRINCIPAL_ID").setDesc(this.t("settingsCliPrincipalDesc")).addText(
         (t) => t.setPlaceholder("UUID").setValue(this.plugin.settings.principalId ?? "").onChange(async (v) => {
           this.plugin.settings.principalId = v;
           await this.plugin.saveSettings();
           this.plugin.refreshClient();
         })
       );
-      new import_obsidian.Setting(containerEl).setName("KOTONOHA_PROJECT_ID").addText(
+      new import_obsidian.Setting(containerEl).setName("KOTONOHA_PROJECT_ID").setDesc(this.t("settingsCliProjectDesc")).addText(
         (t) => t.setPlaceholder("UUID").setValue(this.plugin.settings.projectId ?? "").onChange(async (v) => {
           this.plugin.settings.projectId = v;
           await this.plugin.saveSettings();
@@ -3545,7 +3680,7 @@ var KotonohaConsolePlugin = class extends import_obsidian5.Plugin {
     const lang = this.settings.defaultLanguage;
     switch (this.settings.backendMode) {
       case "mock":
-        new import_obsidian5.Notice(consoleMsg(lang, "noticeMockBackendOk"));
+        new import_obsidian5.Notice(formatMockProbeNotice(lang));
         return;
       case "cli":
         await this.testCliVersion();
@@ -3565,13 +3700,7 @@ var KotonohaConsolePlugin = class extends import_obsidian5.Plugin {
         await this.saveSettings();
         this.refreshClient();
       }
-      new import_obsidian5.Notice(
-        consoleMsg(lang, "noticeHttpOk", {
-          status: result.health,
-          backend: result.backend,
-          endpoint: result.endpoint
-        })
-      );
+      new import_obsidian5.Notice(formatHttpProbeNotice(lang, result));
     } catch (e) {
       const detail = e instanceof HttpProbeError ? e.message : e instanceof Error ? e.message : String(e);
       new import_obsidian5.Notice(
@@ -3595,12 +3724,7 @@ var KotonohaConsolePlugin = class extends import_obsidian5.Plugin {
       });
       const check = checkKotonohaCliVersion(result);
       if (check.ok) {
-        new import_obsidian5.Notice(
-          consoleMsg(lang, "noticeCliVersionOk", {
-            line: check.line,
-            version: check.version
-          })
-        );
+        new import_obsidian5.Notice(formatCliProbeNotice(lang, check.line, check.version));
         return;
       }
       const msgKey = check.reason === "too_old" ? "noticeCliVersionTooOld" : check.reason === "unparseable" ? "noticeCliVersionUnparseable" : "noticeCliError";
