@@ -5,6 +5,12 @@ import type {
   Proposal,
   RdeAudit,
 } from "../domain/types";
+import {
+  logSidecarValidation,
+  validateAuditSidecar,
+  validateProposalSidecar,
+  validateReviewSidecar,
+} from "../sidecar/validateSidecar";
 
 const ROOT = ".kotonoha";
 const PROPOSALS = `${ROOT}/proposals`;
@@ -36,6 +42,7 @@ export class SidecarStore {
       summary: proposal.summary,
       decision: { status: "pending" as const },
     };
+    logSidecarValidation("proposal", path, validateProposalSidecar(body));
     await this.app.vault.adapter.write(path, JSON.stringify(body, null, 2));
   }
 
@@ -63,6 +70,7 @@ export class SidecarStore {
       rde: audit,
       decision: { status: "pending" as const },
     };
+    logSidecarValidation("audit", path, validateAuditSidecar(body));
     await this.app.vault.adapter.write(path, JSON.stringify(body, null, 2));
   }
 
@@ -91,6 +99,7 @@ export class SidecarStore {
       rdeRecommended: audit?.recommendedDecision,
       rdeCategories: audit?.categories,
     };
+    logSidecarValidation("review", path, validateReviewSidecar(body));
     await this.app.vault.adapter.write(path, JSON.stringify(body, null, 2));
     await this.patchSidecarDecision(proposal.id, decision.decision);
   }
