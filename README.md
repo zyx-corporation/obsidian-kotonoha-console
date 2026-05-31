@@ -2,7 +2,7 @@
 
 Kotonoha UI plugin for Obsidian (proposal · RDE audit · human approval).
 
-**Docs:** [`docs/install.ja.md`](docs/install.ja.md) · [`docs/architecture.ja.md`](docs/architecture.ja.md) · [`docs/git-mode-spec.ja.md`](docs/git-mode-spec.ja.md) · [`docs/cli-runtime-compatibility.ja.md`](docs/cli-runtime-compatibility.ja.md) · [`docs/v0.3-dogfood-record.ja.md`](docs/v0.3-dogfood-record.ja.md)
+**Docs:** [`docs/install.ja.md`](docs/install.ja.md) · [`docs/backend-setup.ja.md`](docs/backend-setup.ja.md) · [`docs/architecture.ja.md`](docs/architecture.ja.md) · [`docs/git-mode-spec.ja.md`](docs/git-mode-spec.ja.md) · [`docs/cli-runtime-compatibility.ja.md`](docs/cli-runtime-compatibility.ja.md) · [`docs/v0.3-dogfood-record.ja.md`](docs/v0.3-dogfood-record.ja.md)
 
 **Build:** see [`IMPLEMENTATION.md`](IMPLEMENTATION.md).
 
@@ -19,7 +19,22 @@ Manual install from [GitHub Release v0.3.1](https://github.com/zyx-corporation/o
 
 Download `kotonoha-console-v0.3.1.zip`, unzip into `.obsidian/plugins/`, then enable the plugin (turn off Restricted mode first). v0.3.0 zip uses folder name `obsidian-kotonoha-console/` — rename to `kotonoha-console`.
 
-Full steps: [`docs/install.ja.md`](docs/install.ja.md) · [kotonoha-docs tutorial](https://github.com/zyx-corporation/kotonoha-docs/blob/main/ja/manual/install_obsidian_kotonoha_console.md)
+Full steps: [`docs/install.ja.md`](docs/install.ja.md) · [`docs/backend-setup.ja.md`](docs/backend-setup.ja.md) · [kotonoha-docs tutorial](https://github.com/zyx-corporation/kotonoha-docs/blob/main/ja/manual/install_obsidian_kotonoha_console.md)
+
+## Backend setup
+
+This plugin is the Obsidian UI. Choose a backend mode:
+
+| Backend | Required component | Use case |
+| --- | --- | --- |
+| `mock` | none | UI / dev smoke test |
+| `cli` | [`kotonoha-cli >= 0.3.1`](https://github.com/zyx-corporation/kotonoha-docs/blob/main/ja/tutorials/install_kotonoha_cli.md) | local-first RDE audit and sidecar workflow |
+| `http` | running [`kotonoha-orchestrator`](https://github.com/zyx-corporation/kotonoha-orchestrator) | LLM proposal generation; `/v1/rde/evaluate` stable, `/v1/proposals/generate` experimental |
+
+For day-to-day local-first use, start with **CLI** backend.  
+For LLM summarize / rewrite / expand, use **HTTP orchestrator** backend.
+
+Full guide: [`docs/backend-setup.ja.md`](docs/backend-setup.ja.md)
 
 ## Current status
 

@@ -11,3 +11,4 @@
 - [ ] Release zip uses `kotonoha-console/` folder name
 - [ ] GitHub Release v0.3.1 created
 - [ ] Release Train doc updated (kotonoha-docs)
+- [ ] Backend setup docs (`docs/backend-setup.ja.md`)
