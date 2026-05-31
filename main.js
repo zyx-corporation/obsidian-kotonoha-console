@@ -2438,17 +2438,51 @@ var GenerationRequestService = class {
   }
 };
 
+// src/services/normalizeProposalText.ts
+var UNWRAP_LANGS = /* @__PURE__ */ new Set(["", "markdown", "md", "text"]);
+var OUTER_FENCE = /^```([a-zA-Z0-9_-]*)\s*\r?\n([\s\S]*)\r?\n```\s*$/;
+function unwrapSingleMarkdownFence(text) {
+  const trimmed = text.trim();
+  const match = trimmed.match(OUTER_FENCE);
+  if (!match) return text;
+  const lang = match[1].toLowerCase();
+  if (!UNWRAP_LANGS.has(lang)) return text;
+  return match[2];
+}
+function normalizeProposalText(proposedText) {
+  return unwrapSingleMarkdownFence(proposedText);
+}
+
 // src/services/ProposalService.ts
+function withNormalizedProposal(proposal) {
+  const proposedText = normalizeProposalText(proposal.proposedText);
+  if (proposedText === proposal.proposedText) return proposal;
+  return { ...proposal, proposedText };
+}
 var ProposalService = class {
   constructor(client) {
     this.client = client;
   }
   async generate(request) {
     const result = await this.client.generate(request);
-    return { proposal: result.proposal, audit: result.audit };
+    const proposal = withNormalizedProposal(result.proposal);
+    let audit = result.audit;
+    if (proposal.proposedText !== result.proposal.proposedText && result.audit) {
+      const reaudit = await this.client.auditProposal(
+        request,
+        proposal.id,
+        proposal.proposedText
+      );
+      audit = reaudit.audit;
+    }
+    return { proposal, audit };
   }
   async auditProposal(request, proposalId, proposalText) {
-    return this.client.auditProposal(request, proposalId, proposalText);
+    return this.client.auditProposal(
+      request,
+      proposalId,
+      normalizeProposalText(proposalText)
+    );
   }
 };
 
