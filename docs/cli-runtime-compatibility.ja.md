@@ -36,7 +36,7 @@ Obsidian Console は Git の commit / push 等を実行しない。詳細は [`g
 ## CLI 以外の backend
 
 - **mock:** ローカル guardrails のみ。`kotonoha` 不要。
-- **http:** 監査省略時および再監査で orchestrator `POST /v1/rde/evaluate`（プラグイン v0.2.13 以降）。
+- **http:** 監査省略時および再監査で orchestrator `POST /v1/rde/evaluate`（プラグイン v0.2.13 以降）。安定/実験区分と fallback: [orchestrator API 境界](https://github.com/zyx-corporation/kotonoha-spec/blob/main/docs/orchestrator-api-stability-boundary.md)。
 
 dogfood では CLI 未インストールでも http / mock で進められる。
 
