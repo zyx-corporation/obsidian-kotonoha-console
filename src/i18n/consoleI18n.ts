@@ -85,14 +85,39 @@ const MSGS = {
     settingsBackendModeName: "Backend mode",
     settingsBackendModeDesc:
       "cli = kotonoha CLI; RDE audit works without Git; context export only when gitMode ≠ off",
+    settingsBackendMockInfo:
+      "Backend: mock / test backend\nNo remote connection is required.\nOutput is for UI/dev testing only.",
+    settingsBackendHttpInfo:
+      "Backend: http\nAuto-detects orchestrator / gateway / console proxy.\nStable adapter: /v1/rde/evaluate when orchestrator is detected.\nExperimental: /v1/proposals/generate.",
+    settingsBackendCliInfo:
+      "Backend: cli / first stable runtime\nRequires kotonoha >= 0.3.1.\nCLI is runtime, not the normative specification.",
+    settingsCliRuntimeWarning:
+      "CLI is the first stable runtime — not the normative kotonoha-spec source.",
+    settingsHttpStableOrchestrator: "/v1/rde/evaluate (stable adapter)",
+    settingsHttpStableGateway: "tool / context export where supported",
+    settingsHttpStableConsole: "health / console proxy detection",
+    settingsHttpExperimentalOrchestrator: "/v1/proposals/generate (experimental / best-effort)",
+    settingsHttpExperimentalGateway:
+      "generative rewrite via external orchestrator; RDE: local rule-based guardrails only",
+    settingsHttpExperimentalConsole:
+      "proposal generation may be available; RDE may fall back to local guardrails",
+    settingsHttpProposalExperimentalWarning:
+      "/v1/proposals/generate is experimental and best-effort. Do not treat generated proposals as accepted lineage.",
+    settingsHttpEndpointPortNote:
+      "Default example: http://127.0.0.1:8000 — dogfood/local dev may use http://127.0.0.1:8001.",
+    noticeHttpCapabilitiesStable: "Stable: {line}",
+    noticeHttpCapabilitiesExperimental: "Experimental: {line}",
     settingsCliSection: "CLI (kotonoha ≥ 0.3.1)",
     settingsCliCommandName: "CLI command",
-    settingsCliCommandDesc: "Path to kotonoha binary",
+    settingsCliCommandDesc: "Path to the kotonoha binary (absolute path if not on PATH)",
     settingsBtnTestVersion: "Test version",
     settingsCliWorkdirName: "CLI workdir",
-    settingsCliWorkdirDesc: "Git repo root for --path (empty = vault folder)",
+    settingsCliWorkdirDesc:
+      "Vault path or project root used as cwd / --path (empty = vault folder)",
     settingsCliWorkdirPlaceholder: "(vault path)",
-    settingsDatabaseUrlDesc: "Optional; required for DB-backed CLI commands later",
+    settingsDatabaseUrlDesc: "Optional; passed to CLI env for DB-backed commands",
+    settingsCliPrincipalDesc: "Optional; passed to CLI as KOTONOHA_PRINCIPAL_ID",
+    settingsCliProjectDesc: "Optional; passed to CLI as KOTONOHA_PROJECT_ID",
     settingsGitModeName: "Git mode",
     settingsGitModeDesc: "Git-aware but never mutates the repo (git-mode-spec)",
     settingsMetadataWriteModeName: "Metadata write mode",
@@ -144,7 +169,8 @@ const MSGS = {
     settingsTestBackendDesc: "mock / CLI version / HTTP health + backend auto-detect",
     settingsBtnTestBackend: "Run connection test",
     cmdTestBackend: "Test Kotonoha backend connection",
-    noticeMockBackendOk: "Mock backend — no remote connection required",
+    noticeMockBackendOk:
+      "Mock backend / test backend — no remote connection required",
     httpOrchestratorRdeSummary: "[http/orchestrator] RDE audit · {path}",
     httpGatewaySummary: "[http/gateway] {operation} · {path}",
     httpLocalSummary: "[http/local] {operation} · {path}",
@@ -234,14 +260,40 @@ const MSGS = {
     settingsBackendModeName: "バックエンドモード",
     settingsBackendModeDesc:
       "cli = kotonoha CLI。RDE 監査は Git なしで動作。context export は gitMode ≠ off のときのみ",
+    settingsBackendMockInfo:
+      "Backend: mock / test backend\nリモート接続は不要です。\n出力は UI / 開発テスト用です。",
+    settingsBackendHttpInfo:
+      "Backend: http\norchestrator / gateway / console proxy を自動検出します。\nStable adapter: orchestrator 検出時の /v1/rde/evaluate。\nExperimental: /v1/proposals/generate。",
+    settingsBackendCliInfo:
+      "Backend: cli / first stable runtime\nkotonoha >= 0.3.1 が必要です。\nCLI は runtime であり、仕様正本ではありません。",
+    settingsCliRuntimeWarning:
+      "CLI は first stable runtime です — kotonoha-spec の正本ではありません。",
+    settingsHttpStableOrchestrator: "/v1/rde/evaluate（stable adapter）",
+    settingsHttpStableGateway: "tool / context export（対応時）",
+    settingsHttpStableConsole: "health / console proxy 検出",
+    settingsHttpExperimentalOrchestrator:
+      "/v1/proposals/generate（experimental / best-effort）",
+    settingsHttpExperimentalGateway:
+      "生成系 rewrite は外部 orchestrator 経由；RDE は local rule-based guardrails のみ",
+    settingsHttpExperimentalConsole:
+      "proposal 生成が利用可能な場合あり；RDE は local guardrails にフォールバック可",
+    settingsHttpProposalExperimentalWarning:
+      "/v1/proposals/generate は experimental / best-effort です。生成 proposal を承認済み lineage として扱ってはいけません。",
+    settingsHttpEndpointPortNote:
+      "既定例: http://127.0.0.1:8000 — dogfood / local dev では http://127.0.0.1:8001 を使う場合があります。",
+    noticeHttpCapabilitiesStable: "Stable: {line}",
+    noticeHttpCapabilitiesExperimental: "Experimental: {line}",
     settingsCliSection: "CLI（kotonoha ≥ 0.3.1）",
     settingsCliCommandName: "CLI コマンド",
-    settingsCliCommandDesc: "kotonoha バイナリのパス",
+    settingsCliCommandDesc: "kotonoha バイナリのパス（PATH に無い場合は絶対パス）",
     settingsBtnTestVersion: "バージョン確認",
     settingsCliWorkdirName: "CLI 作業ディレクトリ",
-    settingsCliWorkdirDesc: "--path 用 Git リポジトリルート（空 = vault フォルダ）",
+    settingsCliWorkdirDesc:
+      "cwd / --path に使う vault またはプロジェクトルート（空 = vault フォルダ）",
     settingsCliWorkdirPlaceholder: "（vault パス）",
-    settingsDatabaseUrlDesc: "任意。将来の DB 連携 CLI コマンドで必要",
+    settingsDatabaseUrlDesc: "任意。CLI 環境変数として DB 連携コマンドに渡されます",
+    settingsCliPrincipalDesc: "任意。CLI 環境変数 KOTONOHA_PRINCIPAL_ID として渡されます",
+    settingsCliProjectDesc: "任意。CLI 環境変数 KOTONOHA_PROJECT_ID として渡されます",
     settingsGitModeName: "Git モード",
     settingsGitModeDesc: "Git 連携（リポジトリは変更しません — git-mode-spec）",
     settingsMetadataWriteModeName: "メタデータ書き込み",
@@ -293,7 +345,8 @@ const MSGS = {
     settingsTestBackendDesc: "mock / CLI バージョン / HTTP ヘルス + バックエンド自動検出",
     settingsBtnTestBackend: "接続テストを実行",
     cmdTestBackend: "Kotonoha バックエンド接続テスト",
-    noticeMockBackendOk: "Mock バックエンド — リモート接続は不要です",
+    noticeMockBackendOk:
+      "Mock backend / test backend — リモート接続は不要です",
     httpOrchestratorRdeSummary: "[http/orchestrator] RDE 監査 · {path}",
     httpGatewaySummary: "[http/gateway] {operation} · {path}",
     httpLocalSummary: "[http/local] {operation} · {path}",
@@ -383,14 +436,39 @@ const MSGS = {
     settingsBackendModeName: "后端模式",
     settingsBackendModeDesc:
       "cli = kotonoha CLI；RDE 审计无需 Git；context export 仅在 gitMode ≠ off 时可用",
+    settingsBackendMockInfo:
+      "Backend: mock / test backend\n无需远程连接。\n输出仅用于 UI/开发测试。",
+    settingsBackendHttpInfo:
+      "Backend: http\n自动检测 orchestrator / gateway / console proxy。\nStable adapter: 检测到 orchestrator 时的 /v1/rde/evaluate。\nExperimental: /v1/proposals/generate。",
+    settingsBackendCliInfo:
+      "Backend: cli / first stable runtime\n需要 kotonoha >= 0.3.1。\nCLI 是 runtime，不是规范正本。",
+    settingsCliRuntimeWarning:
+      "CLI 是 first stable runtime — 不是 kotonoha-spec 规范正本。",
+    settingsHttpStableOrchestrator: "/v1/rde/evaluate（stable adapter）",
+    settingsHttpStableGateway: "tool / context export（如支持）",
+    settingsHttpStableConsole: "health / console proxy 检测",
+    settingsHttpExperimentalOrchestrator:
+      "/v1/proposals/generate（experimental / best-effort）",
+    settingsHttpExperimentalGateway:
+      "生成式 rewrite 需外部 orchestrator；RDE 仅 local rule-based guardrails",
+    settingsHttpExperimentalConsole:
+      "可能提供 proposal 生成；RDE 可能回退到 local guardrails",
+    settingsHttpProposalExperimentalWarning:
+      "/v1/proposals/generate 为 experimental / best-effort。勿将生成 proposal 视为已接受 lineage。",
+    settingsHttpEndpointPortNote:
+      "默认示例: http://127.0.0.1:8000 — dogfood/本地开发可能使用 http://127.0.0.1:8001。",
+    noticeHttpCapabilitiesStable: "Stable: {line}",
+    noticeHttpCapabilitiesExperimental: "Experimental: {line}",
     settingsCliSection: "CLI（kotonoha ≥ 0.3.1）",
     settingsCliCommandName: "CLI 命令",
-    settingsCliCommandDesc: "kotonoha 可执行文件路径",
+    settingsCliCommandDesc: "kotonoha 可执行文件路径（不在 PATH 时请用绝对路径）",
     settingsBtnTestVersion: "测试版本",
     settingsCliWorkdirName: "CLI 工作目录",
-    settingsCliWorkdirDesc: "--path 的 Git 仓库根目录（空 = vault 文件夹）",
+    settingsCliWorkdirDesc: "用作 cwd / --path 的 vault 或项目根目录（空 = vault 文件夹）",
     settingsCliWorkdirPlaceholder: "（vault 路径）",
-    settingsDatabaseUrlDesc: "可选；后续 DB 相关 CLI 命令需要",
+    settingsDatabaseUrlDesc: "可选；作为 CLI 环境变量传递给 DB 相关命令",
+    settingsCliPrincipalDesc: "可选；作为 KOTONOHA_PRINCIPAL_ID 传递给 CLI",
+    settingsCliProjectDesc: "可选；作为 KOTONOHA_PROJECT_ID 传递给 CLI",
     settingsGitModeName: "Git 模式",
     settingsGitModeDesc: "Git 感知但不修改仓库（git-mode-spec）",
     settingsMetadataWriteModeName: "元数据写入模式",
@@ -442,7 +520,7 @@ const MSGS = {
     settingsTestBackendDesc: "mock / CLI 版本 / HTTP 健康检查 + 后端自动检测",
     settingsBtnTestBackend: "运行连接测试",
     cmdTestBackend: "测试 Kotonoha 后端连接",
-    noticeMockBackendOk: "Mock 后端 — 无需远程连接",
+    noticeMockBackendOk: "Mock backend / test backend — 无需远程连接",
     httpOrchestratorRdeSummary: "[http/orchestrator] RDE 审计 · {path}",
     httpGatewaySummary: "[http/gateway] {operation} · {path}",
     httpLocalSummary: "[http/local] {operation} · {path}",

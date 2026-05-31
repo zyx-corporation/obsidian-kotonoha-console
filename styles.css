@@ -37,6 +37,11 @@
   font-size: var(--font-ui-smaller);
 }
 
+.kotonoha-console-backend-info {
+  white-space: pre-line;
+  margin: 0.5rem 0 1rem;
+}
+
 .kotonoha-console-muted {
   color: var(--text-muted);
 }

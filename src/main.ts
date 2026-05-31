@@ -28,6 +28,11 @@ import { SidecarStore } from "./services/SidecarStore";
 import { HttpProbeError, probeHttpBackend } from "./client/http/probeHttpBackend";
 import { createKotonohaClient } from "./client/createClient";
 import type { KotonohaClient } from "./client/KotonohaClient";
+import {
+  formatCliProbeNotice,
+  formatHttpProbeNotice,
+  formatMockProbeNotice,
+} from "./settings/backendConnectionUx";
 
 export default class KotonohaConsolePlugin extends Plugin {
   settings: KotonohaConsoleSettings = { ...DEFAULT_SETTINGS };
@@ -166,7 +171,7 @@ export default class KotonohaConsolePlugin extends Plugin {
     const lang = this.settings.defaultLanguage;
     switch (this.settings.backendMode) {
       case "mock":
-        new Notice(consoleMsg(lang, "noticeMockBackendOk"));
+        new Notice(formatMockProbeNotice(lang));
         return;
       case "cli":
         await this.testCliVersion();
@@ -187,13 +192,7 @@ export default class KotonohaConsolePlugin extends Plugin {
         await this.saveSettings();
         this.refreshClient();
       }
-      new Notice(
-        consoleMsg(lang, "noticeHttpOk", {
-          status: result.health,
-          backend: result.backend,
-          endpoint: result.endpoint,
-        }),
-      );
+      new Notice(formatHttpProbeNotice(lang, result));
     } catch (e) {
       const detail =
         e instanceof HttpProbeError
@@ -224,12 +223,7 @@ export default class KotonohaConsolePlugin extends Plugin {
       });
       const check = checkKotonohaCliVersion(result);
       if (check.ok) {
-        new Notice(
-          consoleMsg(lang, "noticeCliVersionOk", {
-            line: check.line,
-            version: check.version,
-          }),
-        );
+        new Notice(formatCliProbeNotice(lang, check.line, check.version));
         return;
       }
       const msgKey =

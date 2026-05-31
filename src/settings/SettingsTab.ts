@@ -3,6 +3,7 @@ import type KotonohaConsolePlugin from "../main";
 import type { BackendMode, GitMode, MetadataWriteMode } from "../domain/types";
 import { consoleMsg } from "../i18n/consoleI18n";
 import type { RdeLang } from "../rde/rdeI18n";
+import { backendModeInfoKey } from "./backendConnectionUx";
 
 const LANG_LABEL: Record<RdeLang, string> = {
   ja: "ja",
@@ -55,6 +56,11 @@ export class KotonohaSettingsTab extends PluginSettingTab {
           }),
       );
 
+    containerEl.createEl("p", {
+      cls: "kotonoha-console-muted kotonoha-console-backend-info",
+      text: this.t(backendModeInfoKey(this.plugin.settings.backendMode)),
+    });
+
     new Setting(containerEl)
       .setName(this.t("settingsTestBackendName"))
       .setDesc(this.t("settingsTestBackendDesc"))
@@ -66,6 +72,16 @@ export class KotonohaSettingsTab extends PluginSettingTab {
 
     if (this.plugin.settings.backendMode === "http") {
       containerEl.createEl("h3", { text: this.t("settingsHttpSection") });
+
+      containerEl.createEl("p", {
+        cls: "kotonoha-console-muted",
+        text: this.t("settingsHttpEndpointPortNote"),
+      });
+
+      containerEl.createEl("p", {
+        cls: "kotonoha-console-muted kotonoha-console-warn",
+        text: this.t("settingsHttpProposalExperimentalWarning"),
+      });
 
       new Setting(containerEl)
         .setName(this.t("settingsHttpEndpointName"))
@@ -98,6 +114,11 @@ export class KotonohaSettingsTab extends PluginSettingTab {
 
     if (this.plugin.settings.backendMode === "cli") {
       containerEl.createEl("h3", { text: this.t("settingsCliSection") });
+
+      containerEl.createEl("p", {
+        cls: "kotonoha-console-muted kotonoha-console-warn",
+        text: this.t("settingsCliRuntimeWarning"),
+      });
 
       new Setting(containerEl)
         .setName(this.t("settingsCliCommandName"))
@@ -143,6 +164,7 @@ export class KotonohaSettingsTab extends PluginSettingTab {
 
       new Setting(containerEl)
         .setName("KOTONOHA_PRINCIPAL_ID")
+        .setDesc(this.t("settingsCliPrincipalDesc"))
         .addText((t) =>
           t
             .setPlaceholder("UUID")
@@ -156,6 +178,7 @@ export class KotonohaSettingsTab extends PluginSettingTab {
 
       new Setting(containerEl)
         .setName("KOTONOHA_PROJECT_ID")
+        .setDesc(this.t("settingsCliProjectDesc"))
         .addText((t) =>
           t
             .setPlaceholder("UUID")
