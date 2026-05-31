@@ -14,4 +14,4 @@
 - [ ] Manual CLI backend smoke test
 - [ ] Manual Note I/O smoke test
 - [ ] PR merged
-- [ ] GitHub Release / tag created after merge
+- [ ] Release zip folder renamed to `kotonoha-console` in install docs (manifest id)

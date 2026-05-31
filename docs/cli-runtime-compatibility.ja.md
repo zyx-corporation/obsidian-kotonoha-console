@@ -50,6 +50,7 @@ CLI は first stable runtime であり、仕様正本ではない。監査カテ
 
 ## 関連
 
-- [`README.md`](../README.md) — クイックスタート
+- [`docs/install.ja.md`](install.ja.md) — Release からの手動インストール
+- [`README.md`](../README.md) — 現在地と境界
 - [`dogfood-acceptance.ja.md`](dogfood-acceptance.ja.md) — 受け入れチェックリスト
 - [`IMPLEMENTATION.md`](../IMPLEMENTATION.md) — ビルドと dev-vault
