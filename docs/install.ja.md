@@ -1,6 +1,6 @@
 # Obsidian Kotonoha Console — インストール
 
-**プラグイン:** `obsidian-kotonoha-console` v0.3.0  
+**プラグイン:** `obsidian-kotonoha-console` v0.3.1  
 **manifest id:** `kotonoha-console`  
 **English:** [`install.md`](install.md)
 
@@ -21,12 +21,14 @@
 
 最新 Release: [obsidian-kotonoha-console Releases](https://github.com/zyx-corporation/obsidian-kotonoha-console/releases)
 
-v0.3.0 以降、次のいずれかで入手できます。
+v0.3.1 以降、次のいずれかで入手できます。
 
 | 方法 | 資産 |
 | --- | --- |
-| **zip（推奨）** | `obsidian-kotonoha-console-v0.3.0.zip` |
+| **zip（推奨）** | `kotonoha-console-v0.3.1.zip` |
 | 個別ファイル | `main.js`, `manifest.json`, `styles.css` |
+
+v0.3.0 の zip（`obsidian-kotonoha-console-v0.3.0.zip`）も利用可能ですが、展開後にフォルダ名を `kotonoha-console` へリネームしてください。
 
 ---
 
@@ -41,9 +43,18 @@ v0.3.0 以降、次のいずれかで入手できます。
 └── styles.css
 ```
 
-### zip から入れる場合
+### zip から入れる場合（v0.3.1+）
 
-Release zip 内のフォルダ名は `obsidian-kotonoha-console/` です。**配置時は `kotonoha-console` にリネーム**してください。
+Release zip 内のフォルダ名は **`kotonoha-console/`** です。そのまま配置できます。
+
+```bash
+cd /path/to/your-vault/.obsidian/plugins
+unzip ~/Downloads/kotonoha-console-v0.3.1.zip
+```
+
+### zip から入れる場合（v0.3.0）
+
+フォルダ名は `obsidian-kotonoha-console/` です。**配置時は `kotonoha-console` にリネーム**してください。
 
 ```bash
 cd /path/to/your-vault/.obsidian/plugins

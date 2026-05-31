@@ -1,6 +1,6 @@
 # Obsidian Kotonoha Console — Installation
 
-**Plugin:** `obsidian-kotonoha-console` v0.3.0  
+**Plugin:** `obsidian-kotonoha-console` v0.3.1  
 **Manifest id:** `kotonoha-console`  
 **Japanese:** [`install.ja.md`](install.ja.md)
 
@@ -21,12 +21,14 @@
 
 Latest release: [obsidian-kotonoha-console Releases](https://github.com/zyx-corporation/obsidian-kotonoha-console/releases)
 
-Use either:
+From v0.3.1:
 
 | Method | Asset |
 | --- | --- |
-| **Zip (recommended)** | `obsidian-kotonoha-console-v0.3.0.zip` |
+| **Zip (recommended)** | `kotonoha-console-v0.3.1.zip` |
 | Individual files | `main.js`, `manifest.json`, `styles.css` |
+
+v0.3.0 zip (`obsidian-kotonoha-console-v0.3.0.zip`) requires renaming the folder to `kotonoha-console`.
 
 ---
 
@@ -41,15 +43,18 @@ Use either:
 └── styles.css
 ```
 
-### From zip
+### From zip (v0.3.1+)
 
-The zip folder is named `obsidian-kotonoha-console/`. **Rename it to `kotonoha-console`** when placing under `.obsidian/plugins/`.
+The zip contains `kotonoha-console/` — place it directly under `.obsidian/plugins/`.
 
 ```bash
 cd /path/to/your-vault/.obsidian/plugins
-unzip ~/Downloads/obsidian-kotonoha-console-v0.3.0.zip
-mv obsidian-kotonoha-console kotonoha-console
+unzip ~/Downloads/kotonoha-console-v0.3.1.zip
 ```
+
+### From zip (v0.3.0)
+
+Rename `obsidian-kotonoha-console/` to `kotonoha-console` after unzip.
 
 ### From individual assets
 
