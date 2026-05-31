@@ -12,6 +12,10 @@
 
 - Release zip folder name is `kotonoha-console/` (manifest id).
 
+### Documentation
+
+- Add [`docs/backend-setup.ja.md`](docs/backend-setup.ja.md) — Mock / CLI / HTTP orchestrator setup paths for practical use.
+
 ## v0.3.0 — First UI hardening
 
 ### Added
@@ -45,3 +49,7 @@
 - Advanced partial apply UX is deferred to v0.4.
 - Git context export integration is deferred to v0.4.
 - Sidecar ↔ CLI/M6 export correlation is deferred to v0.4.
+
+### Backend setup (added in v0.3.1 docs)
+
+The plugin is the Obsidian UI only. See [`docs/backend-setup.ja.md`](docs/backend-setup.ja.md) for Mock / CLI / HTTP orchestrator modes.

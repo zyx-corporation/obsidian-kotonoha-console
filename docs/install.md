@@ -2,7 +2,8 @@
 
 **Plugin:** `obsidian-kotonoha-console` v0.3.1  
 **Manifest id:** `kotonoha-console`  
-**Japanese:** [`install.ja.md`](install.ja.md)
+**Japanese:** [`install.ja.md`](install.ja.md)  
+**Backend setup:** [`backend-setup.md`](backend-setup.md)
 
 ---
 
@@ -13,9 +14,19 @@
 | Obsidian | **1.4.0+** (`minAppVersion` in `manifest.json`) |
 | Distribution | GitHub Release binary assets (not yet in Community plugins catalog) |
 | CLI backend | [`kotonoha >= 0.3.1`](https://github.com/zyx-corporation/kotonoha-docs/blob/main/en/tutorials/install_kotonoha_cli.md) |
-| mock / http backend | No CLI required |
+| mock / http backend | No CLI (HTTP proposals need [orchestrator](backend-setup.md#mode-c-http-orchestrator) |
 
 ---
+
+## Quick start
+
+| Goal | Steps |
+| --- | --- |
+| UI only | Install plugin → enable → Backend `mock` |
+| CLI RDE audit | Plugin + [CLI >= 0.3.1](https://github.com/zyx-corporation/kotonoha-docs/blob/main/en/tutorials/install_kotonoha_cli.md) → Backend `cli` |
+| LLM summarize | Plugin + [start orchestrator](backend-setup.md#mode-c-http-orchestrator) → Backend `http` |
+
+See [`backend-setup.md`](backend-setup.md).
 
 ## 1. Download release assets
 

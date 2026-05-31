@@ -2,7 +2,8 @@
 
 **プラグイン:** `obsidian-kotonoha-console` v0.3.1  
 **manifest id:** `kotonoha-console`  
-**English:** [`install.md`](install.md)
+**English:** [`install.md`](install.md)  
+**Backend setup:** [`backend-setup.ja.md`](backend-setup.ja.md)（Mock / CLI / HTTP orchestrator）
 
 ---
 
@@ -13,9 +14,19 @@
 | Obsidian | **1.4.0+**（`manifest.json` の `minAppVersion`） |
 | 配布形態 | GitHub Release のバイナリ資産（Community plugins 未掲載） |
 | CLI backend を使う場合 | [`kotonoha >= 0.3.1`](https://github.com/zyx-corporation/kotonoha-docs/blob/main/ja/tutorials/install_kotonoha_cli.md) |
-| mock / http backend | CLI 不要 |
+| mock / http backend | CLI 不要（HTTP 要約には [orchestrator](backend-setup.ja.md#mode-c-http-orchestrator-backend) 起動が必要） |
 
 ---
+
+## 最短手順
+
+| 目的 | 手順 |
+| --- | --- |
+| UI 確認だけ | プラグイン配置 → 有効化 → Backend `mock` |
+| CLI で RDE 監査 | プラグイン + [`kotonoha >= 0.3.1`](https://github.com/zyx-corporation/kotonoha-docs/blob/main/ja/tutorials/install_kotonoha_cli.md) → Backend `cli` |
+| LLM 要約・拡張 | プラグイン + [orchestrator 起動](backend-setup.ja.md#mode-c-http-orchestrator-backend) → Backend `http` |
+
+詳細: [`backend-setup.ja.md`](backend-setup.ja.md)
 
 ## 1. Release 資産を取得する
 
@@ -87,7 +98,9 @@ mv obsidian-kotonoha-console kotonoha-console
 | sidecarMode | on（`.kotonoha/` に記録） |
 | gitMode | `off` または `passive-observing` |
 
-CLI backend を使う場合は、先に [CLI インストール](https://github.com/zyx-corporation/kotonoha-docs/blob/main/ja/tutorials/install_kotonoha_cli.md) を完了し、Settings で `kotonoha` バイナリパスを指定してください。詳細: [`cli-runtime-compatibility.ja.md`](cli-runtime-compatibility.ja.md)
+CLI backend を使う場合は、先に [CLI インストール](https://github.com/zyx-corporation/kotonoha-docs/blob/main/ja/tutorials/install_kotonoha_cli.md) を完了し、Settings で `kotonoha` バイナリパスを指定してください。
+
+HTTP backend（要約・書き換え）を使う場合は、[orchestrator 起動](backend-setup.ja.md#mode-c-http-orchestrator-backend) が必要です。詳細: [`backend-setup.ja.md`](backend-setup.ja.md) · [`cli-runtime-compatibility.ja.md`](cli-runtime-compatibility.ja.md)
 
 ---
 
@@ -130,6 +143,6 @@ npm run link:dev-vault   # dev-vault/.obsidian/plugins/kotonoha-console/ にコ�
 ## 関連
 
 - [`README.md`](../README.md) — 現在地と境界
-- [`cli-runtime-compatibility.ja.md`](cli-runtime-compatibility.ja.md) — backend / CLI 要件
+- [`backend-setup.ja.md`](backend-setup.ja.md) — Mock / CLI / HTTP orchestrator 設定
 - [`note-io-acceptance.ja.md`](note-io-acceptance.ja.md) — Note I/O 受け入れ
 - [kotonoha-docs — Obsidian インストール](https://github.com/zyx-corporation/kotonoha-docs/blob/main/ja/manual/install_obsidian_kotonoha_console.md)
