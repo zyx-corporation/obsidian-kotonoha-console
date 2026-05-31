@@ -142,4 +142,80 @@ describe("CliKotonohaClient", () => {
     expect(result.audit?.engine).toBe("cli");
     expect(result.audit?.engineTier).toBe("runtime_cli");
   });
+
+  it("rejects CLI version below 0.3.1", async () => {
+    const runner: KotonohaRunner = async (opts) => {
+      if (opts.args[0] === "version") {
+        return { stdout: "kotonoha 0.2.0\n", stderr: "", exitCode: 0 };
+      }
+      return { stdout: "", stderr: "", exitCode: 1 };
+    };
+
+    const client = new CliKotonohaClient({
+      bin: "kotonoha",
+      cwd: "/vault",
+      gitMode: "off",
+      runner,
+    });
+
+    await expect(
+      client.generate({ ...request, operation: "rde_audit" }),
+    ).rejects.toThrow(/CLI version too old/);
+  });
+
+  it("auditProposal uses rde emit/validate with engine cli", async () => {
+    const calls: string[][] = [];
+    const runner = versionRunner(async (opts) => {
+      calls.push(opts.args);
+      if (opts.args[0] === "rde" && opts.args[1] === "emit") {
+        return { stdout: JSON.stringify(RDE_EMIT), stderr: "", exitCode: 0 };
+      }
+      if (opts.args[0] === "rde" && opts.args[1] === "validate") {
+        return { stdout: "", stderr: "", exitCode: 0 };
+      }
+      return { stdout: "", stderr: "", exitCode: 1 };
+    });
+
+    const client = new CliKotonohaClient({
+      bin: "kotonoha",
+      cwd: "/vault",
+      gitMode: "off",
+      runner,
+    });
+
+    const { audit, engine } = await client.auditProposal(request, "p1", "rewritten");
+    expect(engine).toBe("cli");
+    expect(audit.engine).toBe("cli");
+    expect(audit.engineTier).toBe("runtime_cli");
+    expect(calls.some((a) => a[0] === "rde" && a[1] === "emit")).toBe(true);
+    expect(calls.some((a) => a[0] === "rde" && a[1] === "validate")).toBe(true);
+  });
+
+  it("passes KOTONOHA env vars to runner", async () => {
+    let capturedEnv: Record<string, string> | undefined;
+    const runner: KotonohaRunner = async (opts) => {
+      capturedEnv = opts.env;
+      if (opts.args[0] === "version") {
+        return { stdout: "kotonoha 0.3.1\n", stderr: "", exitCode: 0 };
+      }
+      return { stdout: "", stderr: "", exitCode: 1 };
+    };
+
+    const client = new CliKotonohaClient({
+      bin: "kotonoha",
+      cwd: "/vault",
+      gitMode: "off",
+      env: {
+        DATABASE_URL: "postgres://test/db",
+        KOTONOHA_PRINCIPAL_ID: "p1",
+        KOTONOHA_PROJECT_ID: "proj1",
+      },
+      runner,
+    });
+
+    await client.generate(request);
+    expect(capturedEnv?.DATABASE_URL).toBe("postgres://test/db");
+    expect(capturedEnv?.KOTONOHA_PRINCIPAL_ID).toBe("p1");
+    expect(capturedEnv?.KOTONOHA_PROJECT_ID).toBe("proj1");
+  });
 });

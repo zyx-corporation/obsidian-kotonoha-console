@@ -67,6 +67,8 @@ const MSGS = {
     auditEngineCli: "cli / rde emit + validate",
     auditEngineGateway: "gateway / local rule-based audit",
     auditEngineLocalCaution: "not full RDE evaluation",
+    auditEngineCliCaution:
+      "interchange skeleton / local rule-based guardrails only; not full RDE evaluation",
     confirmSourceChanged:
       "Source has changed. Re-audit or explicit override is required. Continue?",
     confirmGitHeadChanged:
@@ -106,6 +108,10 @@ const MSGS = {
     settingsEnableRdeAuditName: "Enable RDE audit panel",
     settingsAuditLogModeName: "Audit log mode",
     noticeCliOk: "kotonoha ok",
+    noticeCliVersionOk: "CLI OK: {line} (>= {version})",
+    noticeCliVersionTooOld: "CLI version too old: {version} (need >= {min}). cwd: {cwd}",
+    noticeCliVersionUnparseable: "CLI version unparseable: {line}. {msg}",
+    noticeCliCommandNotFound: "CLI command not found: {bin} (cwd: {cwd}). {msg}",
     noticeCliError: "CLI error: {msg}",
     noticeCliSpawnFailed: "CLI spawn failed: {msg}",
     settingsDiagnostic: "Plugin v{version} · UI sample: {sample}",
@@ -210,6 +216,8 @@ const MSGS = {
     auditEngineCli: "cli / rde emit + validate",
     auditEngineGateway: "gateway / local rule-based audit",
     auditEngineLocalCaution: "full RDE ではありません",
+    auditEngineCliCaution:
+      "interchange skeleton / rule-based guardrails のみ — full RDE ではありません",
     confirmSourceChanged:
       "ソースが変更されています。再監査または明示的な上書きが必要です。続行しますか？",
     confirmGitHeadChanged:
@@ -249,6 +257,10 @@ const MSGS = {
     settingsEnableRdeAuditName: "RDE 監査パネルを有効化",
     settingsAuditLogModeName: "監査ログモード",
     noticeCliOk: "kotonoha ok",
+    noticeCliVersionOk: "CLI OK: {line}（>= {version}）",
+    noticeCliVersionTooOld: "CLI バージョンが古い: {version}（>= {min} 必要）。cwd: {cwd}",
+    noticeCliVersionUnparseable: "CLI バージョンを解析できません: {line}。{msg}",
+    noticeCliCommandNotFound: "CLI コマンドが見つかりません: {bin}（cwd: {cwd}）。{msg}",
     noticeCliError: "CLI エラー: {msg}",
     noticeCliSpawnFailed: "CLI 起動失敗: {msg}",
     settingsDiagnostic: "プラグイン v{version} · UI 確認: {sample}",
@@ -353,6 +365,8 @@ const MSGS = {
     auditEngineCli: "cli / rde emit + validate",
     auditEngineGateway: "gateway / local rule-based audit",
     auditEngineLocalCaution: "非完整 RDE 评估",
+    auditEngineCliCaution:
+      "interchange skeleton / 基于规则的 guardrails — 非完整 RDE 评估",
     confirmSourceChanged:
       "源已更改。需要重新审计或明确覆盖。是否继续？",
     confirmGitHeadChanged:
@@ -392,6 +406,10 @@ const MSGS = {
     settingsEnableRdeAuditName: "启用 RDE 审计面板",
     settingsAuditLogModeName: "审计日志模式",
     noticeCliOk: "kotonoha ok",
+    noticeCliVersionOk: "CLI OK: {line}（>= {version}）",
+    noticeCliVersionTooOld: "CLI 版本过旧: {version}（需要 >= {min}）。cwd: {cwd}",
+    noticeCliVersionUnparseable: "无法解析 CLI 版本: {line}。{msg}",
+    noticeCliCommandNotFound: "找不到 CLI 命令: {bin}（cwd: {cwd}）。{msg}",
     noticeCliError: "CLI 错误: {msg}",
     noticeCliSpawnFailed: "CLI 启动失败: {msg}",
     settingsDiagnostic: "插件 v{version} · UI 示例: {sample}",

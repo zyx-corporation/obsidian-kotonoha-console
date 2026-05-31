@@ -70,6 +70,16 @@ HTTP テスト: orchestrator 起動、`backendMode: http`、接続テスト OK�
 1. `backendMode: mock`、**RDE 監査**。
 2. 適用不可、**記録を閉じる** で audit sidecar。
 
+### F. CLI backend（v0.3 / #39）
+
+1. `backendMode: cli`、`CLI command: kotonoha`、`gitMode: off`。
+2. **接続テスト** → `kotonoha 0.3.1` 以上が表示される。
+3. `notes/sample1.md` で **RDE 監査**。
+4. RDE パネルに `engine: cli / rde emit + validate` と full RDE ではない旨。
+5. `.kotonoha/audit/` に optional `engine` metadata。
+6. **却下** または **記録を閉じる** → `.kotonoha/reviews/`。
+7. `gitMode: obsidian-git-aware` に切替 → Git context 表示、Git mutation なし。
+
 ## サインオフ
 
 

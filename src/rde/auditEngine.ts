@@ -15,7 +15,7 @@ const ENGINE_NOTES: Record<AuditEngine, string> = {
     "orchestrator /v1/rde/evaluate + local structural guardrails",
   local: "Local rule-based guardrails only; not full RDE evaluation",
   mock: "Mock backend for UI/dev testing",
-  cli: "kotonoha rde emit / validate runtime path",
+  cli: "kotonoha rde emit / validate runtime path (interchange skeleton — not full RDE)",
   gateway: "Gateway backend; local rule-based audit",
 };
 
@@ -51,8 +51,10 @@ export function formatAuditEnginePanelLine(
   const label = consoleMsg(lang, "auditEngineLabel");
   const name = auditEngineDisplayName(lang, engine);
   let line = `${label}: ${name}`;
-  if (engine === "local" || engine === "gateway") {
-    line += ` (${consoleMsg(lang, "auditEngineLocalCaution")})`;
+  if (engine === "local" || engine === "gateway" || engine === "cli") {
+    const cautionKey =
+      engine === "cli" ? "auditEngineCliCaution" : "auditEngineLocalCaution";
+    line += ` (${consoleMsg(lang, cautionKey)})`;
   }
   return line;
 }

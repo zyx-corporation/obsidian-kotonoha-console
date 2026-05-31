@@ -184,6 +184,7 @@ export class KotonohaSettingsTab extends PluginSettingTab {
             this.plugin.settings.gitMode = v as GitMode;
             await this.plugin.saveSettings();
             this.plugin.refreshNoteReader();
+            this.plugin.refreshClient();
           }),
       );
 

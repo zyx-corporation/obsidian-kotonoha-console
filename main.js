@@ -93,6 +93,59 @@ function buildCliEnv(settings) {
   return env;
 }
 
+// src/cli/kotonohaVersion.ts
+var KOTONOHA_CLI_MIN_VERSION = "0.3.1";
+function parseKotonohaVersion(stdout) {
+  const line = stdout.trim().split(/\r?\n/)[0]?.trim() ?? "";
+  if (!line) return null;
+  const match = line.match(/(\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?)/);
+  return match?.[1] ?? null;
+}
+function compareSemver(a, b) {
+  const parse = (v) => v.split(/[-+]/, 1)[0].split(".").map((n) => Number.parseInt(n, 10) || 0);
+  const av = parse(a);
+  const bv = parse(b);
+  const len = Math.max(av.length, bv.length, 3);
+  for (let i = 0; i < len; i += 1) {
+    const diff = (av[i] ?? 0) - (bv[i] ?? 0);
+    if (diff !== 0) return diff;
+  }
+  return 0;
+}
+function isKotonohaVersionSupported(version, minVersion = KOTONOHA_CLI_MIN_VERSION) {
+  return compareSemver(version, minVersion) >= 0;
+}
+function checkKotonohaCliVersion(result, minVersion = KOTONOHA_CLI_MIN_VERSION) {
+  const line = result.stdout.trim().split(/\r?\n/)[0]?.trim() ?? "";
+  if (result.exitCode !== 0) {
+    return {
+      ok: false,
+      reason: "exit_error",
+      detail: cliErrorMessage(result),
+      line: line || void 0
+    };
+  }
+  const version = parseKotonohaVersion(result.stdout);
+  if (!version) {
+    return {
+      ok: false,
+      reason: "unparseable",
+      detail: line || "(empty stdout)",
+      line: line || void 0
+    };
+  }
+  if (!isKotonohaVersionSupported(version, minVersion)) {
+    return {
+      ok: false,
+      reason: "too_old",
+      detail: `found ${version}, need >= ${minVersion}`,
+      line,
+      version
+    };
+  }
+  return { ok: true, version, line: line || `kotonoha ${version}` };
+}
+
 // src/util/vaultPath.ts
 function vaultBasePath(app) {
   const adapter = app.vault.adapter;
@@ -341,6 +394,7 @@ var MSGS2 = {
     auditEngineCli: "cli / rde emit + validate",
     auditEngineGateway: "gateway / local rule-based audit",
     auditEngineLocalCaution: "not full RDE evaluation",
+    auditEngineCliCaution: "interchange skeleton / local rule-based guardrails only; not full RDE evaluation",
     confirmSourceChanged: "Source has changed. Re-audit or explicit override is required. Continue?",
     confirmGitHeadChanged: "Git HEAD changed since generation (Obsidian Git may have synced). Re-audit recommended. Continue?",
     confirmApply: "Apply this proposal to the note? Original text will be overwritten.",
@@ -374,6 +428,10 @@ var MSGS2 = {
     settingsEnableRdeAuditName: "Enable RDE audit panel",
     settingsAuditLogModeName: "Audit log mode",
     noticeCliOk: "kotonoha ok",
+    noticeCliVersionOk: "CLI OK: {line} (>= {version})",
+    noticeCliVersionTooOld: "CLI version too old: {version} (need >= {min}). cwd: {cwd}",
+    noticeCliVersionUnparseable: "CLI version unparseable: {line}. {msg}",
+    noticeCliCommandNotFound: "CLI command not found: {bin} (cwd: {cwd}). {msg}",
     noticeCliError: "CLI error: {msg}",
     noticeCliSpawnFailed: "CLI spawn failed: {msg}",
     settingsDiagnostic: "Plugin v{version} \xB7 UI sample: {sample}",
@@ -467,6 +525,7 @@ var MSGS2 = {
     auditEngineCli: "cli / rde emit + validate",
     auditEngineGateway: "gateway / local rule-based audit",
     auditEngineLocalCaution: "full RDE \u3067\u306F\u3042\u308A\u307E\u305B\u3093",
+    auditEngineCliCaution: "interchange skeleton / rule-based guardrails \u306E\u307F \u2014 full RDE \u3067\u306F\u3042\u308A\u307E\u305B\u3093",
     confirmSourceChanged: "\u30BD\u30FC\u30B9\u304C\u5909\u66F4\u3055\u308C\u3066\u3044\u307E\u3059\u3002\u518D\u76E3\u67FB\u307E\u305F\u306F\u660E\u793A\u7684\u306A\u4E0A\u66F8\u304D\u304C\u5FC5\u8981\u3067\u3059\u3002\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F",
     confirmGitHeadChanged: "\u751F\u6210\u5F8C\u306B Git HEAD \u304C\u5909\u308F\u3063\u3066\u3044\u307E\u3059\uFF08Obsidian Git \u306E\u540C\u671F\u306E\u53EF\u80FD\u6027\uFF09\u3002\u518D\u76E3\u67FB\u3092\u63A8\u5968\u3057\u307E\u3059\u3002\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F",
     confirmApply: "\u3053\u306E\u63D0\u6848\u3092\u30CE\u30FC\u30C8\u306B\u9069\u7528\u3057\u307E\u3059\u304B\uFF1F\u5143\u306E\u30C6\u30AD\u30B9\u30C8\u306F\u4E0A\u66F8\u304D\u3055\u308C\u307E\u3059\u3002",
@@ -500,6 +559,10 @@ var MSGS2 = {
     settingsEnableRdeAuditName: "RDE \u76E3\u67FB\u30D1\u30CD\u30EB\u3092\u6709\u52B9\u5316",
     settingsAuditLogModeName: "\u76E3\u67FB\u30ED\u30B0\u30E2\u30FC\u30C9",
     noticeCliOk: "kotonoha ok",
+    noticeCliVersionOk: "CLI OK: {line}\uFF08>= {version}\uFF09",
+    noticeCliVersionTooOld: "CLI \u30D0\u30FC\u30B8\u30E7\u30F3\u304C\u53E4\u3044: {version}\uFF08>= {min} \u5FC5\u8981\uFF09\u3002cwd: {cwd}",
+    noticeCliVersionUnparseable: "CLI \u30D0\u30FC\u30B8\u30E7\u30F3\u3092\u89E3\u6790\u3067\u304D\u307E\u305B\u3093: {line}\u3002{msg}",
+    noticeCliCommandNotFound: "CLI \u30B3\u30DE\u30F3\u30C9\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093: {bin}\uFF08cwd: {cwd}\uFF09\u3002{msg}",
     noticeCliError: "CLI \u30A8\u30E9\u30FC: {msg}",
     noticeCliSpawnFailed: "CLI \u8D77\u52D5\u5931\u6557: {msg}",
     settingsDiagnostic: "\u30D7\u30E9\u30B0\u30A4\u30F3 v{version} \xB7 UI \u78BA\u8A8D: {sample}",
@@ -593,6 +656,7 @@ var MSGS2 = {
     auditEngineCli: "cli / rde emit + validate",
     auditEngineGateway: "gateway / local rule-based audit",
     auditEngineLocalCaution: "\u975E\u5B8C\u6574 RDE \u8BC4\u4F30",
+    auditEngineCliCaution: "interchange skeleton / \u57FA\u4E8E\u89C4\u5219\u7684 guardrails \u2014 \u975E\u5B8C\u6574 RDE \u8BC4\u4F30",
     confirmSourceChanged: "\u6E90\u5DF2\u66F4\u6539\u3002\u9700\u8981\u91CD\u65B0\u5BA1\u8BA1\u6216\u660E\u786E\u8986\u76D6\u3002\u662F\u5426\u7EE7\u7EED\uFF1F",
     confirmGitHeadChanged: "\u751F\u6210\u540E Git HEAD \u5DF2\u53D8\u5316\uFF08\u53EF\u80FD\u7531 Obsidian Git \u540C\u6B65\u5F15\u8D77\uFF09\u3002\u5EFA\u8BAE\u91CD\u65B0\u5BA1\u8BA1\u3002\u662F\u5426\u7EE7\u7EED\uFF1F",
     confirmApply: "\u5C06\u6B64\u63D0\u6848\u5E94\u7528\u5230\u7B14\u8BB0\uFF1F\u539F\u59CB\u6587\u672C\u5C06\u88AB\u8986\u76D6\u3002",
@@ -626,6 +690,10 @@ var MSGS2 = {
     settingsEnableRdeAuditName: "\u542F\u7528 RDE \u5BA1\u8BA1\u9762\u677F",
     settingsAuditLogModeName: "\u5BA1\u8BA1\u65E5\u5FD7\u6A21\u5F0F",
     noticeCliOk: "kotonoha ok",
+    noticeCliVersionOk: "CLI OK: {line}\uFF08>= {version}\uFF09",
+    noticeCliVersionTooOld: "CLI \u7248\u672C\u8FC7\u65E7: {version}\uFF08\u9700\u8981 >= {min}\uFF09\u3002cwd: {cwd}",
+    noticeCliVersionUnparseable: "\u65E0\u6CD5\u89E3\u6790 CLI \u7248\u672C: {line}\u3002{msg}",
+    noticeCliCommandNotFound: "\u627E\u4E0D\u5230 CLI \u547D\u4EE4: {bin}\uFF08cwd: {cwd}\uFF09\u3002{msg}",
     noticeCliError: "CLI \u9519\u8BEF: {msg}",
     noticeCliSpawnFailed: "CLI \u542F\u52A8\u5931\u8D25: {msg}",
     settingsDiagnostic: "\u63D2\u4EF6 v{version} \xB7 UI \u793A\u4F8B: {sample}",
@@ -832,6 +900,7 @@ var KotonohaSettingsTab = class extends import_obsidian.PluginSettingTab {
         this.plugin.settings.gitMode = v;
         await this.plugin.saveSettings();
         this.plugin.refreshNoteReader();
+        this.plugin.refreshClient();
       })
     );
     new import_obsidian.Setting(containerEl).setName(this.t("settingsMetadataWriteModeName")).setDesc(this.t("settingsMetadataWriteModeDesc")).addDropdown(
@@ -982,7 +1051,7 @@ var ENGINE_NOTES = {
   orchestrator: "orchestrator /v1/rde/evaluate + local structural guardrails",
   local: "Local rule-based guardrails only; not full RDE evaluation",
   mock: "Mock backend for UI/dev testing",
-  cli: "kotonoha rde emit / validate runtime path",
+  cli: "kotonoha rde emit / validate runtime path (interchange skeleton \u2014 not full RDE)",
   gateway: "Gateway backend; local rule-based audit"
 };
 var ENGINE_MSG_KEYS = {
@@ -1008,8 +1077,9 @@ function formatAuditEnginePanelLine(lang, audit) {
   const label = consoleMsg(lang, "auditEngineLabel");
   const name = auditEngineDisplayName(lang, engine);
   let line = `${label}: ${name}`;
-  if (engine === "local" || engine === "gateway") {
-    line += ` (${consoleMsg(lang, "auditEngineLocalCaution")})`;
+  if (engine === "local" || engine === "gateway" || engine === "cli") {
+    const cautionKey = engine === "cli" ? "auditEngineCliCaution" : "auditEngineLocalCaution";
+    line += ` (${consoleMsg(lang, cautionKey)})`;
   }
   return line;
 }
@@ -2540,33 +2610,26 @@ var CliKotonohaClient = class {
     return this.generateLocal(request, proposalId);
   }
   async auditProposal(request, proposalId, proposalText) {
-    return {
-      audit: attachAuditEngine(
-        performRdeAudit(request, proposalId, { proposalText }),
-        "local"
-      ),
-      engine: "local"
-    };
+    await this.assertCliAvailable();
+    const emitStdout = await this.runRdeEmitValidate();
+    const audit = attachAuditEngine(
+      performRdeAudit(request, proposalId, {
+        proposalText,
+        cli: { emitStdout }
+      }),
+      "cli"
+    );
+    return { audit, engine: "cli" };
   }
   /** git-mode-spec §10: non-Git mode must not require Git-aware CLI. */
   mayUseContextExport() {
     return this.options.gitMode !== "off";
   }
   async generateRdeAudit(request, proposalId) {
-    const emitResult = await this.run({ args: ["rde", "emit"] });
-    if (emitResult.exitCode !== 0) {
-      throw new Error(cliErrorMessage(emitResult));
-    }
-    const validateResult = await this.run({
-      args: ["rde", "validate", "--strict"],
-      stdin: emitResult.stdout
-    });
-    if (validateResult.exitCode !== 0) {
-      throw new Error(cliErrorMessage(validateResult));
-    }
+    const emitStdout = await this.runRdeEmitValidate();
     const audit = attachAuditEngine(
       performRdeAudit(request, proposalId, {
-        cli: { emitStdout: emitResult.stdout },
+        cli: { emitStdout },
         sourceReview: true
       }),
       "cli"
@@ -2585,6 +2648,20 @@ var CliKotonohaClient = class {
       },
       audit
     };
+  }
+  async runRdeEmitValidate() {
+    const emitResult = await this.run({ args: ["rde", "emit"] });
+    if (emitResult.exitCode !== 0) {
+      throw new Error(cliErrorMessage(emitResult));
+    }
+    const validateResult = await this.run({
+      args: ["rde", "validate", "--strict"],
+      stdin: emitResult.stdout
+    });
+    if (validateResult.exitCode !== 0) {
+      throw new Error(cliErrorMessage(validateResult));
+    }
+    return emitResult.stdout;
   }
   async generateWithContextExport(request, proposalId) {
     const relFile = request.context.filePath;
@@ -2628,10 +2705,20 @@ var CliKotonohaClient = class {
   }
   async assertCliAvailable() {
     const result = await this.run({ args: ["version"] });
-    if (result.exitCode !== 0) {
-      throw new Error(
-        `kotonoha not available (${this.options.bin}): ${cliErrorMessage(result)}`
-      );
+    const check = checkKotonohaCliVersion(result);
+    if (check.ok) return;
+    const prefix = `kotonoha (${this.options.bin}, cwd=${this.options.cwd})`;
+    switch (check.reason) {
+      case "exit_error":
+        throw new Error(`${prefix}: CLI exited with non-zero status \u2014 ${check.detail}`);
+      case "unparseable":
+        throw new Error(
+          `${prefix}: could not parse version from stdout \u2014 ${check.detail}`
+        );
+      case "too_old":
+        throw new Error(
+          `${prefix}: CLI version too old \u2014 ${check.detail} (need >= ${KOTONOHA_CLI_MIN_VERSION})`
+        );
     }
   }
   async maybeObservationPath(request) {
@@ -3352,15 +3439,34 @@ var KotonohaConsolePlugin = class extends import_obsidian5.Plugin {
         args: ["version"],
         env: buildCliEnv(this.settings)
       });
-      if (result.exitCode === 0) {
-        new import_obsidian5.Notice(result.stdout.trim().split("\n")[0] ?? consoleMsg(lang, "noticeCliOk"));
-      } else {
-        new import_obsidian5.Notice(consoleMsg(lang, "noticeCliError", { msg: cliErrorMessage(result) }));
+      const check = checkKotonohaCliVersion(result);
+      if (check.ok) {
+        new import_obsidian5.Notice(
+          consoleMsg(lang, "noticeCliVersionOk", {
+            line: check.line,
+            version: check.version
+          })
+        );
+        return;
       }
-    } catch (e) {
+      const msgKey = check.reason === "too_old" ? "noticeCliVersionTooOld" : check.reason === "unparseable" ? "noticeCliVersionUnparseable" : "noticeCliError";
       new import_obsidian5.Notice(
-        consoleMsg(lang, "noticeCliSpawnFailed", {
-          msg: e instanceof Error ? e.message : String(e)
+        consoleMsg(lang, msgKey, {
+          msg: check.detail,
+          line: check.line ?? "",
+          version: check.version ?? "",
+          min: KOTONOHA_CLI_MIN_VERSION,
+          cwd
+        })
+      );
+    } catch (e) {
+      const err = e instanceof Error ? e.message : String(e);
+      const isNotFound = /ENOENT|not found/i.test(err);
+      new import_obsidian5.Notice(
+        consoleMsg(lang, isNotFound ? "noticeCliCommandNotFound" : "noticeCliSpawnFailed", {
+          msg: err,
+          bin,
+          cwd
         })
       );
     }
