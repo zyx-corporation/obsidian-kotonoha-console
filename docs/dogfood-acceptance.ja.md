@@ -1,23 +1,23 @@
 # Obsidian Kotonoha Console ドッグフード受け入れ
 
-**状態:** 最初の usable UI 向け受け入れチェックリスト（v0.2.x）。  
+**状態:** 受け入れ完了（v0.2.15、dev-vault、2026-05-31 sign-off）。  
 **目的:** Obsidian Kotonoha Console を、Kotonoha のコンテキストレビューと RDE 監査ワークフローの **最初の usable UI** として扱う。
 
-規範的正本: [`kotonoha-spec`](https://github.com/zyx-corporation/kotonoha-spec)。  
-English: [`dogfood-acceptance.md`](dogfood-acceptance.md)。
+規範的正本: `[kotonoha-spec](https://github.com/zyx-corporation/kotonoha-spec)`。  
+English: `[dogfood-acceptance.md](dogfood-acceptance.md)`。
 
 ## 受け入れ基準
 
-- [ ] アクティブノートを読み、提案を生成できる。
-- [ ] 提案 sidecar が `.kotonoha/proposals/` に書かれる。
-- [ ] RDE 監査 sidecar が `.kotonoha/audit/` に書かれる。
-- [ ] レビュー決定 sidecar が `.kotonoha/reviews/` に書かれる。
-- [ ] 適用には人間の確認が必要。
-- [ ] ソース hash 不一致時、安全でない適用はブロック（明示的 confirm で上書き可）。
-- [ ] orchestrator 利用時、再監査が `/v1/rde/evaluate` で動作する。
-- [ ] orchestrator 不可時、再監査は local rule-based にフォールバックする。
-- [ ] `metadataWriteMode` に従い frontmatter 書き込みが制御される。
-- [ ] `dev-vault/` で手動受け入れが実施できる。
+- アクティブノートを読み、提案を生成できる。
+- 提案 sidecar が `.kotonoha/proposals/` に書かれる。
+- RDE 監査 sidecar が `.kotonoha/audit/` に書かれる。
+- レビュー決定 sidecar が `.kotonoha/reviews/` に書かれる。
+- 適用には人間の確認が必要。
+- ソース hash 不一致時、安全でない適用はブロック（明示的 confirm で上書き可）。
+- orchestrator 利用時、再監査が `/v1/rde/evaluate` で動作する。
+- orchestrator 不可時、再監査は local rule-based にフォールバックする。
+- `metadataWriteMode` に従い frontmatter 書き込みが制御される。
+- `dev-vault/` で手動受け入れが実施できる。
 
 ## 非目標
 
@@ -72,10 +72,13 @@ HTTP テスト: orchestrator 起動、`backendMode: http`、接続テスト OK�
 
 ## サインオフ
 
-| 区分 | 実施者 | 日付 | 合格 |
-| --- | --- | --- | --- |
-| A | | | |
-| B | | | |
-| C | | | |
-| D | | | |
-| E | | | |
+
+| 区分  | 実施者    | 日付         | 合格  |
+| --- | ------ | ---------- | --- |
+| A   | tomyuk | 2026-05-31 | OK |
+| B   | tomyuk | 2026-05-31 | OK |
+| C   | tomyuk | 2026-05-31 | OK |
+| D   | tomyuk | 2026-05-31 | OK |
+| E   | tomyuk | 2026-05-31 | OK |
+
+

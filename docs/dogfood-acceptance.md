@@ -4,6 +4,8 @@
 
 Treat Obsidian Kotonoha Console as the first usable UI for Kotonoha context review and RDE audit workflows.
 
+**Status:** Acceptance complete (plugin v0.2.15, dev-vault, sign-off 2026-05-31).
+
 ## Scope
 
 This document defines the current dogfood acceptance criteria for `obsidian-kotonoha-console`.
@@ -15,20 +17,20 @@ Japanese companion (detailed dev-vault steps): [`dogfood-acceptance.ja.md`](dogf
 
 ## Acceptance Criteria
 
-- [ ] Active note can be read.
-- [ ] Proposed changes can be generated or displayed.
-- [ ] Proposal sidecar is written under `.kotonoha/proposals/`.
-- [ ] RDE audit sidecar is written under `.kotonoha/audit/`.
-- [ ] Review decision sidecar is written under `.kotonoha/reviews/`.
-- [ ] Apply requires human confirmation.
-- [ ] Reject records a review decision.
-- [ ] Revise records a hold or partial decision.
-- [ ] Re-audit can be performed against a revised proposal.
-- [ ] Source hash mismatch blocks unsafe apply.
-- [ ] Re-audit works with orchestrator when available.
-- [ ] Re-audit falls back to local rule-based audit when orchestrator is unavailable.
-- [ ] Metadata/frontmatter write behavior follows `metadataWriteMode`.
-- [ ] Obsidian manual acceptance can be performed in a dev vault.
+- [x] Active note can be read.
+- [x] Proposed changes can be generated or displayed.
+- [x] Proposal sidecar is written under `.kotonoha/proposals/`.
+- [x] RDE audit sidecar is written under `.kotonoha/audit/`.
+- [x] Review decision sidecar is written under `.kotonoha/reviews/`.
+- [x] Apply requires human confirmation.
+- [x] Reject records a review decision.
+- [x] Revise records a hold or partial decision.
+- [x] Re-audit can be performed against a revised proposal.
+- [x] Source hash mismatch blocks unsafe apply.
+- [x] Re-audit works with orchestrator when available.
+- [x] Re-audit falls back to local rule-based audit when orchestrator is unavailable.
+- [x] Metadata/frontmatter write behavior follows `metadataWriteMode`.
+- [x] Obsidian manual acceptance can be performed in a dev vault.
 
 ## Metadata Write Policy
 
@@ -101,5 +103,9 @@ Revise this document when dogfood testing reveals a missing safety condition or 
 
 | Section | Tester | Date | Pass |
 | --- | --- | --- | --- |
-| Manual scenario | | | |
-| A–E (ja checklist) | | | |
+| Manual scenario | tomyuk | 2026-05-31 | OK |
+| A | tomyuk | 2026-05-31 | OK |
+| B | tomyuk | 2026-05-31 | OK |
+| C | tomyuk | 2026-05-31 | OK |
+| D | tomyuk | 2026-05-31 | OK |
+| E | tomyuk | 2026-05-31 | OK |
