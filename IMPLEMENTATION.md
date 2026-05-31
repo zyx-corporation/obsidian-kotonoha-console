@@ -39,6 +39,8 @@ Link into a vault: copy or symlink this folder to `Vault/.obsidian/plugins/koton
 
 ### Obsidian manual acceptance (RDE 監査)
 
+**Dogfood checklist (full):** [`docs/dogfood-acceptance.ja.md`](docs/dogfood-acceptance.ja.md) · [`docs/dogfood-acceptance.md`](docs/dogfood-acceptance.md)
+
 ```bash
 npm run build
 npm run link:dev-vault    # copies main.js into dev-vault/.obsidian/plugins/
@@ -62,5 +64,5 @@ Headless pre-check: `npm run demo:rde-audit`
 
 ## Next
 
-- Manual acceptance: apply with `metadataWriteMode` prompt / always / off
-- Git `obsidian-git-aware` manual acceptance with Obsidian Git plugin installed
+- Execute dogfood sign-off ([`docs/dogfood-acceptance.ja.md`](docs/dogfood-acceptance.ja.md))
+- Cross-repo convergence: `kotonoha-management` [`docs/planning/`](https://github.com/zyx-corporation/kotonoha-management/tree/main/docs/planning)
