@@ -1,6 +1,6 @@
 # Obsidian Kotonoha Console ドッグフード受け入れ
 
-**状態:** 受け入れ完了（v0.2.15、dev-vault、2026-05-31 sign-off）。  
+**状態:** 受け入れ完了（v0.3.0、dev-vault、2026-05-31 sign-off）。  
 **目的:** Obsidian Kotonoha Console を、Kotonoha のコンテキストレビューと RDE 監査ワークフローの **最初の usable UI** として扱う。
 
 規範的正本: `[kotonoha-spec](https://github.com/zyx-corporation/kotonoha-spec)`。  
