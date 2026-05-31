@@ -35,7 +35,9 @@ npm run typecheck
 npm test
 ```
 
-Link into a vault: copy or symlink this folder to `Vault/.obsidian/plugins/kotonoha-console/` (needs `main.js`, `manifest.json`, `styles.css`).
+Link into a vault: copy built files to `Vault/.obsidian/plugins/kotonoha-console/` (needs `main.js`, `manifest.json`, `styles.css`).
+
+**End-user install (Release):** [`docs/install.ja.md`](docs/install.ja.md)
 
 ### Obsidian manual acceptance (RDE 監査)
 

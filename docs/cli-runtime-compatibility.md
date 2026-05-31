@@ -50,6 +50,7 @@ The CLI is the first stable runtime, not the normative specification. Audit cate
 
 ## Related
 
-- [`README.md`](../README.md) — quick start
+- [`docs/install.md`](install.md) — manual install from GitHub Release
+- [`README.md`](../README.md) — current status and boundaries
 - [`dogfood-acceptance.md`](dogfood-acceptance.md) — sign-off checklist
 - [`IMPLEMENTATION.md`](../IMPLEMENTATION.md) — build and dev vault

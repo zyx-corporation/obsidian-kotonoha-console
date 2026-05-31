@@ -2,9 +2,24 @@
 
 Kotonoha UI plugin for Obsidian (proposal · RDE audit · human approval).
 
-**Docs:** [`docs/architecture.ja.md`](docs/architecture.ja.md) · [`docs/git-mode-spec.ja.md`](docs/git-mode-spec.ja.md) · [`docs/cli-runtime-compatibility.ja.md`](docs/cli-runtime-compatibility.ja.md) · [`docs/v0.3-dogfood-record.ja.md`](docs/v0.3-dogfood-record.ja.md)
+**Docs:** [`docs/install.ja.md`](docs/install.ja.md) · [`docs/architecture.ja.md`](docs/architecture.ja.md) · [`docs/git-mode-spec.ja.md`](docs/git-mode-spec.ja.md) · [`docs/cli-runtime-compatibility.ja.md`](docs/cli-runtime-compatibility.ja.md) · [`docs/v0.3-dogfood-record.ja.md`](docs/v0.3-dogfood-record.ja.md)
 
 **Build:** see [`IMPLEMENTATION.md`](IMPLEMENTATION.md).
+
+## Install
+
+Manual install from [GitHub Release v0.3.0](https://github.com/zyx-corporation/obsidian-kotonoha-console/releases/tag/v0.3.0):
+
+```text
+<vault>/.obsidian/plugins/kotonoha-console/
+├── main.js
+├── manifest.json
+└── styles.css
+```
+
+Download `obsidian-kotonoha-console-v0.3.0.zip`, unzip, **rename the folder to `kotonoha-console`**, then enable the plugin (turn off Restricted mode first).
+
+Full steps: [`docs/install.ja.md`](docs/install.ja.md) · [kotonoha-docs tutorial](https://github.com/zyx-corporation/kotonoha-docs/blob/main/ja/manual/install_obsidian_kotonoha_console.md)
 
 ## Current status
 
