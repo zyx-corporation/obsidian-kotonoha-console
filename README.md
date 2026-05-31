@@ -2,7 +2,7 @@
 
 Kotonoha UI plugin for Obsidian (proposal · RDE audit · human approval).
 
-**Docs:** [`docs/architecture.ja.md`](docs/architecture.ja.md) · [`docs/git-mode-spec.ja.md`](docs/git-mode-spec.ja.md)
+**Docs:** [`docs/architecture.ja.md`](docs/architecture.ja.md) · [`docs/git-mode-spec.ja.md`](docs/git-mode-spec.ja.md) · [`docs/cli-runtime-compatibility.ja.md`](docs/cli-runtime-compatibility.ja.md)
 
 **Build:** see [`IMPLEMENTATION.md`](IMPLEMENTATION.md).
 
