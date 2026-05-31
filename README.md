@@ -8,7 +8,7 @@ Kotonoha UI plugin for Obsidian (proposal · RDE audit · human approval).
 
 ## Install
 
-Manual install from [GitHub Release v0.3.0](https://github.com/zyx-corporation/obsidian-kotonoha-console/releases/tag/v0.3.0):
+Manual install from [GitHub Release v0.3.1](https://github.com/zyx-corporation/obsidian-kotonoha-console/releases/tag/v0.3.1) (or [v0.3.0](https://github.com/zyx-corporation/obsidian-kotonoha-console/releases/tag/v0.3.0)):
 
 ```text
 <vault>/.obsidian/plugins/kotonoha-console/
@@ -17,13 +17,13 @@ Manual install from [GitHub Release v0.3.0](https://github.com/zyx-corporation/o
 └── styles.css
 ```
 
-Download `obsidian-kotonoha-console-v0.3.0.zip`, unzip, **rename the folder to `kotonoha-console`**, then enable the plugin (turn off Restricted mode first).
+Download `kotonoha-console-v0.3.1.zip`, unzip into `.obsidian/plugins/`, then enable the plugin (turn off Restricted mode first). v0.3.0 zip uses folder name `obsidian-kotonoha-console/` — rename to `kotonoha-console`.
 
 Full steps: [`docs/install.ja.md`](docs/install.ja.md) · [kotonoha-docs tutorial](https://github.com/zyx-corporation/kotonoha-docs/blob/main/ja/manual/install_obsidian_kotonoha_console.md)
 
 ## Current status
 
-`obsidian-kotonoha-console` v0.3.0 is the first UI hardening release after dogfood sign-off.
+`obsidian-kotonoha-console` v0.3.1 is the current corrective release after v0.3.0 First UI hardening.
 
 It focuses on:
 

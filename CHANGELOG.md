@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.3.1 — Proposal fence normalization
+
+### Fixed
+
+- Unwrap a single outer `markdown` / `md` / `text` fence from LLM proposal output so Apply inserts Markdown body instead of a code block (#51).
+- Re-audit with normalized `proposedText` when unwrap changes generated content.
+- Preserve inner code blocks and non-Markdown language fences (`ts`, `python`, `json`, etc.).
+
+### Distribution
+
+- Release zip folder name is `kotonoha-console/` (manifest id).
+
 ## v0.3.0 — First UI hardening
 
 ### Added
