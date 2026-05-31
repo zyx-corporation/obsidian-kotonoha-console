@@ -28,6 +28,21 @@ export type RdeCategory =
   | "suspicious_drift"
   | "critical_distortion";
 
+/** Which backend produced the RDE audit (v0.3 #38 — optional on sidecar). */
+export type AuditEngine =
+  | "orchestrator"
+  | "local"
+  | "mock"
+  | "cli"
+  | "gateway";
+
+export type AuditEngineTier =
+  | "stable_adapter"
+  | "rule_based_guardrails"
+  | "test_backend"
+  | "runtime_cli"
+  | "gateway_local";
+
 export interface NoteContext {
   vaultPath: string;
   filePath: string;
@@ -80,6 +95,10 @@ export interface RdeAudit {
   driftRisks: string[];
   recommendedDecision: "approve" | "revise" | "reject" | "human_review";
   confidence: number;
+  /** Optional — audit engine metadata (#38). */
+  engine?: AuditEngine;
+  engineTier?: AuditEngineTier;
+  engineNote?: string;
 }
 
 export interface ApprovalDecision {

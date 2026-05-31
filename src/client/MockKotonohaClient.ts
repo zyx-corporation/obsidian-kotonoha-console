@@ -3,6 +3,7 @@ import type { GenerationRequest } from "../domain/types";
 import { consoleMsg } from "../i18n/consoleI18n";
 import { performRdeAudit } from "../services/RdeAuditService";
 import { rdeAuditReportMarkdown } from "../rde/rdeAuditReport";
+import { attachAuditEngine } from "../rde/auditEngine";
 
 function id(): string {
   return crypto.randomUUID();
@@ -24,7 +25,10 @@ export class MockKotonohaClient implements KotonohaClient {
     const proposalId = id();
 
     if (operation === "rde_audit") {
-      const audit = performRdeAudit(request, proposalId, { sourceReview: true });
+      const audit = attachAuditEngine(
+        performRdeAudit(request, proposalId, { sourceReview: true }),
+        "mock",
+      );
       return {
         proposal: {
           id: proposalId,
@@ -38,9 +42,12 @@ export class MockKotonohaClient implements KotonohaClient {
     }
 
     const mockProposal = proposedText;
-    const audit = performRdeAudit(request, proposalId, {
-      proposalText: mockProposal,
-    });
+    const audit = attachAuditEngine(
+      performRdeAudit(request, proposalId, {
+        proposalText: mockProposal,
+      }),
+      "mock",
+    );
 
     return {
       proposal: {
@@ -64,8 +71,11 @@ export class MockKotonohaClient implements KotonohaClient {
     proposalText: string,
   ): Promise<AuditProposalResult> {
     return {
-      audit: performRdeAudit(request, proposalId, { proposalText }),
-      engine: "local",
+      audit: attachAuditEngine(
+        performRdeAudit(request, proposalId, { proposalText }),
+        "mock",
+      ),
+      engine: "mock",
     };
   }
 }

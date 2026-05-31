@@ -1,15 +1,13 @@
-import type { GenerationRequest, Proposal, RdeAudit } from "../domain/types";
+import type { AuditEngine, GenerationRequest, Proposal, RdeAudit } from "../domain/types";
 
 export interface GenerateResult {
   proposal: Proposal;
   audit?: RdeAudit;
 }
 
-export type RdeAuditEngine = "orchestrator" | "local";
-
 export interface AuditProposalResult {
   audit: RdeAudit;
-  engine: RdeAuditEngine;
+  engine: AuditEngine;
 }
 
 export interface KotonohaClient {

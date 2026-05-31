@@ -57,6 +57,7 @@ describe("HttpKotonohaClient", () => {
     const result = await client.generate(request);
     expect(result.proposal.proposedText).toBe("summary text");
     expect(result.audit).toBeDefined();
+    expect(result.audit?.engine).toBe("local");
   });
 
   it("orchestrator mode: summarize uses /v1/rde/evaluate when audit omitted", async () => {
@@ -96,6 +97,7 @@ describe("HttpKotonohaClient", () => {
     expect(
       result.audit?.preservedElements.some((e) => e.includes("core intent kept")),
     ).toBe(true);
+    expect(result.audit?.engine).toBe("orchestrator");
   });
 
   it("orchestrator mode: rde_audit via /v1/rde/evaluate", async () => {
@@ -124,6 +126,7 @@ describe("HttpKotonohaClient", () => {
     const result = await client.generate({ ...request, operation: "rde_audit" });
     expect(result.proposal.proposedText).toContain("# RDE 監査");
     expect(result.audit?.preservedElements.some((e) => e.includes("intent"))).toBe(true);
+    expect(result.audit?.engine).toBe("orchestrator");
   });
 
   it("orchestrator mode: re-audit via /v1/rde/evaluate on proposal diff", async () => {
@@ -164,6 +167,8 @@ describe("HttpKotonohaClient", () => {
       "Rewritten summary.",
     );
     expect(engine).toBe("orchestrator");
+    expect(audit.engine).toBe("orchestrator");
+    expect(audit.engineTier).toBe("stable_adapter");
     expect(evaluateCalls).toBe(1);
     expect(
       audit.transformedElements.some((e) => e.includes("condensed phrasing")),
@@ -203,5 +208,7 @@ describe("HttpKotonohaClient", () => {
     const result = await client.generate(request);
     expect(result.proposal.proposedText).toContain("This may be possible");
     expect(result.audit).toBeDefined();
+    expect(result.audit?.engine).toBe("gateway");
+    expect(result.audit?.engineTier).toBe("gateway_local");
   });
 });

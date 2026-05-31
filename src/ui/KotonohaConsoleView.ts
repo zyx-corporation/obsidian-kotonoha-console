@@ -7,6 +7,7 @@ import { RdeAuditView } from "./RdeAuditView";
 import { consoleMsg, operationLabel, gitContextLines } from "../i18n/consoleI18n";
 import type { RdeLang } from "../rde/rdeI18n";
 import { localizeBundleForDisplay } from "../services/localizeBundle";
+import { formatAuditEngineNoticeLine } from "../rde/auditEngine";
 import { composeAppliedNote } from "../obsidian/applyNoteContent";
 import { readGitContext } from "../obsidian/GitContextReader";
 import {
@@ -260,8 +261,13 @@ export class KotonohaConsoleView extends ItemView {
         ? consoleMsg(lang, "noticeSavedSidecar")
         : consoleMsg(lang, "noticeSavedUiOnly");
       const msg =
-        operation === "rde_audit"
-          ? consoleMsg(lang, "noticeAuditDone", { saved })
+        operation === "rde_audit" || this.bundle?.audit
+          ? consoleMsg(lang, "noticeRdeAuditWithEngine", {
+              engineLine: this.bundle?.audit
+                ? formatAuditEngineNoticeLine(lang, this.bundle.audit)
+                : consoleMsg(lang, "auditEngineLocal"),
+              saved: operation === "rde_audit" ? saved : "",
+            })
           : consoleMsg(lang, "noticeProposalReady");
       new Notice(msg);
     } catch (e) {
@@ -489,7 +495,7 @@ export class KotonohaConsoleView extends ItemView {
       const proposalText = this.reviseMode
         ? this.editedText
         : this.bundle!.proposal.proposedText;
-      const { audit, engine } = await this.plugin.proposals.auditProposal(
+      const { audit } = await this.plugin.proposals.auditProposal(
         this.lastRequest!,
         this.bundle!.proposal.id,
         proposalText,
@@ -503,10 +509,10 @@ export class KotonohaConsoleView extends ItemView {
         );
       }
       new Notice(
-        consoleMsg(
-          this.uiLang(),
-          engine === "orchestrator" ? "noticeReAuditDoneOrchestrator" : "noticeReAuditDone",
-        ),
+        consoleMsg(this.uiLang(), "noticeRdeAuditWithEngine", {
+          engineLine: formatAuditEngineNoticeLine(this.uiLang(), audit),
+          saved: "",
+        }),
       );
       this.renderBundle();
     });

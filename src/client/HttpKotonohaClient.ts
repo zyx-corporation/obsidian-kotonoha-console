@@ -1,5 +1,5 @@
 import type { GenerateResult, KotonohaClient, AuditProposalResult } from "./KotonohaClient";
-import type { GenerationRequest } from "../domain/types";
+import type { AuditEngine, GenerationRequest } from "../domain/types";
 import { consoleMsg } from "../i18n/consoleI18n";
 import { proposalTextFromContextPack } from "../cli/proposalFromContextPack";
 import { proposalTextFromLocalContext } from "../cli/proposalFromLocal";
@@ -18,6 +18,7 @@ import {
   structuralToMeaningChanges,
   subjectRefForRequest,
 } from "./http/orchestratorRde";
+import { attachAuditEngine } from "../rde/auditEngine";
 import {
   toGenerateResult,
   toHttpGenerateBody,
@@ -78,10 +79,13 @@ export class HttpKotonohaClient implements KotonohaClient {
       try {
         const emitStdout = await this.orchestratorEvaluate(request, structural);
         return {
-          audit: performRdeAudit(request, proposalId, {
-            proposalText,
-            cli: { emitStdout },
-          }),
+          audit: attachAuditEngine(
+            performRdeAudit(request, proposalId, {
+              proposalText,
+              cli: { emitStdout },
+            }),
+            "orchestrator",
+          ),
           engine: "orchestrator",
         };
       } catch {
@@ -89,7 +93,10 @@ export class HttpKotonohaClient implements KotonohaClient {
       }
     }
     return {
-      audit: performRdeAudit(request, proposalId, { proposalText }),
+      audit: attachAuditEngine(
+        performRdeAudit(request, proposalId, { proposalText }),
+        "local",
+      ),
       engine: "local",
     };
   }
@@ -140,10 +147,13 @@ export class HttpKotonohaClient implements KotonohaClient {
     if (request.operation === "rde_audit") {
       const structural = buildSourceReview(request.context.sourceText, request.language);
       const emitStdout = await this.orchestratorEvaluate(request, structural);
-      const audit = performRdeAudit(request, proposalId, {
-        sourceReview: true,
-        cli: { emitStdout },
-      });
+      const audit = attachAuditEngine(
+        performRdeAudit(request, proposalId, {
+          sourceReview: true,
+          cli: { emitStdout },
+        }),
+        "orchestrator",
+      );
       const proposedText = rdeAuditReportMarkdown(request, audit);
       return {
         proposal: {
@@ -182,6 +192,7 @@ export class HttpKotonohaClient implements KotonohaClient {
         request,
         proposalId,
         consoleMsg(request.language, "httpUncertaintyGatewayRde"),
+        "gateway",
       );
     }
 
@@ -191,7 +202,10 @@ export class HttpKotonohaClient implements KotonohaClient {
     );
     const pack = parseGatewayContextPack(toolRes);
     const proposedText = proposalTextFromContextPack(request, pack);
-    const audit = performRdeAudit(request, proposalId, { proposalText: proposedText });
+    const audit = attachAuditEngine(
+      performRdeAudit(request, proposalId, { proposalText: proposedText }),
+      "gateway",
+    );
     return {
       proposal: {
         id: proposalId,
@@ -212,15 +226,19 @@ export class HttpKotonohaClient implements KotonohaClient {
     request: GenerationRequest,
     proposalId: string,
     uncertaintyNote: string,
+    engine: AuditEngine = "local",
   ): GenerateResult {
     const proposedTextForDiff =
       request.operation === "rde_audit"
         ? undefined
         : proposalTextFromLocalContext(request);
-    const audit = performRdeAudit(request, proposalId, {
-      sourceReview: request.operation === "rde_audit",
-      proposalText: proposedTextForDiff,
-    });
+    const audit = attachAuditEngine(
+      performRdeAudit(request, proposalId, {
+        sourceReview: request.operation === "rde_audit",
+        proposalText: proposedTextForDiff,
+      }),
+      engine,
+    );
     const proposedText =
       request.operation === "rde_audit"
         ? rdeAuditReportMarkdown(request, audit)
@@ -256,7 +274,10 @@ export class HttpKotonohaClient implements KotonohaClient {
     if (request.operation === "rde_audit") {
       return {
         proposal,
-        audit: performRdeAudit(request, proposalId, { sourceReview: true }),
+        audit: attachAuditEngine(
+          performRdeAudit(request, proposalId, { sourceReview: true }),
+          "local",
+        ),
       };
     }
     const { audit: computed } = await this.auditProposal(

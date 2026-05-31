@@ -59,6 +59,14 @@ const MSGS = {
     noticeReviseMode: "Revise mode — edit, then Apply revision or Re-audit",
     noticeReAuditDone: "Re-audit complete (local rule-based)",
     noticeReAuditDoneOrchestrator: "Re-audit complete (orchestrator /v1/rde/evaluate)",
+    noticeRdeAuditWithEngine: "RDE audit complete — {engineLine}{saved}",
+    auditEngineLabel: "Engine",
+    auditEngineOrchestrator: "orchestrator / stable adapter",
+    auditEngineLocal: "local / rule-based guardrails",
+    auditEngineMock: "mock / test backend",
+    auditEngineCli: "cli / rde emit + validate",
+    auditEngineGateway: "gateway / local rule-based audit",
+    auditEngineLocalCaution: "not full RDE evaluation",
     confirmSourceChanged:
       "Source has changed. Re-audit or explicit override is required. Continue?",
     confirmGitHeadChanged:
@@ -194,6 +202,14 @@ const MSGS = {
     noticeReviseMode: "改訂モード — 編集後、改訂を適用または再監査",
     noticeReAuditDone: "再監査完了（local rule-based）",
     noticeReAuditDoneOrchestrator: "再監査完了（orchestrator /v1/rde/evaluate）",
+    noticeRdeAuditWithEngine: "RDE監査完了 — {engineLine}{saved}",
+    auditEngineLabel: "監査エンジン",
+    auditEngineOrchestrator: "orchestrator / stable adapter",
+    auditEngineLocal: "local / rule-based guardrails",
+    auditEngineMock: "mock / test backend",
+    auditEngineCli: "cli / rde emit + validate",
+    auditEngineGateway: "gateway / local rule-based audit",
+    auditEngineLocalCaution: "full RDE ではありません",
     confirmSourceChanged:
       "ソースが変更されています。再監査または明示的な上書きが必要です。続行しますか？",
     confirmGitHeadChanged:
@@ -329,6 +345,14 @@ const MSGS = {
     noticeReviseMode: "修订模式 — 编辑后应用修订或重新审计",
     noticeReAuditDone: "重新审计完成（local rule-based）",
     noticeReAuditDoneOrchestrator: "重新审计完成（orchestrator /v1/rde/evaluate）",
+    noticeRdeAuditWithEngine: "RDE 审计完成 — {engineLine}{saved}",
+    auditEngineLabel: "审计引擎",
+    auditEngineOrchestrator: "orchestrator / stable adapter",
+    auditEngineLocal: "local / rule-based guardrails",
+    auditEngineMock: "mock / test backend",
+    auditEngineCli: "cli / rde emit + validate",
+    auditEngineGateway: "gateway / local rule-based audit",
+    auditEngineLocalCaution: "非完整 RDE 评估",
     confirmSourceChanged:
       "源已更改。需要重新审计或明确覆盖。是否继续？",
     confirmGitHeadChanged:

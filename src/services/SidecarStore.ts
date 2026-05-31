@@ -57,6 +57,9 @@ export class SidecarStore {
       proposalHash,
       operation: request.operation,
       createdAt: audit.createdAt,
+      ...(audit.engine ? { engine: audit.engine } : {}),
+      ...(audit.engineTier ? { engineTier: audit.engineTier } : {}),
+      ...(audit.engineNote ? { engineNote: audit.engineNote } : {}),
       rde: audit,
       decision: { status: "pending" as const },
     };
