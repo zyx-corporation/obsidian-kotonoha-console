@@ -36,7 +36,7 @@ Obsidian Console does **not** invoke Git write operations. See [`git-mode-spec.m
 ## Non-CLI backends
 
 - **mock:** local guardrails merge only; no `kotonoha` binary.
-- **http:** orchestrator `POST /v1/rde/evaluate` when audit is omitted or on re-audit (plugin v0.2.13+).
+- **http:** orchestrator `POST /v1/rde/evaluate` when audit is omitted or on re-audit (plugin v0.2.13+). See [orchestrator API stability boundary](https://github.com/zyx-corporation/kotonoha-spec/blob/main/docs/orchestrator-api-stability-boundary.md) for stable vs experimental tiers and fallback policy.
 
 These modes support dogfood without a local CLI install.
 
