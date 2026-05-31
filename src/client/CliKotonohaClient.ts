@@ -14,6 +14,7 @@ import { proposalTextFromLocalContext } from "../cli/proposalFromLocal";
 import { consoleMsg } from "../i18n/consoleI18n";
 import { performRdeAudit } from "../services/RdeAuditService";
 import { rdeAuditReportMarkdown } from "../rde/rdeAuditReport";
+import { attachAuditEngine } from "../rde/auditEngine";
 
 export interface CliKotonohaClientOptions {
   bin: string;
@@ -64,7 +65,10 @@ export class CliKotonohaClient implements KotonohaClient {
     proposalText: string,
   ): Promise<AuditProposalResult> {
     return {
-      audit: performRdeAudit(request, proposalId, { proposalText }),
+      audit: attachAuditEngine(
+        performRdeAudit(request, proposalId, { proposalText }),
+        "local",
+      ),
       engine: "local",
     };
   }
@@ -91,10 +95,13 @@ export class CliKotonohaClient implements KotonohaClient {
       throw new Error(cliErrorMessage(validateResult));
     }
 
-    const audit = performRdeAudit(request, proposalId, {
-      cli: { emitStdout: emitResult.stdout },
-      sourceReview: true,
-    });
+    const audit = attachAuditEngine(
+      performRdeAudit(request, proposalId, {
+        cli: { emitStdout: emitResult.stdout },
+        sourceReview: true,
+      }),
+      "cli",
+    );
     const proposedText = rdeAuditReportMarkdown(request, audit);
 
     return {
@@ -155,7 +162,10 @@ export class CliKotonohaClient implements KotonohaClient {
     proposedText: string,
     meta: { summary: string; uncertaintyNote: string },
   ): GenerateResult {
-    const audit = performRdeAudit(request, proposalId, { proposalText: proposedText });
+    const audit = attachAuditEngine(
+      performRdeAudit(request, proposalId, { proposalText: proposedText }),
+      "local",
+    );
     return {
       proposal: {
         id: proposalId,

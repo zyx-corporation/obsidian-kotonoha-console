@@ -9,6 +9,7 @@ import {
   rdeAuditLowConfidenceMessage,
   shouldShowLowConfidenceWarning,
 } from "./rdeAuditPolicyMessages";
+import { formatAuditEnginePanelLine } from "../rde/auditEngine";
 
 const OPEN_BY_DEFAULT = new Set(["sectionUnresolved", "sectionDriftRisks"]);
 
@@ -20,6 +21,12 @@ export class RdeAuditView {
       cls: "kotonoha-console-section-title",
       text: rdeMsg(lang, "auditPanelTitle"),
     });
+    if (audit.engine) {
+      host.createEl("p", {
+        cls: "kotonoha-console-audit-engine",
+        text: formatAuditEnginePanelLine(lang, audit),
+      });
+    }
     if (shouldShowLowConfidenceWarning(audit)) {
       host.createEl("p", {
         cls: "kotonoha-console-warn",

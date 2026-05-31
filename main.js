@@ -333,6 +333,14 @@ var MSGS2 = {
     noticeReviseMode: "Revise mode \u2014 edit, then Apply revision or Re-audit",
     noticeReAuditDone: "Re-audit complete (local rule-based)",
     noticeReAuditDoneOrchestrator: "Re-audit complete (orchestrator /v1/rde/evaluate)",
+    noticeRdeAuditWithEngine: "RDE audit complete \u2014 {engineLine}{saved}",
+    auditEngineLabel: "Engine",
+    auditEngineOrchestrator: "orchestrator / stable adapter",
+    auditEngineLocal: "local / rule-based guardrails",
+    auditEngineMock: "mock / test backend",
+    auditEngineCli: "cli / rde emit + validate",
+    auditEngineGateway: "gateway / local rule-based audit",
+    auditEngineLocalCaution: "not full RDE evaluation",
     confirmSourceChanged: "Source has changed. Re-audit or explicit override is required. Continue?",
     confirmGitHeadChanged: "Git HEAD changed since generation (Obsidian Git may have synced). Re-audit recommended. Continue?",
     confirmApply: "Apply this proposal to the note? Original text will be overwritten.",
@@ -451,6 +459,14 @@ var MSGS2 = {
     noticeReviseMode: "\u6539\u8A02\u30E2\u30FC\u30C9 \u2014 \u7DE8\u96C6\u5F8C\u3001\u6539\u8A02\u3092\u9069\u7528\u307E\u305F\u306F\u518D\u76E3\u67FB",
     noticeReAuditDone: "\u518D\u76E3\u67FB\u5B8C\u4E86\uFF08local rule-based\uFF09",
     noticeReAuditDoneOrchestrator: "\u518D\u76E3\u67FB\u5B8C\u4E86\uFF08orchestrator /v1/rde/evaluate\uFF09",
+    noticeRdeAuditWithEngine: "RDE\u76E3\u67FB\u5B8C\u4E86 \u2014 {engineLine}{saved}",
+    auditEngineLabel: "\u76E3\u67FB\u30A8\u30F3\u30B8\u30F3",
+    auditEngineOrchestrator: "orchestrator / stable adapter",
+    auditEngineLocal: "local / rule-based guardrails",
+    auditEngineMock: "mock / test backend",
+    auditEngineCli: "cli / rde emit + validate",
+    auditEngineGateway: "gateway / local rule-based audit",
+    auditEngineLocalCaution: "full RDE \u3067\u306F\u3042\u308A\u307E\u305B\u3093",
     confirmSourceChanged: "\u30BD\u30FC\u30B9\u304C\u5909\u66F4\u3055\u308C\u3066\u3044\u307E\u3059\u3002\u518D\u76E3\u67FB\u307E\u305F\u306F\u660E\u793A\u7684\u306A\u4E0A\u66F8\u304D\u304C\u5FC5\u8981\u3067\u3059\u3002\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F",
     confirmGitHeadChanged: "\u751F\u6210\u5F8C\u306B Git HEAD \u304C\u5909\u308F\u3063\u3066\u3044\u307E\u3059\uFF08Obsidian Git \u306E\u540C\u671F\u306E\u53EF\u80FD\u6027\uFF09\u3002\u518D\u76E3\u67FB\u3092\u63A8\u5968\u3057\u307E\u3059\u3002\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F",
     confirmApply: "\u3053\u306E\u63D0\u6848\u3092\u30CE\u30FC\u30C8\u306B\u9069\u7528\u3057\u307E\u3059\u304B\uFF1F\u5143\u306E\u30C6\u30AD\u30B9\u30C8\u306F\u4E0A\u66F8\u304D\u3055\u308C\u307E\u3059\u3002",
@@ -569,6 +585,14 @@ var MSGS2 = {
     noticeReviseMode: "\u4FEE\u8BA2\u6A21\u5F0F \u2014 \u7F16\u8F91\u540E\u5E94\u7528\u4FEE\u8BA2\u6216\u91CD\u65B0\u5BA1\u8BA1",
     noticeReAuditDone: "\u91CD\u65B0\u5BA1\u8BA1\u5B8C\u6210\uFF08local rule-based\uFF09",
     noticeReAuditDoneOrchestrator: "\u91CD\u65B0\u5BA1\u8BA1\u5B8C\u6210\uFF08orchestrator /v1/rde/evaluate\uFF09",
+    noticeRdeAuditWithEngine: "RDE \u5BA1\u8BA1\u5B8C\u6210 \u2014 {engineLine}{saved}",
+    auditEngineLabel: "\u5BA1\u8BA1\u5F15\u64CE",
+    auditEngineOrchestrator: "orchestrator / stable adapter",
+    auditEngineLocal: "local / rule-based guardrails",
+    auditEngineMock: "mock / test backend",
+    auditEngineCli: "cli / rde emit + validate",
+    auditEngineGateway: "gateway / local rule-based audit",
+    auditEngineLocalCaution: "\u975E\u5B8C\u6574 RDE \u8BC4\u4F30",
     confirmSourceChanged: "\u6E90\u5DF2\u66F4\u6539\u3002\u9700\u8981\u91CD\u65B0\u5BA1\u8BA1\u6216\u660E\u786E\u8986\u76D6\u3002\u662F\u5426\u7EE7\u7EED\uFF1F",
     confirmGitHeadChanged: "\u751F\u6210\u540E Git HEAD \u5DF2\u53D8\u5316\uFF08\u53EF\u80FD\u7531 Obsidian Git \u540C\u6B65\u5F15\u8D77\uFF09\u3002\u5EFA\u8BAE\u91CD\u65B0\u5BA1\u8BA1\u3002\u662F\u5426\u7EE7\u7EED\uFF1F",
     confirmApply: "\u5C06\u6B64\u63D0\u6848\u5E94\u7528\u5230\u7B14\u8BB0\uFF1F\u539F\u59CB\u6587\u672C\u5C06\u88AB\u8986\u76D6\u3002",
@@ -946,6 +970,56 @@ var ProposalView = class {
   }
 };
 
+// src/rde/auditEngine.ts
+var ENGINE_TIERS = {
+  orchestrator: "stable_adapter",
+  local: "rule_based_guardrails",
+  mock: "test_backend",
+  cli: "runtime_cli",
+  gateway: "gateway_local"
+};
+var ENGINE_NOTES = {
+  orchestrator: "orchestrator /v1/rde/evaluate + local structural guardrails",
+  local: "Local rule-based guardrails only; not full RDE evaluation",
+  mock: "Mock backend for UI/dev testing",
+  cli: "kotonoha rde emit / validate runtime path",
+  gateway: "Gateway backend; local rule-based audit"
+};
+var ENGINE_MSG_KEYS = {
+  orchestrator: "auditEngineOrchestrator",
+  local: "auditEngineLocal",
+  mock: "auditEngineMock",
+  cli: "auditEngineCli",
+  gateway: "auditEngineGateway"
+};
+function attachAuditEngine(audit, engine) {
+  return {
+    ...audit,
+    engine,
+    engineTier: ENGINE_TIERS[engine],
+    engineNote: ENGINE_NOTES[engine]
+  };
+}
+function auditEngineDisplayName(lang, engine) {
+  return consoleMsg(lang, ENGINE_MSG_KEYS[engine]);
+}
+function formatAuditEnginePanelLine(lang, audit) {
+  const engine = audit.engine ?? "local";
+  const label = consoleMsg(lang, "auditEngineLabel");
+  const name = auditEngineDisplayName(lang, engine);
+  let line = `${label}: ${name}`;
+  if (engine === "local" || engine === "gateway") {
+    line += ` (${consoleMsg(lang, "auditEngineLocalCaution")})`;
+  }
+  return line;
+}
+function formatAuditEngineNoticeLine(lang, audit) {
+  return formatAuditEnginePanelLine(lang, audit).replace(
+    `${consoleMsg(lang, "auditEngineLabel")}: `,
+    ""
+  );
+}
+
 // src/ui/RdeAuditView.ts
 var OPEN_BY_DEFAULT = /* @__PURE__ */ new Set(["sectionUnresolved", "sectionDriftRisks"]);
 var RdeAuditView = class {
@@ -956,6 +1030,12 @@ var RdeAuditView = class {
       cls: "kotonoha-console-section-title",
       text: rdeMsg(lang, "auditPanelTitle")
     });
+    if (audit.engine) {
+      host.createEl("p", {
+        cls: "kotonoha-console-audit-engine",
+        text: formatAuditEnginePanelLine(lang, audit)
+      });
+    }
     if (shouldShowLowConfidenceWarning(audit)) {
       host.createEl("p", {
         cls: "kotonoha-console-warn",
@@ -1776,7 +1856,10 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       });
       this.renderBundle();
       const saved = this.plugin.settings.sidecarMode ? consoleMsg(lang, "noticeSavedSidecar") : consoleMsg(lang, "noticeSavedUiOnly");
-      const msg = operation === "rde_audit" ? consoleMsg(lang, "noticeAuditDone", { saved }) : consoleMsg(lang, "noticeProposalReady");
+      const msg = operation === "rde_audit" || this.bundle?.audit ? consoleMsg(lang, "noticeRdeAuditWithEngine", {
+        engineLine: this.bundle?.audit ? formatAuditEngineNoticeLine(lang, this.bundle.audit) : consoleMsg(lang, "auditEngineLocal"),
+        saved: operation === "rde_audit" ? saved : ""
+      }) : consoleMsg(lang, "noticeProposalReady");
       new import_obsidian2.Notice(msg);
     } catch (e) {
       new import_obsidian2.Notice(consoleMsg(lang, "noticeFailed", { msg: message(e) }));
@@ -1961,7 +2044,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     if (!this.bundle || !this.lastRequest) return;
     await this.withBusy(async () => {
       const proposalText = this.reviseMode ? this.editedText : this.bundle.proposal.proposedText;
-      const { audit, engine } = await this.plugin.proposals.auditProposal(
+      const { audit } = await this.plugin.proposals.auditProposal(
         this.lastRequest,
         this.bundle.proposal.id,
         proposalText
@@ -1975,10 +2058,10 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
         );
       }
       new import_obsidian2.Notice(
-        consoleMsg(
-          this.uiLang(),
-          engine === "orchestrator" ? "noticeReAuditDoneOrchestrator" : "noticeReAuditDone"
-        )
+        consoleMsg(this.uiLang(), "noticeRdeAuditWithEngine", {
+          engineLine: formatAuditEngineNoticeLine(this.uiLang(), audit),
+          saved: ""
+        })
       );
       this.renderBundle();
     });
@@ -2224,6 +2307,9 @@ var SidecarStore = class {
       proposalHash,
       operation: request.operation,
       createdAt: audit.createdAt,
+      ...audit.engine ? { engine: audit.engine } : {},
+      ...audit.engineTier ? { engineTier: audit.engineTier } : {},
+      ...audit.engineNote ? { engineNote: audit.engineNote } : {},
       rde: audit,
       decision: { status: "pending" }
     };
@@ -2455,7 +2541,10 @@ var CliKotonohaClient = class {
   }
   async auditProposal(request, proposalId, proposalText) {
     return {
-      audit: performRdeAudit(request, proposalId, { proposalText }),
+      audit: attachAuditEngine(
+        performRdeAudit(request, proposalId, { proposalText }),
+        "local"
+      ),
       engine: "local"
     };
   }
@@ -2475,10 +2564,13 @@ var CliKotonohaClient = class {
     if (validateResult.exitCode !== 0) {
       throw new Error(cliErrorMessage(validateResult));
     }
-    const audit = performRdeAudit(request, proposalId, {
-      cli: { emitStdout: emitResult.stdout },
-      sourceReview: true
-    });
+    const audit = attachAuditEngine(
+      performRdeAudit(request, proposalId, {
+        cli: { emitStdout: emitResult.stdout },
+        sourceReview: true
+      }),
+      "cli"
+    );
     const proposedText = rdeAuditReportMarkdown(request, audit);
     return {
       proposal: {
@@ -2518,7 +2610,10 @@ var CliKotonohaClient = class {
     });
   }
   withLocalAudit(request, proposalId, proposedText, meta) {
-    const audit = performRdeAudit(request, proposalId, { proposalText: proposedText });
+    const audit = attachAuditEngine(
+      performRdeAudit(request, proposalId, { proposalText: proposedText }),
+      "local"
+    );
     return {
       proposal: {
         id: proposalId,
@@ -2776,17 +2871,23 @@ var HttpKotonohaClient = class {
       try {
         const emitStdout = await this.orchestratorEvaluate(request, structural);
         return {
-          audit: performRdeAudit(request, proposalId, {
-            proposalText,
-            cli: { emitStdout }
-          }),
+          audit: attachAuditEngine(
+            performRdeAudit(request, proposalId, {
+              proposalText,
+              cli: { emitStdout }
+            }),
+            "orchestrator"
+          ),
           engine: "orchestrator"
         };
       } catch {
       }
     }
     return {
-      audit: performRdeAudit(request, proposalId, { proposalText }),
+      audit: attachAuditEngine(
+        performRdeAudit(request, proposalId, { proposalText }),
+        "local"
+      ),
       engine: "local"
     };
   }
@@ -2831,10 +2932,13 @@ var HttpKotonohaClient = class {
     if (request.operation === "rde_audit") {
       const structural = buildSourceReview(request.context.sourceText, request.language);
       const emitStdout = await this.orchestratorEvaluate(request, structural);
-      const audit = performRdeAudit(request, proposalId, {
-        sourceReview: true,
-        cli: { emitStdout }
-      });
+      const audit = attachAuditEngine(
+        performRdeAudit(request, proposalId, {
+          sourceReview: true,
+          cli: { emitStdout }
+        }),
+        "orchestrator"
+      );
       const proposedText = rdeAuditReportMarkdown(request, audit);
       return {
         proposal: {
@@ -2869,7 +2973,8 @@ var HttpKotonohaClient = class {
       return this.generateLocalWithNote(
         request,
         proposalId,
-        consoleMsg(request.language, "httpUncertaintyGatewayRde")
+        consoleMsg(request.language, "httpUncertaintyGatewayRde"),
+        "gateway"
       );
     }
     const toolRes = await this.http.postJson(
@@ -2878,7 +2983,10 @@ var HttpKotonohaClient = class {
     );
     const pack = parseGatewayContextPack(toolRes);
     const proposedText = proposalTextFromContextPack(request, pack);
-    const audit = performRdeAudit(request, proposalId, { proposalText: proposedText });
+    const audit = attachAuditEngine(
+      performRdeAudit(request, proposalId, { proposalText: proposedText }),
+      "gateway"
+    );
     return {
       proposal: {
         id: proposalId,
@@ -2894,12 +3002,15 @@ var HttpKotonohaClient = class {
       audit
     };
   }
-  generateLocalWithNote(request, proposalId, uncertaintyNote) {
+  generateLocalWithNote(request, proposalId, uncertaintyNote, engine = "local") {
     const proposedTextForDiff = request.operation === "rde_audit" ? void 0 : proposalTextFromLocalContext(request);
-    const audit = performRdeAudit(request, proposalId, {
-      sourceReview: request.operation === "rde_audit",
-      proposalText: proposedTextForDiff
-    });
+    const audit = attachAuditEngine(
+      performRdeAudit(request, proposalId, {
+        sourceReview: request.operation === "rde_audit",
+        proposalText: proposedTextForDiff
+      }),
+      engine
+    );
     const proposedText = request.operation === "rde_audit" ? rdeAuditReportMarkdown(request, audit) : proposedTextForDiff;
     return {
       proposal: {
@@ -2923,7 +3034,10 @@ var HttpKotonohaClient = class {
     if (request.operation === "rde_audit") {
       return {
         proposal,
-        audit: performRdeAudit(request, proposalId, { sourceReview: true })
+        audit: attachAuditEngine(
+          performRdeAudit(request, proposalId, { sourceReview: true }),
+          "local"
+        )
       };
     }
     const { audit: computed } = await this.auditProposal(
@@ -2962,7 +3076,10 @@ var MockKotonohaClient = class {
     ].join("\n");
     const proposalId = id();
     if (operation === "rde_audit") {
-      const audit2 = performRdeAudit(request, proposalId, { sourceReview: true });
+      const audit2 = attachAuditEngine(
+        performRdeAudit(request, proposalId, { sourceReview: true }),
+        "mock"
+      );
       return {
         proposal: {
           id: proposalId,
@@ -2975,9 +3092,12 @@ var MockKotonohaClient = class {
       };
     }
     const mockProposal = proposedText;
-    const audit = performRdeAudit(request, proposalId, {
-      proposalText: mockProposal
-    });
+    const audit = attachAuditEngine(
+      performRdeAudit(request, proposalId, {
+        proposalText: mockProposal
+      }),
+      "mock"
+    );
     return {
       proposal: {
         id: proposalId,
@@ -2995,8 +3115,11 @@ var MockKotonohaClient = class {
   }
   async auditProposal(request, proposalId, proposalText) {
     return {
-      audit: performRdeAudit(request, proposalId, { proposalText }),
-      engine: "local"
+      audit: attachAuditEngine(
+        performRdeAudit(request, proposalId, { proposalText }),
+        "mock"
+      ),
+      engine: "mock"
     };
   }
 };
