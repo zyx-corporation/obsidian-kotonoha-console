@@ -5,6 +5,7 @@
 
 規範的正本: `[kotonoha-spec](https://github.com/zyx-corporation/kotonoha-spec)`。  
 Sidecar 方針（v0.3）: [`sidecar-spec-alignment.ja.md`](sidecar-spec-alignment.ja.md)。  
+Note I/O（v0.3）: [`note-io-acceptance.ja.md`](note-io-acceptance.ja.md)。  
 English: `[dogfood-acceptance.md](dogfood-acceptance.md)`。
 
 ## 受け入れ基準

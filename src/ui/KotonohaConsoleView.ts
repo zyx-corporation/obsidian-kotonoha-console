@@ -11,6 +11,10 @@ import { formatAuditEngineNoticeLine } from "../rde/auditEngine";
 import { composeAppliedNote } from "../obsidian/applyNoteContent";
 import { readGitContext } from "../obsidian/GitContextReader";
 import {
+  resolveTargetFilePath,
+  sourceHashMismatch,
+} from "../obsidian/noteIoGuards";
+import {
   effectiveMetadataWriteMode,
   mergeKotonohaFrontmatter,
   shouldWriteMetadata,
@@ -178,14 +182,17 @@ export class KotonohaConsoleView extends ItemView {
   /** Target note at generation time — Console focus must not break apply. */
   private resolveTargetFile(): TFile | null {
     const active = this.plugin.activeNoteReader.getActiveFile();
-    if (active && (!this.targetFilePath || active.path === this.targetFilePath)) {
-      return active;
-    }
-    if (this.targetFilePath) {
-      const file = this.app.vault.getAbstractFileByPath(this.targetFilePath);
-      if (file instanceof TFile) return file;
-    }
-    return active;
+    const path = resolveTargetFilePath(
+      active?.path ?? null,
+      this.targetFilePath,
+      (p) => {
+        const f = this.app.vault.getAbstractFileByPath(p);
+        return f instanceof TFile;
+      },
+    );
+    if (!path) return null;
+    const file = this.app.vault.getAbstractFileByPath(path);
+    return file instanceof TFile ? file : null;
   }
 
   private uiLang(): RdeLang {
@@ -334,9 +341,7 @@ export class KotonohaConsoleView extends ItemView {
       this.lastRequest?.context.selectionText,
     );
     if (
-      this.sourceHashAtGeneration &&
-      current &&
-      current.sourceHash !== this.sourceHashAtGeneration
+      sourceHashMismatch(this.sourceHashAtGeneration, current?.sourceHash)
     ) {
       const ok = confirm(consoleMsg(lang, "confirmSourceChanged"));
       if (!ok) return;
@@ -354,10 +359,8 @@ export class KotonohaConsoleView extends ItemView {
       }
     }
 
-    if (this.plugin.settings.requireHumanApproval) {
-      const ok = confirm(consoleMsg(lang, "confirmApply"));
-      if (!ok) return;
-    }
+    const okApply = confirm(consoleMsg(lang, "confirmApply"));
+    if (!okApply) return;
 
     await this.withBusy(async () => {
       const file = this.resolveTargetFile();
@@ -374,10 +377,15 @@ export class KotonohaConsoleView extends ItemView {
         ? this.editedText
         : this.bundle!.proposal.proposedText;
       const original = await this.app.vault.read(file);
-      const finalText = composeAppliedNote(original, proposedText, {
+      const composed = composeAppliedNote(original, proposedText, {
         preserveFrontmatter: this.plugin.settings.preserveFrontmatter,
         selectionText: this.lastRequest?.context.selectionText,
       });
+
+      if (composed.kind === "selection_not_found") {
+        new Notice(consoleMsg(lang, "noticeSelectionNotFound"));
+        return;
+      }
 
       if (this.lastRequest?.context.selectionText) {
         const view = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -385,10 +393,10 @@ export class KotonohaConsoleView extends ItemView {
         if (editor && view.file?.path === file.path) {
           editor.replaceSelection(proposedText);
         } else {
-          await this.plugin.markdownWriter.replaceNoteContent(file, finalText);
+          await this.plugin.markdownWriter.replaceNoteContent(file, composed.content);
         }
       } else {
-        await this.plugin.markdownWriter.replaceNoteContent(file, finalText);
+        await this.plugin.markdownWriter.replaceNoteContent(file, composed.content);
       }
 
       const text = proposedText;

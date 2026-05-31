@@ -1,9 +1,11 @@
 import type { App, TFile } from "obsidian";
+import { MarkdownView } from "obsidian";
 import type { NoteContext } from "../domain/types";
-import { sha256Hex } from "../util/hash";
+import { buildNoteContext } from "./buildNoteContext";
 import { readGitContext } from "./GitContextReader";
 import type { GitMode } from "../domain/types";
 import { vaultBasePath } from "../util/vaultPath";
+import { readSelection } from "./SelectionReader";
 
 export class ActiveNoteReader {
   constructor(
@@ -16,22 +18,25 @@ export class ActiveNoteReader {
     return file ?? null;
   }
 
+  /** Editor selection from active Markdown view, if any. */
+  readActiveSelection(): string | undefined {
+    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (!view?.editor) return undefined;
+    return readSelection(view.editor);
+  }
+
   async readNoteContext(selectionText?: string): Promise<NoteContext | null> {
     const file = this.getActiveFile();
     if (!file) return null;
-    return this.readNoteContextForFile(file, selectionText);
+    const selection = selectionText ?? this.readActiveSelection();
+    return this.readNoteContextForFile(file, selection);
   }
 
   async readNoteContextForFile(
     file: TFile,
     selectionText?: string,
   ): Promise<NoteContext | null> {
-    const sourceText = await this.app.vault.read(file);
-    const targetText =
-      selectionText !== undefined && selectionText.length > 0
-        ? selectionText
-        : sourceText;
-
+    const fullSourceText = await this.app.vault.read(file);
     const cache = this.app.metadataCache.getFileCache(file);
     const frontmatter = (cache?.frontmatter as Record<string, unknown>) ?? {};
     const tags = (cache?.tags ?? []).map((t) => t.tag);
@@ -42,18 +47,16 @@ export class ActiveNoteReader {
         ? undefined
         : await readGitContext(this.app, file, this.gitMode);
 
-    return {
+    return buildNoteContext({
       vaultPath: vaultBasePath(this.app),
       filePath: file.path,
       title: file.basename,
-      sourceText: targetText,
-      selectionText:
-        selectionText && selectionText.length > 0 ? selectionText : undefined,
-      sourceHash: await sha256Hex(targetText),
+      fullSourceText,
+      selectionText,
+      frontmatter,
       tags,
       links,
-      frontmatter,
       git,
-    };
+    });
   }
 }

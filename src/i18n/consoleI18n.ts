@@ -75,6 +75,8 @@ const MSGS = {
       "Git HEAD changed since generation (Obsidian Git may have synced). Re-audit recommended. Continue?",
     confirmApply: "Apply this proposal to the note? Original text will be overwritten.",
     noticeOpenEditor: "Open the note in the editor to apply selection",
+    noticeSelectionNotFound:
+      "Selection text was not found in the note — apply blocked to avoid whole-note overwrite",
     mockRdeSummary: "[mock] RDE audit · {title}",
     mockOpSummary: "[mock] {operation} · {title}",
     mockUncertainty:
@@ -250,6 +252,8 @@ const MSGS = {
       "生成後に Git HEAD が変わっています（Obsidian Git の同期の可能性）。再監査を推奨します。続行しますか？",
     confirmApply: "この提案をノートに適用しますか？元のテキストは上書きされます。",
     noticeOpenEditor: "エディタでノートを開いてから選択範囲に適用してください",
+    noticeSelectionNotFound:
+      "選択テキストがノート内に見つかりません — ノート全体の誤上書きを防ぐため適用を中止しました",
     mockRdeSummary: "[mock] RDE 監査 · {title}",
     mockOpSummary: "[mock] {operation} · {title}",
     mockUncertainty:
@@ -426,6 +430,8 @@ const MSGS = {
       "生成后 Git HEAD 已变化（可能由 Obsidian Git 同步引起）。建议重新审计。是否继续？",
     confirmApply: "将此提案应用到笔记？原始文本将被覆盖。",
     noticeOpenEditor: "请在编辑器中打开笔记后再应用到选区",
+    noticeSelectionNotFound:
+      "选区文本在笔记中未找到 — 已阻止应用以避免整篇覆盖",
     mockRdeSummary: "[mock] RDE 审计 · {title}",
     mockOpSummary: "[mock] {operation} · {title}",
     mockUncertainty:
