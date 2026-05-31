@@ -2,11 +2,29 @@
 
 Kotonoha UI plugin for Obsidian (proposal · RDE audit · human approval).
 
-**Docs:** [`docs/architecture.ja.md`](docs/architecture.ja.md) · [`docs/git-mode-spec.ja.md`](docs/git-mode-spec.ja.md) · [`docs/cli-runtime-compatibility.ja.md`](docs/cli-runtime-compatibility.ja.md)
+**Docs:** [`docs/architecture.ja.md`](docs/architecture.ja.md) · [`docs/git-mode-spec.ja.md`](docs/git-mode-spec.ja.md) · [`docs/cli-runtime-compatibility.ja.md`](docs/cli-runtime-compatibility.ja.md) · [`docs/v0.3-dogfood-record.ja.md`](docs/v0.3-dogfood-record.ja.md)
 
 **Build:** see [`IMPLEMENTATION.md`](IMPLEMENTATION.md).
 
-**CLI mode:** Settings → Backend **cli** → [`kotonoha`](https://github.com/zyx-corporation/kotonoha-cli) ≥ v0.3.1. **Git は必須ではない**（既定 `gitMode: off`）。**RDE 監査**は `rde emit` / `rde validate` のみ。`context export` は `gitMode` が `off` 以外のときのみ。
+## Current status
+
+`obsidian-kotonoha-console` v0.3.0 is the first UI hardening release after dogfood sign-off.
+
+It focuses on:
+
+- audit engine labeling,
+- CLI backend dogfood parity,
+- sidecar validation and compatibility,
+- backend connection UX,
+- Note I/O safety.
+
+The plugin remains Git-aware but not Git-owning. It does not commit, pull, push, stage, or synchronize repositories.
+
+`/v1/proposals/generate` is experimental. `orchestrator /v1/rde/evaluate` is treated as the stable adapter path when orchestrator is detected.
+
+Sidecars under `.kotonoha/` are local/plugin records and are not complete SLS storage.
+
+**CLI mode** requires [`kotonoha`](https://github.com/zyx-corporation/kotonoha-cli) **>= 0.3.1**. **Git は必須ではない**（既定 `gitMode: off`）。**RDE 監査**は `rde emit` / `rde validate` のみ。`context export` は `gitMode` が `off` 以外のときのみ。
 
 This plugin is intended to provide a personal writing and knowledge-work UI for Kotonoha / SLS workflows: MeaningDelta creation, RDE validation, RDE attachment, review decisions, and note-centered semantic lineage.
 
