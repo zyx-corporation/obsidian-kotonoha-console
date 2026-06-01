@@ -14,6 +14,6 @@
 - [ ] Manual CLI backend smoke test
 - [ ] Manual Note I/O smoke test
 - [ ] PR merged
-- [ ] Release zip uses `kotonoha-console/` folder and `kotonoha-console-v0.3.0.zip`
+- [ ] Release zip uses `kotonoha-console/` folder and `obsidian-kotonoha-console-v0.3.0.zip`
 - [ ] Backend setup docs (`docs/backend-setup.ja.md`)
 - [ ] GitHub Release v0.3.0 assets uploaded

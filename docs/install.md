@@ -36,7 +36,7 @@ See [`backend-setup.md`](backend-setup.md).
 <vault>/.obsidian/plugins/kotonoha-console/
 ```
 
-Download **`kotonoha-console-v0.3.0.zip`**, unzip under `.obsidian/plugins/`.
+Download **`obsidian-kotonoha-console-v0.3.0.zip`**, unzip under `.obsidian/plugins/`.
 
 ---
 

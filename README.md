@@ -17,7 +17,7 @@ Manual install from [GitHub Release v0.3.0](https://github.com/zyx-corporation/o
 └── styles.css
 ```
 
-Download `kotonoha-console-v0.3.0.zip`, unzip into `.obsidian/plugins/`, then enable the plugin (turn off Restricted mode first).
+Download `obsidian-kotonoha-console-v0.3.0.zip`, unzip into `.obsidian/plugins/`, then enable the plugin (turn off Restricted mode first).
 
 Full steps: [`docs/install.ja.md`](docs/install.ja.md) · [`docs/backend-setup.ja.md`](docs/backend-setup.ja.md) · [kotonoha-docs tutorial](https://github.com/zyx-corporation/kotonoha-docs/blob/main/ja/manual/install_obsidian_kotonoha_console.md)
 

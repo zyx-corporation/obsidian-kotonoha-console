@@ -32,7 +32,7 @@
 
 | 方法 | 資産 |
 | --- | --- |
-| **zip（推奨）** | `kotonoha-console-v0.3.0.zip` |
+| **zip（推奨）** | `obsidian-kotonoha-console-v0.3.0.zip` |
 | 個別ファイル | `main.js`, `manifest.json`, `styles.css` |
 
 ---
@@ -54,7 +54,7 @@ Release zip 内のフォルダ名は **`kotonoha-console/`** です。そのま�
 
 ```bash
 cd /path/to/your-vault/.obsidian/plugins
-unzip ~/Downloads/kotonoha-console-v0.3.0.zip
+unzip ~/Downloads/obsidian-kotonoha-console-v0.3.0.zip
 ```
 
 ### 個別ファイルをコピーする場合

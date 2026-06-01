@@ -27,7 +27,7 @@
 ### Distribution
 
 - Release zip folder name is `kotonoha-console/` (manifest id).
-- Release asset: `kotonoha-console-v0.3.0.zip`.
+- Release asset: `obsidian-kotonoha-console-v0.3.0.zip` (folder `kotonoha-console/`).
 
 ### Dogfood
 
