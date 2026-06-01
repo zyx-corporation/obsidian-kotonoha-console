@@ -1,6 +1,6 @@
 # Obsidian Kotonoha Console — インストール
 
-**プラグイン:** `obsidian-kotonoha-console` v0.3.1  
+**プラグイン:** `obsidian-kotonoha-console` **v0.3.0**  
 **manifest id:** `kotonoha-console`  
 **English:** [`install.md`](install.md)  
 **Backend setup:** [`backend-setup.ja.md`](backend-setup.ja.md)（Mock / CLI / HTTP orchestrator）
@@ -12,8 +12,8 @@
 | 項目 | 要件 |
 | --- | --- |
 | Obsidian | **1.4.0+**（`manifest.json` の `minAppVersion`） |
-| 配布形態 | GitHub Release のバイナリ資産（Community plugins 未掲載） |
-| CLI backend を使う場合 | [`kotonoha >= 0.3.1`](https://github.com/zyx-corporation/kotonoha-docs/blob/main/ja/tutorials/install_kotonoha_cli.md) |
+| 配布形態 | [GitHub Release v0.3.0](https://github.com/zyx-corporation/obsidian-kotonoha-console/releases/tag/v0.3.0) |
+| CLI backend を使う場合 | [`kotonoha-cli >= 0.3.1`](https://github.com/zyx-corporation/kotonoha-docs/blob/main/ja/tutorials/install_kotonoha_cli.md) |
 | mock / http backend | CLI 不要（HTTP 要約には [orchestrator](backend-setup.ja.md#mode-c-http-orchestrator-backend) 起動が必要） |
 
 ---
@@ -23,29 +23,23 @@
 | 目的 | 手順 |
 | --- | --- |
 | UI 確認だけ | プラグイン配置 → 有効化 → Backend `mock` |
-| CLI で RDE 監査 | プラグイン + [`kotonoha >= 0.3.1`](https://github.com/zyx-corporation/kotonoha-docs/blob/main/ja/tutorials/install_kotonoha_cli.md) → Backend `cli` |
+| CLI で RDE 監査 | プラグイン + [`kotonoha-cli >= 0.3.1`](https://github.com/zyx-corporation/kotonoha-docs/blob/main/ja/tutorials/install_kotonoha_cli.md) → Backend `cli` |
 | LLM 要約・拡張 | プラグイン + [orchestrator 起動](backend-setup.ja.md#mode-c-http-orchestrator-backend) → Backend `http` |
 
 詳細: [`backend-setup.ja.md`](backend-setup.ja.md)
 
 ## 1. Release 資産を取得する
 
-最新 Release: [obsidian-kotonoha-console Releases](https://github.com/zyx-corporation/obsidian-kotonoha-console/releases)
-
-v0.3.1 以降、次のいずれかで入手できます。
-
 | 方法 | 資産 |
 | --- | --- |
-| **zip（推奨）** | `kotonoha-console-v0.3.1.zip` |
+| **zip（推奨）** | `kotonoha-console-v0.3.0.zip` |
 | 個別ファイル | `main.js`, `manifest.json`, `styles.css` |
-
-v0.3.0 の zip（`obsidian-kotonoha-console-v0.3.0.zip`）も利用可能ですが、展開後にフォルダ名を `kotonoha-console` へリネームしてください。
 
 ---
 
 ## 2. vault に配置する
 
-### 推奨パス（manifest id に合わせる）
+### 推奨パス
 
 ```text
 <vault>/.obsidian/plugins/kotonoha-console/
@@ -54,23 +48,13 @@ v0.3.0 の zip（`obsidian-kotonoha-console-v0.3.0.zip`）も利用可能です�
 └── styles.css
 ```
 
-### zip から入れる場合（v0.3.1+）
+### zip から入れる場合
 
 Release zip 内のフォルダ名は **`kotonoha-console/`** です。そのまま配置できます。
 
 ```bash
 cd /path/to/your-vault/.obsidian/plugins
-unzip ~/Downloads/kotonoha-console-v0.3.1.zip
-```
-
-### zip から入れる場合（v0.3.0）
-
-フォルダ名は `obsidian-kotonoha-console/` です。**配置時は `kotonoha-console` にリネーム**してください。
-
-```bash
-cd /path/to/your-vault/.obsidian/plugins
-unzip ~/Downloads/obsidian-kotonoha-console-v0.3.0.zip
-mv obsidian-kotonoha-console kotonoha-console
+unzip ~/Downloads/kotonoha-console-v0.3.0.zip
 ```
 
 ### 個別ファイルをコピーする場合
@@ -82,9 +66,9 @@ mv obsidian-kotonoha-console kotonoha-console
 ## 3. Obsidian で有効化する
 
 1. vault を開く（またはリロード）
-2. **Settings → Community plugins** → **Restricted mode を OFF**（初回必須）
-3. 一覧で **Kotonoha Console** を **Enable**
-4. バージョンが古い場合は、プラグインを OFF → ON で再読み込み
+2. **Settings → Community plugins** → **Restricted mode を OFF**
+3. **Kotonoha Console** を **Enable**
+4. 更新時はプラグイン OFF → ON
 
 ---
 
@@ -94,55 +78,34 @@ mv obsidian-kotonoha-console kotonoha-console
 
 | 設定 | 初回おすすめ |
 | --- | --- |
-| Backend | `mock`（CLI / orchestrator 不要）または `http` |
-| sidecarMode | on（`.kotonoha/` に記録） |
+| Backend | `mock` または `http` |
+| sidecarMode | on |
 | gitMode | `off` または `passive-observing` |
 
-CLI backend を使う場合は、先に [CLI インストール](https://github.com/zyx-corporation/kotonoha-docs/blob/main/ja/tutorials/install_kotonoha_cli.md) を完了し、Settings で `kotonoha` バイナリパスを指定してください。
-
-HTTP backend（要約・書き換え）を使う場合は、[orchestrator 起動](backend-setup.ja.md#mode-c-http-orchestrator-backend) が必要です。詳細: [`backend-setup.ja.md`](backend-setup.ja.md) · [`cli-runtime-compatibility.ja.md`](cli-runtime-compatibility.ja.md)
+CLI / HTTP の詳細: [`backend-setup.ja.md`](backend-setup.ja.md)
 
 ---
 
 ## 5. 動作確認
 
-1. Markdown ノートを開く（例: 任意の `.md`）
-2. Command palette → **Kotonoha Console を開く** または **RDE 監査を実施（アクティブノート）**
+1. Markdown ノートを開く
+2. Command palette → **Kotonoha Console を開く**
 3. 提案生成 → Apply 前に確認ダイアログが出ること
-
-受け入れチェックリスト: [`dogfood-acceptance.ja.md`](dogfood-acceptance.ja.md)
 
 ---
 
-## 開発者向け（ソースからビルド）
-
-Release 資産ではなくリポジトリから試す場合:
+## 開発者向け
 
 ```bash
-git clone https://github.com/zyx-corporation/obsidian-kotonoha-console.git
-cd obsidian-kotonoha-console
-npm ci && npm run build
-npm run link:dev-vault   # dev-vault/.obsidian/plugins/kotonoha-console/ にコピー
+npm ci && npm run build && npm run link:dev-vault
 ```
 
 詳細: [`IMPLEMENTATION.md`](../IMPLEMENTATION.md)
 
 ---
 
-## トラブルシューティング
-
-| 症状 | 対処 |
-| --- | --- |
-| プラグイン一覧に出ない | Restricted mode OFF、vault リロード、`plugins/kotonoha-console/` に 3 ファイルがあるか確認 |
-| 更新が反映されない | プラグイン OFF → ON、または manifest の version が変わっているか確認 |
-| CLI backend が動かない | `kotonoha version` が **>= 0.3.1** か確認 |
-| 選択範囲 Apply が全体置換になる | v0.3.0 以降を使用。Console 操作前にノートタブを開いたまま選択 |
-
----
-
 ## 関連
 
-- [`README.md`](../README.md) — 現在地と境界
-- [`backend-setup.ja.md`](backend-setup.ja.md) — Mock / CLI / HTTP orchestrator 設定
-- [`note-io-acceptance.ja.md`](note-io-acceptance.ja.md) — Note I/O 受け入れ
-- [kotonoha-docs — Obsidian インストール](https://github.com/zyx-corporation/kotonoha-docs/blob/main/ja/manual/install_obsidian_kotonoha_console.md)
+- [`README.md`](../README.md)
+- [`backend-setup.ja.md`](backend-setup.ja.md)
+- [`note-io-acceptance.ja.md`](note-io-acceptance.ja.md)
