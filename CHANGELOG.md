@@ -1,6 +1,22 @@
 # Changelog
 
-## v0.3.1 — Proposal fence normalization
+## v0.3.0 — First UI hardening
+
+### Added
+
+- Audit engine labeling for orchestrator, local, mock, CLI, and gateway paths.
+- CLI backend dogfood parity for `kotonoha >= 0.3.1`.
+- Minimal sidecar validation helpers for proposal, audit, and review records.
+- Settings / connection UX explaining backend capabilities and stability tiers.
+- Note I/O acceptance hardening for active note reading, selection handling, frontmatter preservation, metadata write policy, source hash guard, and target note focus guard.
+- [`docs/backend-setup.ja.md`](docs/backend-setup.ja.md) — Mock / CLI / HTTP orchestrator setup paths for practical use.
+
+### Changed
+
+- HTTP backend messaging now distinguishes stable adapter endpoints from experimental proposal generation.
+- CLI backend messaging now clarifies that CLI is runtime, not normative spec.
+- Sidecar validation remains compatibility-first and tolerates legacy records without engine metadata.
+- Note mutation remains explicit, source-hash guarded, and human-reviewed.
 
 ### Fixed
 
@@ -11,27 +27,7 @@
 ### Distribution
 
 - Release zip folder name is `kotonoha-console/` (manifest id).
-
-### Documentation
-
-- Add [`docs/backend-setup.ja.md`](docs/backend-setup.ja.md) — Mock / CLI / HTTP orchestrator setup paths for practical use.
-
-## v0.3.0 — First UI hardening
-
-### Added
-
-- Audit engine labeling for orchestrator, local, mock, CLI, and gateway paths.
-- CLI backend dogfood parity for `kotonoha >= 0.3.1`.
-- Minimal sidecar validation helpers for proposal, audit, and review records.
-- Settings / connection UX explaining backend capabilities and stability tiers.
-- Note I/O acceptance hardening for active note reading, selection handling, frontmatter preservation, metadata write policy, source hash guard, and target note focus guard.
-
-### Changed
-
-- HTTP backend messaging now distinguishes stable adapter endpoints from experimental proposal generation.
-- CLI backend messaging now clarifies that CLI is runtime, not normative spec.
-- Sidecar validation remains compatibility-first and tolerates legacy records without engine metadata.
-- Note mutation remains explicit, source-hash guarded, and human-reviewed.
+- Release asset: `kotonoha-console-v0.3.0.zip`.
 
 ### Dogfood
 
@@ -49,7 +45,3 @@
 - Advanced partial apply UX is deferred to v0.4.
 - Git context export integration is deferred to v0.4.
 - Sidecar ↔ CLI/M6 export correlation is deferred to v0.4.
-
-### Backend setup (added in v0.3.1 docs)
-
-The plugin is the Obsidian UI only. See [`docs/backend-setup.ja.md`](docs/backend-setup.ja.md) for Mock / CLI / HTTP orchestrator modes.
