@@ -73,6 +73,8 @@ const MSGS = {
       "Source has changed. Re-audit or explicit override is required. Continue?",
     confirmGitHeadChanged:
       "Git HEAD changed since generation (Obsidian Git may have synced). Re-audit recommended. Continue?",
+    confirmRevisionAuditStale:
+      "The revised text changed after the last audit. Re-audit is recommended. Continue anyway?",
     confirmApply: "Apply this proposal to the note? Original text will be overwritten.",
     noticeOpenEditor: "Open the note in the editor to apply selection",
     noticeSelectionNotFound:
@@ -250,6 +252,8 @@ const MSGS = {
       "ソースが変更されています。再監査または明示的な上書きが必要です。続行しますか？",
     confirmGitHeadChanged:
       "生成後に Git HEAD が変わっています（Obsidian Git の同期の可能性）。再監査を推奨します。続行しますか？",
+    confirmRevisionAuditStale:
+      "最後の監査後に改訂テキストが変更されています。再監査を推奨します。このまま続行しますか？",
     confirmApply: "この提案をノートに適用しますか？元のテキストは上書きされます。",
     noticeOpenEditor: "エディタでノートを開いてから選択範囲に適用してください",
     noticeSelectionNotFound:
@@ -428,6 +432,8 @@ const MSGS = {
       "源已更改。需要重新审计或明确覆盖。是否继续？",
     confirmGitHeadChanged:
       "生成后 Git HEAD 已变化（可能由 Obsidian Git 同步引起）。建议重新审计。是否继续？",
+    confirmRevisionAuditStale:
+      "修订文本在上次审计后已更改。建议重新审计。仍要继续吗？",
     confirmApply: "将此提案应用到笔记？原始文本将被覆盖。",
     noticeOpenEditor: "请在编辑器中打开笔记后再应用到选区",
     noticeSelectionNotFound:

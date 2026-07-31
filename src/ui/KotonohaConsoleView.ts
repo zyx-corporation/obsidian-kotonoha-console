@@ -19,6 +19,7 @@ import {
   mergeKotonohaFrontmatter,
   shouldWriteMetadata,
 } from "../obsidian/metadataLineage";
+import { isRevisionAuditStale } from "../obsidian/revisionAuditGuards";
 
 export const KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
 
@@ -29,6 +30,7 @@ export class KotonohaConsoleView extends ItemView {
   private targetFilePath: string | null = null;
   private sourceHashAtGeneration: string | null = null;
   private gitCommitAtGeneration: string | null = null;
+  private auditedProposalText: string | null = null;
   private reviseMode = false;
   private editedText = "";
   private proposalHost!: HTMLElement;
@@ -173,6 +175,7 @@ export class KotonohaConsoleView extends ItemView {
     this.targetFilePath = null;
     this.sourceHashAtGeneration = null;
     this.gitCommitAtGeneration = null;
+    this.auditedProposalText = null;
     this.reviseMode = false;
     this.editedText = "";
     this.proposalHost?.empty();
@@ -248,6 +251,9 @@ export class KotonohaConsoleView extends ItemView {
         this.reviseMode = false;
         this.editedText = "";
         this.bundle = await this.plugin.proposals.generate(request);
+        this.auditedProposalText = this.bundle.audit
+          ? this.bundle.proposal.proposedText
+          : null;
         await this.plugin.auditLog.logProposal(
           this.bundle.proposal,
           ctx.sourceText,
@@ -357,6 +363,21 @@ export class KotonohaConsoleView extends ItemView {
         const ok = confirm(consoleMsg(lang, "confirmGitHeadChanged"));
         if (!ok) return;
       }
+    }
+
+    const proposedTextForApply = this.reviseMode
+      ? this.editedText
+      : this.bundle.proposal.proposedText;
+    if (
+      isRevisionAuditStale(
+        this.reviseMode,
+        proposedTextForApply,
+        this.auditedProposalText,
+        Boolean(this.bundle.audit),
+      )
+    ) {
+      const ok = confirm(consoleMsg(lang, "confirmRevisionAuditStale"));
+      if (!ok) return;
     }
 
     const okApply = confirm(consoleMsg(lang, "confirmApply"));
@@ -499,6 +520,7 @@ export class KotonohaConsoleView extends ItemView {
         proposalText,
       );
       this.bundle = { ...this.bundle!, audit };
+      this.auditedProposalText = proposalText;
       if (this.plugin.settings.sidecarMode) {
         await this.plugin.sidecar.saveRdeAuditRecord(
           this.lastRequest!,
