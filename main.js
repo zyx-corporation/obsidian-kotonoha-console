@@ -395,10 +395,16 @@ var MSGS2 = {
     auditEngineGateway: "gateway / local rule-based audit",
     auditEngineLocalCaution: "not full RDE evaluation",
     auditEngineCliCaution: "interchange skeleton / local rule-based guardrails only; not full RDE evaluation",
+    applyScopeWholeNote: "Apply scope: whole note",
+    applyScopeSelection: "Apply scope: selected text ({chars} chars)",
+    applyScopeUnsupported: "Apply scope unavailable: {reason}",
     confirmSourceChanged: "Source has changed. Re-audit or explicit override is required. Continue?",
     confirmGitHeadChanged: "Git HEAD changed since generation (Obsidian Git may have synced). Re-audit recommended. Continue?",
     confirmRevisionAuditStale: "The revised text changed after the last audit. Re-audit is recommended. Continue anyway?",
     confirmApply: "Apply this proposal to the note? Original text will be overwritten.",
+    confirmApplyWholeNote: "Apply this proposal to the whole note? Original note content will be overwritten.",
+    confirmApplySelection: "Apply this proposal to the selected text only? The rest of the note will be preserved.",
+    noticeApplyScopeUnsupported: "Apply blocked: {reason}",
     noticeOpenEditor: "Open the note in the editor to apply selection",
     noticeSelectionNotFound: "Selection text was not found in the note \u2014 apply blocked to avoid whole-note overwrite",
     mockRdeSummary: "[mock] RDE audit \xB7 {title}",
@@ -544,10 +550,16 @@ var MSGS2 = {
     auditEngineGateway: "gateway / local rule-based audit",
     auditEngineLocalCaution: "full RDE \u3067\u306F\u3042\u308A\u307E\u305B\u3093",
     auditEngineCliCaution: "interchange skeleton / rule-based guardrails \u306E\u307F \u2014 full RDE \u3067\u306F\u3042\u308A\u307E\u305B\u3093",
+    applyScopeWholeNote: "\u9069\u7528\u7BC4\u56F2: \u30CE\u30FC\u30C8\u5168\u4F53",
+    applyScopeSelection: "\u9069\u7528\u7BC4\u56F2: \u9078\u629E\u30C6\u30AD\u30B9\u30C8\uFF08{chars}\u6587\u5B57\uFF09",
+    applyScopeUnsupported: "\u9069\u7528\u7BC4\u56F2\u3092\u78BA\u5B9A\u3067\u304D\u307E\u305B\u3093: {reason}",
     confirmSourceChanged: "\u30BD\u30FC\u30B9\u304C\u5909\u66F4\u3055\u308C\u3066\u3044\u307E\u3059\u3002\u518D\u76E3\u67FB\u307E\u305F\u306F\u660E\u793A\u7684\u306A\u4E0A\u66F8\u304D\u304C\u5FC5\u8981\u3067\u3059\u3002\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F",
     confirmGitHeadChanged: "\u751F\u6210\u5F8C\u306B Git HEAD \u304C\u5909\u308F\u3063\u3066\u3044\u307E\u3059\uFF08Obsidian Git \u306E\u540C\u671F\u306E\u53EF\u80FD\u6027\uFF09\u3002\u518D\u76E3\u67FB\u3092\u63A8\u5968\u3057\u307E\u3059\u3002\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F",
     confirmRevisionAuditStale: "\u6700\u5F8C\u306E\u76E3\u67FB\u5F8C\u306B\u6539\u8A02\u30C6\u30AD\u30B9\u30C8\u304C\u5909\u66F4\u3055\u308C\u3066\u3044\u307E\u3059\u3002\u518D\u76E3\u67FB\u3092\u63A8\u5968\u3057\u307E\u3059\u3002\u3053\u306E\u307E\u307E\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F",
     confirmApply: "\u3053\u306E\u63D0\u6848\u3092\u30CE\u30FC\u30C8\u306B\u9069\u7528\u3057\u307E\u3059\u304B\uFF1F\u5143\u306E\u30C6\u30AD\u30B9\u30C8\u306F\u4E0A\u66F8\u304D\u3055\u308C\u307E\u3059\u3002",
+    confirmApplyWholeNote: "\u3053\u306E\u63D0\u6848\u3092\u30CE\u30FC\u30C8\u5168\u4F53\u306B\u9069\u7528\u3057\u307E\u3059\u304B\uFF1F\u5143\u306E\u30CE\u30FC\u30C8\u672C\u6587\u306F\u4E0A\u66F8\u304D\u3055\u308C\u307E\u3059\u3002",
+    confirmApplySelection: "\u3053\u306E\u63D0\u6848\u3092\u9078\u629E\u30C6\u30AD\u30B9\u30C8\u3060\u3051\u306B\u9069\u7528\u3057\u307E\u3059\u304B\uFF1F\u30CE\u30FC\u30C8\u306E\u4ED6\u306E\u90E8\u5206\u306F\u4FDD\u6301\u3055\u308C\u307E\u3059\u3002",
+    noticeApplyScopeUnsupported: "\u9069\u7528\u3092\u4E2D\u6B62\u3057\u307E\u3057\u305F: {reason}",
     noticeOpenEditor: "\u30A8\u30C7\u30A3\u30BF\u3067\u30CE\u30FC\u30C8\u3092\u958B\u3044\u3066\u304B\u3089\u9078\u629E\u7BC4\u56F2\u306B\u9069\u7528\u3057\u3066\u304F\u3060\u3055\u3044",
     noticeSelectionNotFound: "\u9078\u629E\u30C6\u30AD\u30B9\u30C8\u304C\u30CE\u30FC\u30C8\u5185\u306B\u898B\u3064\u304B\u308A\u307E\u305B\u3093 \u2014 \u30CE\u30FC\u30C8\u5168\u4F53\u306E\u8AA4\u4E0A\u66F8\u304D\u3092\u9632\u3050\u305F\u3081\u9069\u7528\u3092\u4E2D\u6B62\u3057\u307E\u3057\u305F",
     mockRdeSummary: "[mock] RDE \u76E3\u67FB \xB7 {title}",
@@ -693,10 +705,16 @@ var MSGS2 = {
     auditEngineGateway: "gateway / local rule-based audit",
     auditEngineLocalCaution: "\u975E\u5B8C\u6574 RDE \u8BC4\u4F30",
     auditEngineCliCaution: "interchange skeleton / \u57FA\u4E8E\u89C4\u5219\u7684 guardrails \u2014 \u975E\u5B8C\u6574 RDE \u8BC4\u4F30",
+    applyScopeWholeNote: "\u5E94\u7528\u8303\u56F4\uFF1A\u6574\u7BC7\u7B14\u8BB0",
+    applyScopeSelection: "\u5E94\u7528\u8303\u56F4\uFF1A\u9009\u4E2D\u6587\u672C\uFF08{chars} \u5B57\uFF09",
+    applyScopeUnsupported: "\u65E0\u6CD5\u786E\u5B9A\u5E94\u7528\u8303\u56F4\uFF1A{reason}",
     confirmSourceChanged: "\u6E90\u5DF2\u66F4\u6539\u3002\u9700\u8981\u91CD\u65B0\u5BA1\u8BA1\u6216\u660E\u786E\u8986\u76D6\u3002\u662F\u5426\u7EE7\u7EED\uFF1F",
     confirmGitHeadChanged: "\u751F\u6210\u540E Git HEAD \u5DF2\u53D8\u5316\uFF08\u53EF\u80FD\u7531 Obsidian Git \u540C\u6B65\u5F15\u8D77\uFF09\u3002\u5EFA\u8BAE\u91CD\u65B0\u5BA1\u8BA1\u3002\u662F\u5426\u7EE7\u7EED\uFF1F",
     confirmRevisionAuditStale: "\u4FEE\u8BA2\u6587\u672C\u5728\u4E0A\u6B21\u5BA1\u8BA1\u540E\u5DF2\u66F4\u6539\u3002\u5EFA\u8BAE\u91CD\u65B0\u5BA1\u8BA1\u3002\u4ECD\u8981\u7EE7\u7EED\u5417\uFF1F",
     confirmApply: "\u5C06\u6B64\u63D0\u6848\u5E94\u7528\u5230\u7B14\u8BB0\uFF1F\u539F\u59CB\u6587\u672C\u5C06\u88AB\u8986\u76D6\u3002",
+    confirmApplyWholeNote: "\u5C06\u6B64\u63D0\u6848\u5E94\u7528\u5230\u6574\u7BC7\u7B14\u8BB0\uFF1F\u539F\u59CB\u7B14\u8BB0\u5185\u5BB9\u5C06\u88AB\u8986\u76D6\u3002",
+    confirmApplySelection: "\u4EC5\u5C06\u6B64\u63D0\u6848\u5E94\u7528\u5230\u9009\u4E2D\u6587\u672C\uFF1F\u7B14\u8BB0\u5176\u4ED6\u90E8\u5206\u5C06\u4FDD\u7559\u3002",
+    noticeApplyScopeUnsupported: "\u5DF2\u963B\u6B62\u5E94\u7528\uFF1A{reason}",
     noticeOpenEditor: "\u8BF7\u5728\u7F16\u8F91\u5668\u4E2D\u6253\u5F00\u7B14\u8BB0\u540E\u518D\u5E94\u7528\u5230\u9009\u533A",
     noticeSelectionNotFound: "\u9009\u533A\u6587\u672C\u5728\u7B14\u8BB0\u4E2D\u672A\u627E\u5230 \u2014 \u5DF2\u963B\u6B62\u5E94\u7528\u4EE5\u907F\u514D\u6574\u7BC7\u8986\u76D6",
     mockRdeSummary: "[mock] RDE \u5BA1\u8BA1 \xB7 {title}",
@@ -1138,6 +1156,18 @@ var ProposalView = class {
       host.createEl("p", {
         cls: "kotonoha-console-warn",
         text: proposal.uncertaintyNote
+      });
+    }
+    if (!actions.auditReportOnly && actions.applyScopeText) {
+      host.createEl("p", {
+        cls: "kotonoha-console-apply-scope",
+        text: actions.applyScopeText
+      });
+    }
+    if (!actions.auditReportOnly && actions.applyScopeWarningText) {
+      host.createEl("p", {
+        cls: "kotonoha-console-warn",
+        text: actions.applyScopeWarningText
       });
     }
     if (actions.reviseMode) {
@@ -1881,6 +1911,22 @@ function isRevisionAuditStale(reviseMode, currentProposalText, auditedProposalTe
   return currentProposalText.trim() !== auditedProposalText.trim();
 }
 
+// src/obsidian/applyScope.ts
+function describeApplyScope(input) {
+  const unsupported = input.unsupportedPartialReason?.trim();
+  if (unsupported) {
+    return { kind: "unsupported_partial", reason: unsupported };
+  }
+  const selection = input.selectionText?.trim();
+  if (selection) {
+    return { kind: "selection", selectedChars: Array.from(selection).length };
+  }
+  return { kind: "whole_note" };
+}
+function isApplyScopeSupported(scope) {
+  return scope.kind !== "unsupported_partial";
+}
+
 // src/ui/KotonohaConsoleView.ts
 var KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
 var KotonohaConsoleView = class extends import_obsidian2.ItemView {
@@ -2132,6 +2178,8 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       onReAudit: isAuditReport ? void 0 : () => void this.reAuditProposal(),
       auditReportOnly: isAuditReport,
       auditMissing,
+      applyScopeText: isAuditReport ? void 0 : this.formatApplyScopeText(lang),
+      applyScopeWarningText: isAuditReport ? void 0 : this.formatApplyScopeWarningText(lang),
       language: lang,
       reviseMode: this.reviseMode,
       editedText: this.editedText,
@@ -2148,6 +2196,15 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     const lang = this.uiLang();
     if (this.lastOperation === "rde_audit") {
       new import_obsidian2.Notice(consoleMsg(lang, "noticeAuditNoApply"));
+      return;
+    }
+    const applyScope = this.currentApplyScope();
+    if (!isApplyScopeSupported(applyScope)) {
+      new import_obsidian2.Notice(
+        consoleMsg(lang, "noticeApplyScopeUnsupported", {
+          reason: applyScope.reason
+        })
+      );
       return;
     }
     const file = this.resolveTargetFile();
@@ -2184,7 +2241,12 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       const ok = confirm(consoleMsg(lang, "confirmRevisionAuditStale"));
       if (!ok) return;
     }
-    const okApply = confirm(consoleMsg(lang, "confirmApply"));
+    const okApply = confirm(
+      consoleMsg(
+        lang,
+        applyScope.kind === "selection" ? "confirmApplySelection" : "confirmApplyWholeNote"
+      )
+    );
     if (!okApply) return;
     await this.withBusy(async () => {
       const file2 = this.resolveTargetFile();
@@ -2244,6 +2306,32 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       review_status: reviewStatus,
       latest_proposal_id: this.bundle.proposal.id,
       project_id: this.plugin.settings.projectId
+    });
+  }
+  currentApplyScope() {
+    return describeApplyScope({
+      selectionText: this.lastRequest?.context.selectionText
+    });
+  }
+  formatApplyScopeText(lang) {
+    const scope = this.currentApplyScope();
+    if (scope.kind === "selection") {
+      return consoleMsg(lang, "applyScopeSelection", {
+        chars: scope.selectedChars
+      });
+    }
+    if (scope.kind === "unsupported_partial") {
+      return consoleMsg(lang, "applyScopeUnsupported", {
+        reason: scope.reason
+      });
+    }
+    return consoleMsg(lang, "applyScopeWholeNote");
+  }
+  formatApplyScopeWarningText(lang) {
+    const scope = this.currentApplyScope();
+    if (scope.kind !== "unsupported_partial") return void 0;
+    return consoleMsg(lang, "noticeApplyScopeUnsupported", {
+      reason: scope.reason
     });
   }
   async rejectProposal() {

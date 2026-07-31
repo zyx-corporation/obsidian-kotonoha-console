@@ -13,6 +13,8 @@ export interface ProposalViewActions {
   language?: RdeLang;
   auditReportOnly?: boolean;
   auditMissing?: boolean;
+  applyScopeText?: string;
+  applyScopeWarningText?: string;
   reviseMode?: boolean;
   editedText?: string;
   onEditedTextChange?: (text: string) => void;
@@ -46,6 +48,18 @@ export class ProposalView {
       host.createEl("p", {
         cls: "kotonoha-console-warn",
         text: proposal.uncertaintyNote,
+      });
+    }
+    if (!actions.auditReportOnly && actions.applyScopeText) {
+      host.createEl("p", {
+        cls: "kotonoha-console-apply-scope",
+        text: actions.applyScopeText,
+      });
+    }
+    if (!actions.auditReportOnly && actions.applyScopeWarningText) {
+      host.createEl("p", {
+        cls: "kotonoha-console-warn",
+        text: actions.applyScopeWarningText,
       });
     }
 
