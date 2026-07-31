@@ -69,6 +69,9 @@ const MSGS = {
     auditEngineLocalCaution: "not full RDE evaluation",
     auditEngineCliCaution:
       "interchange skeleton / local rule-based guardrails only; not full RDE evaluation",
+    applyScopeWholeNote: "Apply scope: whole note",
+    applyScopeSelection: "Apply scope: selected text ({chars} chars)",
+    applyScopeUnsupported: "Apply scope unavailable: {reason}",
     confirmSourceChanged:
       "Source has changed. Re-audit or explicit override is required. Continue?",
     confirmGitHeadChanged:
@@ -76,6 +79,11 @@ const MSGS = {
     confirmRevisionAuditStale:
       "The revised text changed after the last audit. Re-audit is recommended. Continue anyway?",
     confirmApply: "Apply this proposal to the note? Original text will be overwritten.",
+    confirmApplyWholeNote:
+      "Apply this proposal to the whole note? Original note content will be overwritten.",
+    confirmApplySelection:
+      "Apply this proposal to the selected text only? The rest of the note will be preserved.",
+    noticeApplyScopeUnsupported: "Apply blocked: {reason}",
     noticeOpenEditor: "Open the note in the editor to apply selection",
     noticeSelectionNotFound:
       "Selection text was not found in the note — apply blocked to avoid whole-note overwrite",
@@ -248,6 +256,9 @@ const MSGS = {
     auditEngineLocalCaution: "full RDE ではありません",
     auditEngineCliCaution:
       "interchange skeleton / rule-based guardrails のみ — full RDE ではありません",
+    applyScopeWholeNote: "適用範囲: ノート全体",
+    applyScopeSelection: "適用範囲: 選択テキスト（{chars}文字）",
+    applyScopeUnsupported: "適用範囲を確定できません: {reason}",
     confirmSourceChanged:
       "ソースが変更されています。再監査または明示的な上書きが必要です。続行しますか？",
     confirmGitHeadChanged:
@@ -255,6 +266,11 @@ const MSGS = {
     confirmRevisionAuditStale:
       "最後の監査後に改訂テキストが変更されています。再監査を推奨します。このまま続行しますか？",
     confirmApply: "この提案をノートに適用しますか？元のテキストは上書きされます。",
+    confirmApplyWholeNote:
+      "この提案をノート全体に適用しますか？元のノート本文は上書きされます。",
+    confirmApplySelection:
+      "この提案を選択テキストだけに適用しますか？ノートの他の部分は保持されます。",
+    noticeApplyScopeUnsupported: "適用を中止しました: {reason}",
     noticeOpenEditor: "エディタでノートを開いてから選択範囲に適用してください",
     noticeSelectionNotFound:
       "選択テキストがノート内に見つかりません — ノート全体の誤上書きを防ぐため適用を中止しました",
@@ -428,6 +444,9 @@ const MSGS = {
     auditEngineLocalCaution: "非完整 RDE 评估",
     auditEngineCliCaution:
       "interchange skeleton / 基于规则的 guardrails — 非完整 RDE 评估",
+    applyScopeWholeNote: "应用范围：整篇笔记",
+    applyScopeSelection: "应用范围：选中文本（{chars} 字）",
+    applyScopeUnsupported: "无法确定应用范围：{reason}",
     confirmSourceChanged:
       "源已更改。需要重新审计或明确覆盖。是否继续？",
     confirmGitHeadChanged:
@@ -435,6 +454,9 @@ const MSGS = {
     confirmRevisionAuditStale:
       "修订文本在上次审计后已更改。建议重新审计。仍要继续吗？",
     confirmApply: "将此提案应用到笔记？原始文本将被覆盖。",
+    confirmApplyWholeNote: "将此提案应用到整篇笔记？原始笔记内容将被覆盖。",
+    confirmApplySelection: "仅将此提案应用到选中文本？笔记其他部分将保留。",
+    noticeApplyScopeUnsupported: "已阻止应用：{reason}",
     noticeOpenEditor: "请在编辑器中打开笔记后再应用到选区",
     noticeSelectionNotFound:
       "选区文本在笔记中未找到 — 已阻止应用以避免整篇覆盖",

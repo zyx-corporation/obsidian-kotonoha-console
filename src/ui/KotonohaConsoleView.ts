@@ -20,6 +20,11 @@ import {
   shouldWriteMetadata,
 } from "../obsidian/metadataLineage";
 import { isRevisionAuditStale } from "../obsidian/revisionAuditGuards";
+import {
+  describeApplyScope,
+  isApplyScopeSupported,
+  type ApplyScope,
+} from "../obsidian/applyScope";
 
 export const KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
 
@@ -315,6 +320,10 @@ export class KotonohaConsoleView extends ItemView {
       onReAudit: isAuditReport ? undefined : () => void this.reAuditProposal(),
       auditReportOnly: isAuditReport,
       auditMissing,
+      applyScopeText: isAuditReport ? undefined : this.formatApplyScopeText(lang),
+      applyScopeWarningText: isAuditReport
+        ? undefined
+        : this.formatApplyScopeWarningText(lang),
       language: lang,
       reviseMode: this.reviseMode,
       editedText: this.editedText,
@@ -333,6 +342,16 @@ export class KotonohaConsoleView extends ItemView {
     const lang = this.uiLang();
     if (this.lastOperation === "rde_audit") {
       new Notice(consoleMsg(lang, "noticeAuditNoApply"));
+      return;
+    }
+
+    const applyScope = this.currentApplyScope();
+    if (!isApplyScopeSupported(applyScope)) {
+      new Notice(
+        consoleMsg(lang, "noticeApplyScopeUnsupported", {
+          reason: applyScope.reason,
+        }),
+      );
       return;
     }
 
@@ -380,7 +399,14 @@ export class KotonohaConsoleView extends ItemView {
       if (!ok) return;
     }
 
-    const okApply = confirm(consoleMsg(lang, "confirmApply"));
+    const okApply = confirm(
+      consoleMsg(
+        lang,
+        applyScope.kind === "selection"
+          ? "confirmApplySelection"
+          : "confirmApplyWholeNote",
+      ),
+    );
     if (!okApply) return;
 
     await this.withBusy(async () => {
@@ -459,6 +485,35 @@ export class KotonohaConsoleView extends ItemView {
       review_status: reviewStatus,
       latest_proposal_id: this.bundle.proposal.id,
       project_id: this.plugin.settings.projectId,
+    });
+  }
+
+  private currentApplyScope(): ApplyScope {
+    return describeApplyScope({
+      selectionText: this.lastRequest?.context.selectionText,
+    });
+  }
+
+  private formatApplyScopeText(lang: RdeLang): string {
+    const scope = this.currentApplyScope();
+    if (scope.kind === "selection") {
+      return consoleMsg(lang, "applyScopeSelection", {
+        chars: scope.selectedChars,
+      });
+    }
+    if (scope.kind === "unsupported_partial") {
+      return consoleMsg(lang, "applyScopeUnsupported", {
+        reason: scope.reason,
+      });
+    }
+    return consoleMsg(lang, "applyScopeWholeNote");
+  }
+
+  private formatApplyScopeWarningText(lang: RdeLang): string | undefined {
+    const scope = this.currentApplyScope();
+    if (scope.kind !== "unsupported_partial") return undefined;
+    return consoleMsg(lang, "noticeApplyScopeUnsupported", {
+      reason: scope.reason,
     });
   }
 
