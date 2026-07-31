@@ -46,7 +46,7 @@ export class CliKotonohaClient implements KotonohaClient {
       return this.generateRdeAudit(request, proposalId);
     }
 
-    if (this.mayUseContextExport()) {
+    if (this.mayUseContextExport(request)) {
       try {
         return await this.generateWithContextExport(request, proposalId);
       } catch (e) {
@@ -81,8 +81,8 @@ export class CliKotonohaClient implements KotonohaClient {
   }
 
   /** git-mode-spec §10: non-Git mode must not require Git-aware CLI. */
-  private mayUseContextExport(): boolean {
-    return this.options.gitMode !== "off";
+  private mayUseContextExport(request: GenerationRequest): boolean {
+    return this.options.gitMode !== "off" && Boolean(request.context.git?.commit);
   }
 
   private async generateRdeAudit(
