@@ -2,13 +2,13 @@
 
 Kotonoha UI plugin for Obsidian (proposal · RDE audit · human approval).
 
-**Docs:** [`docs/install.ja.md`](docs/install.ja.md) · [`docs/backend-setup.ja.md`](docs/backend-setup.ja.md) · [`docs/architecture.ja.md`](docs/architecture.ja.md) · [`docs/git-mode-spec.ja.md`](docs/git-mode-spec.ja.md) · [`docs/cli-runtime-compatibility.ja.md`](docs/cli-runtime-compatibility.ja.md) · [`docs/v0.3-dogfood-record.ja.md`](docs/v0.3-dogfood-record.ja.md)
+**Docs:** [`docs/install.ja.md`](docs/install.ja.md) · [`docs/backend-setup.ja.md`](docs/backend-setup.ja.md) · [`docs/architecture.ja.md`](docs/architecture.ja.md) · [`docs/git-mode-spec.ja.md`](docs/git-mode-spec.ja.md) · [`docs/cli-runtime-compatibility.ja.md`](docs/cli-runtime-compatibility.ja.md) · [`docs/v0.4-dogfood-record.ja.md`](docs/v0.4-dogfood-record.ja.md)
 
 **Build:** see [`IMPLEMENTATION.md`](IMPLEMENTATION.md).
 
 ## Install
 
-Manual install from [GitHub Release v0.3.0](https://github.com/zyx-corporation/obsidian-kotonoha-console/releases/tag/v0.3.0):
+Manual install from [GitHub Release v0.4.0](https://github.com/zyx-corporation/obsidian-kotonoha-console/releases/tag/v0.4.0):
 
 ```text
 <vault>/.obsidian/plugins/kotonoha-console/
@@ -17,7 +17,7 @@ Manual install from [GitHub Release v0.3.0](https://github.com/zyx-corporation/o
 └── styles.css
 ```
 
-Download `obsidian-kotonoha-console-v0.3.0.zip`, unzip into `.obsidian/plugins/`, then enable the plugin (turn off Restricted mode first).
+Download `obsidian-kotonoha-console-v0.4.0.zip`, unzip into `.obsidian/plugins/`, then enable the plugin (turn off Restricted mode first).
 
 Full steps: [`docs/install.ja.md`](docs/install.ja.md) · [`docs/backend-setup.ja.md`](docs/backend-setup.ja.md) · [kotonoha-docs tutorial](https://github.com/zyx-corporation/kotonoha-docs/blob/main/ja/manual/install_obsidian_kotonoha_console.md)
 
@@ -38,21 +38,21 @@ Full guide: [`docs/backend-setup.ja.md`](docs/backend-setup.ja.md)
 
 ## Current status
 
-`obsidian-kotonoha-console` **v0.3.0** is the First UI hardening release.
+`obsidian-kotonoha-console` **v0.4.0** is the Integration depth release.
 
 It focuses on:
 
-- audit engine labeling,
-- CLI backend dogfood parity,
-- sidecar validation and compatibility,
-- backend connection UX,
-- Note I/O safety.
+- read-only `passive-observing` Git context,
+- revise → re-audit → apply stale-audit guardrails,
+- clearer whole-note vs selection apply UX,
+- CLI `context export` only when read-only Git context is available,
+- sidecar ↔ CLI/M6 export correlation hints.
 
 The plugin remains Git-aware but not Git-owning. It does not commit, pull, push, stage, or synchronize repositories.
 
 `/v1/proposals/generate` is experimental. `orchestrator /v1/rde/evaluate` is treated as the stable adapter path when orchestrator is detected.
 
-Sidecars under `.kotonoha/` are local/plugin records and are not complete SLS storage.
+Sidecars under `.kotonoha/` are local/plugin records and are not complete SLS storage. v0.4 adds read-only export correlation hints; it does not sync sidecars into M6/Postgres.
 
 **CLI mode** requires [`kotonoha`](https://github.com/zyx-corporation/kotonoha-cli) **>= 0.3.1**. **Git は必須ではない**（既定 `gitMode: off`）。**RDE 監査**は `rde emit` / `rde validate` のみ。`context export` は `gitMode` が `off` 以外のときのみ。
 

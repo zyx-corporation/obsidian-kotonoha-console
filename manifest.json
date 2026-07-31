@@ -1,7 +1,7 @@
 {
   "id": "kotonoha-console",
   "name": "Kotonoha Console",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "minAppVersion": "1.4.0",
   "description": "Proposal, RDE audit, and human approval for Kotonoha semantic lineage in Obsidian.",
   "author": "zyx-corporation",
