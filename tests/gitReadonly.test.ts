@@ -37,6 +37,36 @@ describe("buildGitContext", () => {
     });
   });
 
+  it("passive-observing uses read-only git commands only", async () => {
+    const root = "/repo";
+    const calls: string[] = [];
+    const exec: GitExec = async (args, cwd) => {
+      calls.push(`${cwd}::${args.join(" ")}`);
+      return (
+        {
+          [`${root}::rev-parse --show-toplevel`]: root,
+          [`${root}::rev-parse --abbrev-ref HEAD`]: "main",
+          [`${root}::rev-parse --short HEAD`]: "abc1234",
+          [`${root}::status --porcelain -- notes/a.md`]: "",
+          [`${root}::status --porcelain`]: "",
+        } as Record<string, string>
+      )[`${cwd}::${args.join(" ")}`];
+    };
+
+    await buildGitContext(root, "notes/a.md", "passive-observing", exec);
+
+    expect(calls).toEqual([
+      `${root}::rev-parse --show-toplevel`,
+      `${root}::rev-parse --abbrev-ref HEAD`,
+      `${root}::rev-parse --short HEAD`,
+      `${root}::status --porcelain -- notes/a.md`,
+      `${root}::status --porcelain`,
+    ]);
+    expect(calls.join("\n")).not.toMatch(
+      /\b(add|commit|pull|push|reset|merge|rebase|checkout|switch|restore)\b/,
+    );
+  });
+
   it("external: root and path only", async () => {
     const root = "/repo";
     const exec = mockExec({
