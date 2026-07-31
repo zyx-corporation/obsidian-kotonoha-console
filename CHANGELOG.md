@@ -1,5 +1,33 @@
 # Changelog
 
+## v0.4.0 — Integration depth
+
+### Added
+
+- `passive-observing` Git dogfood guardrails: read branch / commit / dirty state without invoking Git writes.
+- Revise → re-audit → apply stale-audit guard: warns when revised text changes after the latest audit.
+- Partial apply scope UX: proposal cards and confirmation dialogs distinguish whole-note apply from selection apply.
+- CLI `context export` integration is gated on read-only Git snapshot availability and falls back to path + source hash anchors.
+- Sidecar ↔ CLI/M6 export correlation hints on proposal / audit / review sidecars.
+- `docs/v0.4-dogfood-record.ja.md` records Phase 1–5 evidence.
+
+### Changed
+
+- CLI backend now calls `kotonoha context export` only when `gitMode` is enabled and a Git commit snapshot exists.
+- Proposal UI shows local-only vs available export correlation status.
+- Sidecar validation remains compatibility-first: malformed `exportCorrelation` fields warn but do not block legacy sidecars.
+
+### Distribution
+
+- Release zip folder name remains `kotonoha-console/` (manifest id).
+- Release asset: `obsidian-kotonoha-console-v0.4.0.zip` (folder `kotonoha-console/`).
+
+### Boundaries
+
+- Obsidian sidecars remain local/plugin evidence records, not canonical SLS storage.
+- Git integration remains read-only; no commit, pull, push, stage, reset, merge, rebase, checkout, switch, or restore operations are invoked.
+- Sidecar ↔ M6 correlation is a read-only hint, not DB sync.
+
 ## v0.3.0 — First UI hardening
 
 ### Added

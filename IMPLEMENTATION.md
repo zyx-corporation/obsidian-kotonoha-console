@@ -5,8 +5,8 @@ Aligned with [`docs/architecture.ja.md`](docs/architecture.ja.md) phases.
 | Phase | Status | Notes |
 | --- | --- | --- |
 | 0 Plugin skeleton | **done** | `main.ts`, settings, commands, side panel |
-| 1 Note I/O | **partial** | active note, selection via editor on apply, frontmatter/tags |
-| 2 Kotonoha client | **partial** | `CliKotonohaClient`, **`HttpKotonohaClient`** (orchestrator/gateway/console); see [`docs/http-client-contract.md`](docs/http-client-contract.md) |
+| 1 Note I/O | **done** | active note, selection apply, frontmatter/tags, source hash and target focus guards |
+| 2 Kotonoha client | **done** | `CliKotonohaClient`, **`HttpKotonohaClient`** (orchestrator/gateway/console); CLI context export gated on read-only Git snapshot |
 | 3 Proposal mode | **done** | generate, copy, reject, revise, confirm apply |
 | 4 RDE audit | **done** | source review + structural diff + CLI `rde emit`/`validate`; sidecar |
 | 5 Approval workflow | **done** | audit log + `.kotonoha/reviews/` (approve/reject/hold/partial) |
@@ -66,5 +66,5 @@ Headless pre-check: `npm run demo:rde-audit`
 
 ## Next
 
-- Execute dogfood sign-off ([`docs/dogfood-acceptance.ja.md`](docs/dogfood-acceptance.ja.md))
-- Cross-repo convergence: `kotonoha-management` [`docs/planning/`](https://github.com/zyx-corporation/kotonoha-management/tree/main/docs/planning)
+- v0.4.0 release checklist: [`docs/release-checklist-v0.4.md`](docs/release-checklist-v0.4.md)
+- Future scope should start from a new v0.5 issue rather than expanding v0.4 sidecar/export correlation.
