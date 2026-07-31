@@ -33,6 +33,8 @@ const AUDIT_ENGINES = new Set([
   "gateway",
 ]);
 
+const EXPORT_CORRELATION_STATUSES = new Set(["available", "missing"]);
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -47,6 +49,32 @@ function isStringArray(value: unknown): value is string[] {
 
 function pushTypeError(errors: string[], field: string, expected: string, actual: unknown): void {
   errors.push(`${field}: expected ${expected}, got ${typeof actual}`);
+}
+
+function validateExportCorrelation(value: unknown): SidecarValidationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  if (value === undefined) return { ok: true, errors, warnings };
+  if (!isRecord(value)) {
+    warnings.push("exportCorrelation: expected object");
+    return { ok: true, errors, warnings };
+  }
+  if (value.canonical !== false) {
+    warnings.push("exportCorrelation.canonical: expected false");
+  }
+  if (
+    value.status !== undefined &&
+    !EXPORT_CORRELATION_STATUSES.has(String(value.status))
+  ) {
+    warnings.push(`exportCorrelation.status: unknown value "${String(value.status)}"`);
+  }
+  if (!isRecord(value.local)) {
+    warnings.push("exportCorrelation.local: expected object");
+  }
+  if (!isRecord(value.m6)) {
+    warnings.push("exportCorrelation.m6: expected object");
+  }
+  return { ok: true, errors, warnings };
 }
 
 /** Log validation issues without blocking writes (v0.3 policy). */
@@ -92,6 +120,8 @@ export function validateProposalSidecar(value: unknown): SidecarValidationResult
       errors.push(`decision.status: unknown value "${String(value.decision.status)}"`);
     }
   }
+
+  warnings.push(...validateExportCorrelation(value.exportCorrelation).warnings);
 
   return { ok: errors.length === 0, errors, warnings };
 }
@@ -162,6 +192,8 @@ export function validateAuditSidecar(value: unknown): SidecarValidationResult {
     errors.push(`engine: unknown value "${String(value.engine)}"`);
   }
 
+  warnings.push(...validateExportCorrelation(value.exportCorrelation).warnings);
+
   return { ok: errors.length === 0, errors, warnings };
 }
 
@@ -189,6 +221,8 @@ export function validateReviewSidecar(value: unknown): SidecarValidationResult {
       errors.push("decision.decidedAt: required non-empty string");
     }
   }
+
+  warnings.push(...validateExportCorrelation(value.exportCorrelation).warnings);
 
   return { ok: errors.length === 0, errors, warnings };
 }

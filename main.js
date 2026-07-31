@@ -398,6 +398,8 @@ var MSGS2 = {
     applyScopeWholeNote: "Apply scope: whole note",
     applyScopeSelection: "Apply scope: selected text ({chars} chars)",
     applyScopeUnsupported: "Apply scope unavailable: {reason}",
+    exportCorrelationAvailable: "Export correlation: project {projectId} \xB7 commit {commit} \xB7 {path}",
+    exportCorrelationMissing: "Export correlation: local sidecar only ({reason} unavailable)",
     confirmSourceChanged: "Source has changed. Re-audit or explicit override is required. Continue?",
     confirmGitHeadChanged: "Git HEAD changed since generation (Obsidian Git may have synced). Re-audit recommended. Continue?",
     confirmRevisionAuditStale: "The revised text changed after the last audit. Re-audit is recommended. Continue anyway?",
@@ -553,6 +555,8 @@ var MSGS2 = {
     applyScopeWholeNote: "\u9069\u7528\u7BC4\u56F2: \u30CE\u30FC\u30C8\u5168\u4F53",
     applyScopeSelection: "\u9069\u7528\u7BC4\u56F2: \u9078\u629E\u30C6\u30AD\u30B9\u30C8\uFF08{chars}\u6587\u5B57\uFF09",
     applyScopeUnsupported: "\u9069\u7528\u7BC4\u56F2\u3092\u78BA\u5B9A\u3067\u304D\u307E\u305B\u3093: {reason}",
+    exportCorrelationAvailable: "Export \u76F8\u95A2: project {projectId} \xB7 commit {commit} \xB7 {path}",
+    exportCorrelationMissing: "Export \u76F8\u95A2: local sidecar \u306E\u307F\uFF08{reason} \u4E0D\u660E\uFF09",
     confirmSourceChanged: "\u30BD\u30FC\u30B9\u304C\u5909\u66F4\u3055\u308C\u3066\u3044\u307E\u3059\u3002\u518D\u76E3\u67FB\u307E\u305F\u306F\u660E\u793A\u7684\u306A\u4E0A\u66F8\u304D\u304C\u5FC5\u8981\u3067\u3059\u3002\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F",
     confirmGitHeadChanged: "\u751F\u6210\u5F8C\u306B Git HEAD \u304C\u5909\u308F\u3063\u3066\u3044\u307E\u3059\uFF08Obsidian Git \u306E\u540C\u671F\u306E\u53EF\u80FD\u6027\uFF09\u3002\u518D\u76E3\u67FB\u3092\u63A8\u5968\u3057\u307E\u3059\u3002\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F",
     confirmRevisionAuditStale: "\u6700\u5F8C\u306E\u76E3\u67FB\u5F8C\u306B\u6539\u8A02\u30C6\u30AD\u30B9\u30C8\u304C\u5909\u66F4\u3055\u308C\u3066\u3044\u307E\u3059\u3002\u518D\u76E3\u67FB\u3092\u63A8\u5968\u3057\u307E\u3059\u3002\u3053\u306E\u307E\u307E\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F",
@@ -708,6 +712,8 @@ var MSGS2 = {
     applyScopeWholeNote: "\u5E94\u7528\u8303\u56F4\uFF1A\u6574\u7BC7\u7B14\u8BB0",
     applyScopeSelection: "\u5E94\u7528\u8303\u56F4\uFF1A\u9009\u4E2D\u6587\u672C\uFF08{chars} \u5B57\uFF09",
     applyScopeUnsupported: "\u65E0\u6CD5\u786E\u5B9A\u5E94\u7528\u8303\u56F4\uFF1A{reason}",
+    exportCorrelationAvailable: "Export \u5173\u8054\uFF1Aproject {projectId} \xB7 commit {commit} \xB7 {path}",
+    exportCorrelationMissing: "Export \u5173\u8054\uFF1A\u4EC5 local sidecar\uFF08{reason} \u4E0D\u53EF\u7528\uFF09",
     confirmSourceChanged: "\u6E90\u5DF2\u66F4\u6539\u3002\u9700\u8981\u91CD\u65B0\u5BA1\u8BA1\u6216\u660E\u786E\u8986\u76D6\u3002\u662F\u5426\u7EE7\u7EED\uFF1F",
     confirmGitHeadChanged: "\u751F\u6210\u540E Git HEAD \u5DF2\u53D8\u5316\uFF08\u53EF\u80FD\u7531 Obsidian Git \u540C\u6B65\u5F15\u8D77\uFF09\u3002\u5EFA\u8BAE\u91CD\u65B0\u5BA1\u8BA1\u3002\u662F\u5426\u7EE7\u7EED\uFF1F",
     confirmRevisionAuditStale: "\u4FEE\u8BA2\u6587\u672C\u5728\u4E0A\u6B21\u5BA1\u8BA1\u540E\u5DF2\u66F4\u6539\u3002\u5EFA\u8BAE\u91CD\u65B0\u5BA1\u8BA1\u3002\u4ECD\u8981\u7EE7\u7EED\u5417\uFF1F",
@@ -1168,6 +1174,12 @@ var ProposalView = class {
       host.createEl("p", {
         cls: "kotonoha-console-warn",
         text: actions.applyScopeWarningText
+      });
+    }
+    if (actions.exportCorrelationText) {
+      host.createEl("p", {
+        cls: "kotonoha-console-export-correlation",
+        text: actions.exportCorrelationText
       });
     }
     if (actions.reviseMode) {
@@ -2134,12 +2146,17 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
           ctx.sourceText
         );
         if (this.plugin.settings.sidecarMode) {
-          await this.plugin.sidecar.saveProposalRecord(request, this.bundle.proposal);
+          await this.plugin.sidecar.saveProposalRecord(
+            request,
+            this.bundle.proposal,
+            { projectId: this.plugin.settings.projectId }
+          );
           if (this.bundle.audit) {
             await this.plugin.sidecar.saveRdeAuditRecord(
               request,
               this.bundle.proposal,
-              this.bundle.audit
+              this.bundle.audit,
+              { projectId: this.plugin.settings.projectId }
             );
           }
         }
@@ -2180,6 +2197,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       auditMissing,
       applyScopeText: isAuditReport ? void 0 : this.formatApplyScopeText(lang),
       applyScopeWarningText: isAuditReport ? void 0 : this.formatApplyScopeWarningText(lang),
+      exportCorrelationText: this.formatExportCorrelationText(lang),
       language: lang,
       reviseMode: this.reviseMode,
       editedText: this.editedText,
@@ -2334,6 +2352,21 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       reason: scope.reason
     });
   }
+  formatExportCorrelationText(lang) {
+    if (!this.lastRequest) return void 0;
+    const commit = this.lastRequest.context.git?.commit;
+    const projectId = this.plugin.settings.projectId?.trim();
+    if (commit && projectId) {
+      return consoleMsg(lang, "exportCorrelationAvailable", {
+        projectId,
+        commit,
+        path: this.lastRequest.context.filePath
+      });
+    }
+    return consoleMsg(lang, "exportCorrelationMissing", {
+      reason: !commit && !projectId ? "projectId / gitCommit" : !projectId ? "projectId" : "gitCommit"
+    });
+  }
   async rejectProposal() {
     if (!this.bundle) return;
     const lang = this.uiLang();
@@ -2389,7 +2422,8 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
         await this.plugin.sidecar.saveRdeAuditRecord(
           this.lastRequest,
           this.bundle.proposal,
-          audit
+          audit,
+          { projectId: this.plugin.settings.projectId }
         );
       }
       new import_obsidian2.Notice(
@@ -2409,7 +2443,8 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       this.lastRequest,
       this.bundle.proposal,
       decision,
-      this.bundle.audit
+      this.bundle.audit,
+      { projectId: this.plugin.settings.projectId }
     );
   }
 };
@@ -2708,6 +2743,7 @@ var AUDIT_ENGINES = /* @__PURE__ */ new Set([
   "cli",
   "gateway"
 ]);
+var EXPORT_CORRELATION_STATUSES = /* @__PURE__ */ new Set(["available", "missing"]);
 function isRecord(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -2719,6 +2755,28 @@ function isStringArray(value) {
 }
 function pushTypeError(errors, field, expected, actual) {
   errors.push(`${field}: expected ${expected}, got ${typeof actual}`);
+}
+function validateExportCorrelation(value) {
+  const errors = [];
+  const warnings = [];
+  if (value === void 0) return { ok: true, errors, warnings };
+  if (!isRecord(value)) {
+    warnings.push("exportCorrelation: expected object");
+    return { ok: true, errors, warnings };
+  }
+  if (value.canonical !== false) {
+    warnings.push("exportCorrelation.canonical: expected false");
+  }
+  if (value.status !== void 0 && !EXPORT_CORRELATION_STATUSES.has(String(value.status))) {
+    warnings.push(`exportCorrelation.status: unknown value "${String(value.status)}"`);
+  }
+  if (!isRecord(value.local)) {
+    warnings.push("exportCorrelation.local: expected object");
+  }
+  if (!isRecord(value.m6)) {
+    warnings.push("exportCorrelation.m6: expected object");
+  }
+  return { ok: true, errors, warnings };
 }
 function logSidecarValidation(kind, path, result) {
   for (const error of result.errors) {
@@ -2754,6 +2812,7 @@ function validateProposalSidecar(value) {
       errors.push(`decision.status: unknown value "${String(value.decision.status)}"`);
     }
   }
+  warnings.push(...validateExportCorrelation(value.exportCorrelation).warnings);
   return { ok: errors.length === 0, errors, warnings };
 }
 function validateRdeAuditPayload(value, prefix = "rde") {
@@ -2812,6 +2871,7 @@ function validateAuditSidecar(value) {
   if (value.engine !== void 0 && !AUDIT_ENGINES.has(String(value.engine))) {
     errors.push(`engine: unknown value "${String(value.engine)}"`);
   }
+  warnings.push(...validateExportCorrelation(value.exportCorrelation).warnings);
   return { ok: errors.length === 0, errors, warnings };
 }
 function validateReviewSidecar(value) {
@@ -2835,7 +2895,49 @@ function validateReviewSidecar(value) {
       errors.push("decision.decidedAt: required non-empty string");
     }
   }
+  warnings.push(...validateExportCorrelation(value.exportCorrelation).warnings);
   return { ok: errors.length === 0, errors, warnings };
+}
+
+// src/sidecar/exportCorrelation.ts
+var SIDECAR_EXPORT_CORRELATION_FORMAT = "kotonoha.obsidian.export_correlation.v0.1";
+var M6_PROJECT_AUDIT_EXPORT_FORMAT = "kotonoha.m6_project_audit_export.v0.1";
+function buildSidecarExportCorrelation(input) {
+  const projectId = clean(input.projectId);
+  const gitCommit = clean(input.request.context.git?.commit);
+  const missing = missingCorrelationReason(projectId, gitCommit);
+  return {
+    format: SIDECAR_EXPORT_CORRELATION_FORMAT,
+    canonical: false,
+    status: missing ? "missing" : "available",
+    ...missing ? { missingReason: missing } : {},
+    local: {
+      proposalId: input.proposal.id,
+      requestId: input.request.id,
+      filePath: input.request.context.filePath,
+      sourceHash: input.request.context.sourceHash,
+      ...input.proposalHash ? { proposalHash: input.proposalHash } : {},
+      ...gitCommit ? { gitCommit } : {},
+      ...projectId ? { projectId } : {}
+    },
+    m6: {
+      expectedFormat: M6_PROJECT_AUDIT_EXPORT_FORMAT,
+      ...projectId ? { projectId } : {},
+      ...gitCommit ? { gitCommit } : {},
+      filePath: input.request.context.filePath
+    },
+    note: "Read-only correlation hint. Obsidian sidecars are local evidence records, not canonical SLS storage."
+  };
+}
+function missingCorrelationReason(projectId, gitCommit) {
+  if (!projectId && !gitCommit) return "projectId and gitCommit unavailable";
+  if (!projectId) return "projectId unset";
+  if (!gitCommit) return "gitCommit unavailable";
+  return void 0;
+}
+function clean(value) {
+  const v = value?.trim();
+  return v ? v : void 0;
 }
 
 // src/services/SidecarStore.ts
@@ -2849,9 +2951,16 @@ var SidecarStore = class {
   constructor(app) {
     this.app = app;
   }
-  async saveProposalRecord(request, proposal) {
+  async saveProposalRecord(request, proposal, options) {
     await this.ensureDirs();
     const path = `${PROPOSALS}/${proposal.id}.proposal.json`;
+    const proposalHash = await hash(proposal.proposedText);
+    const exportCorrelation = buildSidecarExportCorrelation({
+      request,
+      proposal,
+      proposalHash,
+      projectId: options?.projectId
+    });
     const body = {
       schemaVersion: SCHEMA_VERSION,
       plugin: PLUGIN_ID,
@@ -2861,7 +2970,8 @@ var SidecarStore = class {
       operation: request.operation,
       filePath: request.context.filePath,
       sourceHash: request.context.sourceHash,
-      proposalHash: await hash(proposal.proposedText),
+      proposalHash,
+      exportCorrelation,
       createdAt: proposal.createdAt,
       summary: proposal.summary,
       decision: { status: "pending" }
@@ -2869,10 +2979,16 @@ var SidecarStore = class {
     logSidecarValidation("proposal", path, validateProposalSidecar(body));
     await this.app.vault.adapter.write(path, JSON.stringify(body, null, 2));
   }
-  async saveRdeAuditRecord(request, proposal, audit) {
+  async saveRdeAuditRecord(request, proposal, audit, options) {
     await this.ensureDirs();
     const path = `${AUDIT}/${proposal.id}.rde-audit.json`;
     const proposalHash = await hash(proposal.proposedText);
+    const exportCorrelation = buildSidecarExportCorrelation({
+      request,
+      proposal,
+      proposalHash,
+      projectId: options?.projectId
+    });
     const body = {
       schemaVersion: SCHEMA_VERSION,
       plugin: PLUGIN_ID,
@@ -2881,6 +2997,7 @@ var SidecarStore = class {
       filePath: request.context.filePath,
       sourceHash: request.context.sourceHash,
       proposalHash,
+      exportCorrelation,
       operation: request.operation,
       createdAt: audit.createdAt,
       ...audit.engine ? { engine: audit.engine } : {},
@@ -2893,9 +3010,16 @@ var SidecarStore = class {
     await this.app.vault.adapter.write(path, JSON.stringify(body, null, 2));
   }
   /** git-mode-spec §9.1 step 10 — human review decision sidecar. */
-  async saveReviewRecord(request, proposal, decision, audit) {
+  async saveReviewRecord(request, proposal, decision, audit, options) {
     await this.ensureDirs();
     const path = `${REVIEWS}/${proposal.id}.review.json`;
+    const proposalHash = await hash(proposal.proposedText);
+    const exportCorrelation = buildSidecarExportCorrelation({
+      request,
+      proposal,
+      proposalHash,
+      projectId: options?.projectId
+    });
     const body = {
       schemaVersion: SCHEMA_VERSION,
       plugin: PLUGIN_ID,
@@ -2903,6 +3027,8 @@ var SidecarStore = class {
       proposalId: proposal.id,
       filePath: request.context.filePath,
       sourceHash: request.context.sourceHash,
+      proposalHash,
+      exportCorrelation,
       operation: request.operation,
       decision: {
         status: decision.decision,

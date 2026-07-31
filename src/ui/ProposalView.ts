@@ -15,6 +15,7 @@ export interface ProposalViewActions {
   auditMissing?: boolean;
   applyScopeText?: string;
   applyScopeWarningText?: string;
+  exportCorrelationText?: string;
   reviseMode?: boolean;
   editedText?: string;
   onEditedTextChange?: (text: string) => void;
@@ -60,6 +61,12 @@ export class ProposalView {
       host.createEl("p", {
         cls: "kotonoha-console-warn",
         text: actions.applyScopeWarningText,
+      });
+    }
+    if (actions.exportCorrelationText) {
+      host.createEl("p", {
+        cls: "kotonoha-console-export-correlation",
+        text: actions.exportCorrelationText,
       });
     }
 

@@ -11,6 +11,7 @@ import {
   validateProposalSidecar,
   validateReviewSidecar,
 } from "../sidecar/validateSidecar";
+import { buildSidecarExportCorrelation } from "../sidecar/exportCorrelation";
 
 const ROOT = ".kotonoha";
 const PROPOSALS = `${ROOT}/proposals`;
@@ -25,9 +26,17 @@ export class SidecarStore {
   async saveProposalRecord(
     request: GenerationRequest,
     proposal: Proposal,
+    options?: { projectId?: string },
   ): Promise<void> {
     await this.ensureDirs();
     const path = `${PROPOSALS}/${proposal.id}.proposal.json`;
+    const proposalHash = await hash(proposal.proposedText);
+    const exportCorrelation = buildSidecarExportCorrelation({
+      request,
+      proposal,
+      proposalHash,
+      projectId: options?.projectId,
+    });
     const body = {
       schemaVersion: SCHEMA_VERSION,
       plugin: PLUGIN_ID,
@@ -37,7 +46,8 @@ export class SidecarStore {
       operation: request.operation,
       filePath: request.context.filePath,
       sourceHash: request.context.sourceHash,
-      proposalHash: await hash(proposal.proposedText),
+      proposalHash,
+      exportCorrelation,
       createdAt: proposal.createdAt,
       summary: proposal.summary,
       decision: { status: "pending" as const },
@@ -50,10 +60,17 @@ export class SidecarStore {
     request: GenerationRequest,
     proposal: Proposal,
     audit: RdeAudit,
+    options?: { projectId?: string },
   ): Promise<void> {
     await this.ensureDirs();
     const path = `${AUDIT}/${proposal.id}.rde-audit.json`;
     const proposalHash = await hash(proposal.proposedText);
+    const exportCorrelation = buildSidecarExportCorrelation({
+      request,
+      proposal,
+      proposalHash,
+      projectId: options?.projectId,
+    });
     const body = {
       schemaVersion: SCHEMA_VERSION,
       plugin: PLUGIN_ID,
@@ -62,6 +79,7 @@ export class SidecarStore {
       filePath: request.context.filePath,
       sourceHash: request.context.sourceHash,
       proposalHash,
+      exportCorrelation,
       operation: request.operation,
       createdAt: audit.createdAt,
       ...(audit.engine ? { engine: audit.engine } : {}),
@@ -80,9 +98,17 @@ export class SidecarStore {
     proposal: Proposal,
     decision: ApprovalDecision,
     audit?: RdeAudit,
+    options?: { projectId?: string },
   ): Promise<void> {
     await this.ensureDirs();
     const path = `${REVIEWS}/${proposal.id}.review.json`;
+    const proposalHash = await hash(proposal.proposedText);
+    const exportCorrelation = buildSidecarExportCorrelation({
+      request,
+      proposal,
+      proposalHash,
+      projectId: options?.projectId,
+    });
     const body = {
       schemaVersion: SCHEMA_VERSION,
       plugin: PLUGIN_ID,
@@ -90,6 +116,8 @@ export class SidecarStore {
       proposalId: proposal.id,
       filePath: request.context.filePath,
       sourceHash: request.context.sourceHash,
+      proposalHash,
+      exportCorrelation,
       operation: request.operation,
       decision: {
         status: decision.decision,

@@ -72,6 +72,10 @@ const MSGS = {
     applyScopeWholeNote: "Apply scope: whole note",
     applyScopeSelection: "Apply scope: selected text ({chars} chars)",
     applyScopeUnsupported: "Apply scope unavailable: {reason}",
+    exportCorrelationAvailable:
+      "Export correlation: project {projectId} · commit {commit} · {path}",
+    exportCorrelationMissing:
+      "Export correlation: local sidecar only ({reason} unavailable)",
     confirmSourceChanged:
       "Source has changed. Re-audit or explicit override is required. Continue?",
     confirmGitHeadChanged:
@@ -259,6 +263,10 @@ const MSGS = {
     applyScopeWholeNote: "適用範囲: ノート全体",
     applyScopeSelection: "適用範囲: 選択テキスト（{chars}文字）",
     applyScopeUnsupported: "適用範囲を確定できません: {reason}",
+    exportCorrelationAvailable:
+      "Export 相関: project {projectId} · commit {commit} · {path}",
+    exportCorrelationMissing:
+      "Export 相関: local sidecar のみ（{reason} 不明）",
     confirmSourceChanged:
       "ソースが変更されています。再監査または明示的な上書きが必要です。続行しますか？",
     confirmGitHeadChanged:
@@ -447,6 +455,10 @@ const MSGS = {
     applyScopeWholeNote: "应用范围：整篇笔记",
     applyScopeSelection: "应用范围：选中文本（{chars} 字）",
     applyScopeUnsupported: "无法确定应用范围：{reason}",
+    exportCorrelationAvailable:
+      "Export 关联：project {projectId} · commit {commit} · {path}",
+    exportCorrelationMissing:
+      "Export 关联：仅 local sidecar（{reason} 不可用）",
     confirmSourceChanged:
       "源已更改。需要重新审计或明确覆盖。是否继续？",
     confirmGitHeadChanged:
