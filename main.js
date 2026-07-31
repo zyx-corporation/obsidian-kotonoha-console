@@ -397,6 +397,7 @@ var MSGS2 = {
     auditEngineCliCaution: "interchange skeleton / local rule-based guardrails only; not full RDE evaluation",
     confirmSourceChanged: "Source has changed. Re-audit or explicit override is required. Continue?",
     confirmGitHeadChanged: "Git HEAD changed since generation (Obsidian Git may have synced). Re-audit recommended. Continue?",
+    confirmRevisionAuditStale: "The revised text changed after the last audit. Re-audit is recommended. Continue anyway?",
     confirmApply: "Apply this proposal to the note? Original text will be overwritten.",
     noticeOpenEditor: "Open the note in the editor to apply selection",
     noticeSelectionNotFound: "Selection text was not found in the note \u2014 apply blocked to avoid whole-note overwrite",
@@ -545,6 +546,7 @@ var MSGS2 = {
     auditEngineCliCaution: "interchange skeleton / rule-based guardrails \u306E\u307F \u2014 full RDE \u3067\u306F\u3042\u308A\u307E\u305B\u3093",
     confirmSourceChanged: "\u30BD\u30FC\u30B9\u304C\u5909\u66F4\u3055\u308C\u3066\u3044\u307E\u3059\u3002\u518D\u76E3\u67FB\u307E\u305F\u306F\u660E\u793A\u7684\u306A\u4E0A\u66F8\u304D\u304C\u5FC5\u8981\u3067\u3059\u3002\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F",
     confirmGitHeadChanged: "\u751F\u6210\u5F8C\u306B Git HEAD \u304C\u5909\u308F\u3063\u3066\u3044\u307E\u3059\uFF08Obsidian Git \u306E\u540C\u671F\u306E\u53EF\u80FD\u6027\uFF09\u3002\u518D\u76E3\u67FB\u3092\u63A8\u5968\u3057\u307E\u3059\u3002\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F",
+    confirmRevisionAuditStale: "\u6700\u5F8C\u306E\u76E3\u67FB\u5F8C\u306B\u6539\u8A02\u30C6\u30AD\u30B9\u30C8\u304C\u5909\u66F4\u3055\u308C\u3066\u3044\u307E\u3059\u3002\u518D\u76E3\u67FB\u3092\u63A8\u5968\u3057\u307E\u3059\u3002\u3053\u306E\u307E\u307E\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F",
     confirmApply: "\u3053\u306E\u63D0\u6848\u3092\u30CE\u30FC\u30C8\u306B\u9069\u7528\u3057\u307E\u3059\u304B\uFF1F\u5143\u306E\u30C6\u30AD\u30B9\u30C8\u306F\u4E0A\u66F8\u304D\u3055\u308C\u307E\u3059\u3002",
     noticeOpenEditor: "\u30A8\u30C7\u30A3\u30BF\u3067\u30CE\u30FC\u30C8\u3092\u958B\u3044\u3066\u304B\u3089\u9078\u629E\u7BC4\u56F2\u306B\u9069\u7528\u3057\u3066\u304F\u3060\u3055\u3044",
     noticeSelectionNotFound: "\u9078\u629E\u30C6\u30AD\u30B9\u30C8\u304C\u30CE\u30FC\u30C8\u5185\u306B\u898B\u3064\u304B\u308A\u307E\u305B\u3093 \u2014 \u30CE\u30FC\u30C8\u5168\u4F53\u306E\u8AA4\u4E0A\u66F8\u304D\u3092\u9632\u3050\u305F\u3081\u9069\u7528\u3092\u4E2D\u6B62\u3057\u307E\u3057\u305F",
@@ -693,6 +695,7 @@ var MSGS2 = {
     auditEngineCliCaution: "interchange skeleton / \u57FA\u4E8E\u89C4\u5219\u7684 guardrails \u2014 \u975E\u5B8C\u6574 RDE \u8BC4\u4F30",
     confirmSourceChanged: "\u6E90\u5DF2\u66F4\u6539\u3002\u9700\u8981\u91CD\u65B0\u5BA1\u8BA1\u6216\u660E\u786E\u8986\u76D6\u3002\u662F\u5426\u7EE7\u7EED\uFF1F",
     confirmGitHeadChanged: "\u751F\u6210\u540E Git HEAD \u5DF2\u53D8\u5316\uFF08\u53EF\u80FD\u7531 Obsidian Git \u540C\u6B65\u5F15\u8D77\uFF09\u3002\u5EFA\u8BAE\u91CD\u65B0\u5BA1\u8BA1\u3002\u662F\u5426\u7EE7\u7EED\uFF1F",
+    confirmRevisionAuditStale: "\u4FEE\u8BA2\u6587\u672C\u5728\u4E0A\u6B21\u5BA1\u8BA1\u540E\u5DF2\u66F4\u6539\u3002\u5EFA\u8BAE\u91CD\u65B0\u5BA1\u8BA1\u3002\u4ECD\u8981\u7EE7\u7EED\u5417\uFF1F",
     confirmApply: "\u5C06\u6B64\u63D0\u6848\u5E94\u7528\u5230\u7B14\u8BB0\uFF1F\u539F\u59CB\u6587\u672C\u5C06\u88AB\u8986\u76D6\u3002",
     noticeOpenEditor: "\u8BF7\u5728\u7F16\u8F91\u5668\u4E2D\u6253\u5F00\u7B14\u8BB0\u540E\u518D\u5E94\u7528\u5230\u9009\u533A",
     noticeSelectionNotFound: "\u9009\u533A\u6587\u672C\u5728\u7B14\u8BB0\u4E2D\u672A\u627E\u5230 \u2014 \u5DF2\u963B\u6B62\u5E94\u7528\u4EE5\u907F\u514D\u6574\u7BC7\u8986\u76D6",
@@ -1870,6 +1873,14 @@ function quoteYaml(value) {
   return value;
 }
 
+// src/obsidian/revisionAuditGuards.ts
+function isRevisionAuditStale(reviseMode, currentProposalText, auditedProposalText, auditPresent) {
+  if (!reviseMode || !auditPresent || auditedProposalText === null) {
+    return false;
+  }
+  return currentProposalText.trim() !== auditedProposalText.trim();
+}
+
 // src/ui/KotonohaConsoleView.ts
 var KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
 var KotonohaConsoleView = class extends import_obsidian2.ItemView {
@@ -1883,6 +1894,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
   targetFilePath = null;
   sourceHashAtGeneration = null;
   gitCommitAtGeneration = null;
+  auditedProposalText = null;
   reviseMode = false;
   editedText = "";
   proposalHost;
@@ -2001,6 +2013,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     this.targetFilePath = null;
     this.sourceHashAtGeneration = null;
     this.gitCommitAtGeneration = null;
+    this.auditedProposalText = null;
     this.reviseMode = false;
     this.editedText = "";
     this.proposalHost?.empty();
@@ -2069,6 +2082,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
         this.reviseMode = false;
         this.editedText = "";
         this.bundle = await this.plugin.proposals.generate(request);
+        this.auditedProposalText = this.bundle.audit ? this.bundle.proposal.proposedText : null;
         await this.plugin.auditLog.logProposal(
           this.bundle.proposal,
           ctx.sourceText
@@ -2159,6 +2173,16 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
         const ok = confirm(consoleMsg(lang, "confirmGitHeadChanged"));
         if (!ok) return;
       }
+    }
+    const proposedTextForApply = this.reviseMode ? this.editedText : this.bundle.proposal.proposedText;
+    if (isRevisionAuditStale(
+      this.reviseMode,
+      proposedTextForApply,
+      this.auditedProposalText,
+      Boolean(this.bundle.audit)
+    )) {
+      const ok = confirm(consoleMsg(lang, "confirmRevisionAuditStale"));
+      if (!ok) return;
     }
     const okApply = confirm(consoleMsg(lang, "confirmApply"));
     if (!okApply) return;
@@ -2272,6 +2296,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
         proposalText
       );
       this.bundle = { ...this.bundle, audit };
+      this.auditedProposalText = proposalText;
       if (this.plugin.settings.sidecarMode) {
         await this.plugin.sidecar.saveRdeAuditRecord(
           this.lastRequest,
