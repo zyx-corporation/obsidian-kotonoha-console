@@ -3102,7 +3102,7 @@ var CliKotonohaClient = class {
     if (request.operation === "rde_audit") {
       return this.generateRdeAudit(request, proposalId);
     }
-    if (this.mayUseContextExport()) {
+    if (this.mayUseContextExport(request)) {
       try {
         return await this.generateWithContextExport(request, proposalId);
       } catch (e) {
@@ -3130,8 +3130,8 @@ var CliKotonohaClient = class {
     return { audit, engine: "cli" };
   }
   /** git-mode-spec §10: non-Git mode must not require Git-aware CLI. */
-  mayUseContextExport() {
-    return this.options.gitMode !== "off";
+  mayUseContextExport(request) {
+    return this.options.gitMode !== "off" && Boolean(request.context.git?.commit);
   }
   async generateRdeAudit(request, proposalId) {
     const emitStdout = await this.runRdeEmitValidate();

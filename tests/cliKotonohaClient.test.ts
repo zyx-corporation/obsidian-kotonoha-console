@@ -40,6 +40,20 @@ const request: GenerationRequest = {
   language: "ja",
 };
 
+const gitRequest: GenerationRequest = {
+  ...request,
+  context: {
+    ...ctx,
+    git: {
+      root: "/vault",
+      branch: "main",
+      commit: "abc123",
+      dirty: false,
+      repoRelativePath: "note.md",
+    },
+  },
+};
+
 function versionRunner(extra: KotonohaRunner): KotonohaRunner {
   return async (opts) => {
     if (opts.args[0] === "version") {
@@ -71,11 +85,55 @@ describe("CliKotonohaClient", () => {
       runner,
     });
 
-    const result = await client.generate(request);
+    const result = await client.generate(gitRequest);
     expect(calls.some((a) => a[0] === "context")).toBe(true);
     expect(result.proposal.proposedText).toContain("hello world");
     expect(result.audit).toBeDefined();
     expect(result.audit?.engine).toBe("local");
+  });
+
+  it("does not call context export without a git commit snapshot", async () => {
+    const calls: string[][] = [];
+    const runner = versionRunner(async (opts) => {
+      calls.push(opts.args);
+      return { stdout: "", stderr: "unexpected", exitCode: 1 };
+    });
+
+    const client = new CliKotonohaClient({
+      bin: "kotonoha",
+      cwd: "/vault",
+      gitMode: "passive-observing",
+      runner,
+    });
+
+    const result = await client.generate(request);
+    expect(calls.some((a) => a[0] === "context")).toBe(false);
+    expect(result.proposal.summary).toContain("[cli-local]");
+    expect(result.proposal.uncertaintyNote).toContain("path + source_hash");
+  });
+
+  it("falls back to local anchors when context export fails", async () => {
+    const calls: string[][] = [];
+    const runner = versionRunner(async (opts) => {
+      calls.push(opts.args);
+      if (opts.args[0] === "context") {
+        return { stdout: "", stderr: "not a git repository", exitCode: 128 };
+      }
+      return { stdout: "", stderr: "unexpected", exitCode: 1 };
+    });
+
+    const client = new CliKotonohaClient({
+      bin: "kotonoha",
+      cwd: "/vault",
+      gitMode: "passive-observing",
+      runner,
+    });
+
+    const result = await client.generate(gitRequest);
+    expect(calls.some((a) => a[0] === "context")).toBe(true);
+    expect(result.proposal.summary).toContain("[cli-local]");
+    expect(result.proposal.proposedText).toContain("source_hash");
+    expect(result.proposal.uncertaintyNote).toContain("context export 失敗");
   });
 
   it("does not call context export when gitMode is off", async () => {
