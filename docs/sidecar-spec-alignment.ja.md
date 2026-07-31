@@ -37,6 +37,15 @@ English summary: sidecars under `.kotonoha/` are **local/plugin evidence records
 
 提案本文（`proposedText`）は sidecar には hash のみ保存し、UI / vault 上の提案表示が実体です。
 
+v0.4 では各 sidecar に任意の `exportCorrelation` を付ける。これは Obsidian sidecar と CLI/M6 export を照合するための **read-only hint** であり、canonical SLS storage ではない。
+
+`exportCorrelation` が参照する主なキー:
+
+- local: `proposalId`, `requestId`, `filePath`, `sourceHash`, `proposalHash`, `gitCommit`, `projectId`
+- M6 export: `kotonoha.m6_project_audit_export.v0.1`, `project_id`, `exports[].meaning_delta.id`, `exports[].meaning_delta.git_commit`, `exports[].meaning_delta.file_path`, `exports[].rde_assessments[].audit_correlation_id`
+
+`projectId` や `gitCommit` がない場合、`status: "missing"` として保存し、処理は継続する。
+
 ---
 
 ## 最小 validation（実装）
@@ -59,7 +68,7 @@ unknown field → **OK**
 
 - `kotonoha-spec` への JSON Schema 昇格
 - complete SLS storage 実装
-- M6 export / CLI correlation（v0.4）
+- Complete SLS storage 実装
 - Note I/O 完了（#40）
 - Release 作業（#43）
 

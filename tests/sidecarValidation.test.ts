@@ -18,6 +18,27 @@ const validProposal = {
   createdAt: "2026-05-31T00:00:00.000Z",
   summary: "[cli-local] summarize",
   decision: { status: "pending" },
+  exportCorrelation: {
+    format: "kotonoha.obsidian.export_correlation.v0.1",
+    canonical: false,
+    status: "available",
+    local: {
+      proposalId: "p1",
+      requestId: "r1",
+      filePath: "notes/sample.md",
+      sourceHash: "abc123",
+      proposalHash: "def456",
+      gitCommit: "abc123",
+      projectId: "project1",
+    },
+    m6: {
+      expectedFormat: "kotonoha.m6_project_audit_export.v0.1",
+      projectId: "project1",
+      gitCommit: "abc123",
+      filePath: "notes/sample.md",
+    },
+    note: "Read-only correlation hint.",
+  },
 };
 
 const validRde = {
@@ -53,6 +74,7 @@ const validAuditWithEngine = {
     engineNote: "kotonoha rde emit / validate runtime path",
   },
   decision: { status: "pending" },
+  exportCorrelation: validProposal.exportCorrelation,
 };
 
 const validAuditLegacy = {
@@ -83,6 +105,7 @@ const validReview = {
   },
   rdeRecommended: "reject",
   rdeCategories: ["preserved"],
+  exportCorrelation: validProposal.exportCorrelation,
 };
 
 describe("sidecarValidation", () => {
@@ -117,6 +140,15 @@ describe("sidecarValidation", () => {
       futureField: "experimental",
     });
     expect(result.ok).toBe(true);
+  });
+
+  it("warns but does not fail on malformed export correlation", () => {
+    const result = validateProposalSidecar({
+      ...validProposal,
+      exportCorrelation: { canonical: true, status: "surprising" },
+    });
+    expect(result.ok).toBe(true);
+    expect(result.warnings.some((w) => w.includes("exportCorrelation"))).toBe(true);
   });
 
   it("errors when proposal sidecar missing source anchor", () => {

@@ -58,6 +58,12 @@
   font-size: var(--font-ui-smaller);
 }
 
+.kotonoha-console-export-correlation {
+  margin: 0.2rem 0;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
 .kotonoha-console-meta {
   margin: 0.25rem 0 0.5rem;
   padding: 0.35rem 0.5rem;

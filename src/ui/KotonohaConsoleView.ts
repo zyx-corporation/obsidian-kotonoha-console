@@ -264,12 +264,17 @@ export class KotonohaConsoleView extends ItemView {
           ctx.sourceText,
         );
         if (this.plugin.settings.sidecarMode) {
-          await this.plugin.sidecar.saveProposalRecord(request, this.bundle.proposal);
+          await this.plugin.sidecar.saveProposalRecord(
+            request,
+            this.bundle.proposal,
+            { projectId: this.plugin.settings.projectId },
+          );
           if (this.bundle.audit) {
             await this.plugin.sidecar.saveRdeAuditRecord(
               request,
               this.bundle.proposal,
               this.bundle.audit,
+              { projectId: this.plugin.settings.projectId },
             );
           }
         }
@@ -324,6 +329,7 @@ export class KotonohaConsoleView extends ItemView {
       applyScopeWarningText: isAuditReport
         ? undefined
         : this.formatApplyScopeWarningText(lang),
+      exportCorrelationText: this.formatExportCorrelationText(lang),
       language: lang,
       reviseMode: this.reviseMode,
       editedText: this.editedText,
@@ -517,6 +523,27 @@ export class KotonohaConsoleView extends ItemView {
     });
   }
 
+  private formatExportCorrelationText(lang: RdeLang): string | undefined {
+    if (!this.lastRequest) return undefined;
+    const commit = this.lastRequest.context.git?.commit;
+    const projectId = this.plugin.settings.projectId?.trim();
+    if (commit && projectId) {
+      return consoleMsg(lang, "exportCorrelationAvailable", {
+        projectId,
+        commit,
+        path: this.lastRequest.context.filePath,
+      });
+    }
+    return consoleMsg(lang, "exportCorrelationMissing", {
+      reason:
+        !commit && !projectId
+          ? "projectId / gitCommit"
+          : !projectId
+            ? "projectId"
+            : "gitCommit",
+    });
+  }
+
   private async rejectProposal(): Promise<void> {
     if (!this.bundle) return;
     const lang = this.uiLang();
@@ -581,6 +608,7 @@ export class KotonohaConsoleView extends ItemView {
           this.lastRequest!,
           this.bundle.proposal,
           audit,
+          { projectId: this.plugin.settings.projectId },
         );
       }
       new Notice(
@@ -602,6 +630,7 @@ export class KotonohaConsoleView extends ItemView {
       this.bundle.proposal,
       decision,
       this.bundle.audit,
+      { projectId: this.plugin.settings.projectId },
     );
   }
 }
