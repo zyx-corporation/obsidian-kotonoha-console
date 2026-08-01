@@ -16,10 +16,6 @@ export class KotonohaSettingsTab extends PluginSettingTab {
     super(app, plugin);
   }
 
-  getSettingDefinitions(): [] {
-    return [];
-  }
-
   /** Called when defaultLanguage changes so labels refresh while tab is open. */
   refreshDisplay(): void {
     this.display();

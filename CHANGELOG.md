@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.5.2 — Community warning trim
+
+### Changed
+
+- Lowered `minAppVersion` to `1.7.2`, matching the oldest API currently required by the plugin.
+- Removed an empty declarative settings stub so the existing imperative settings tab remains on the compatible path.
+
+### Fixed
+
+- Removed unnecessary regex match assertions from structural diff link scanning.
+
 ## v0.5.1 — Community review fixes
 
 ### Changed
