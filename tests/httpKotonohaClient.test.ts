@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { HttpKotonohaClient } from "../src/client/HttpKotonohaClient";
 import type { GenerationRequest, NoteContext } from "../src/domain/types";
 
@@ -21,6 +21,17 @@ const request: GenerationRequest = {
   context: ctx,
   language: "ja",
 };
+
+beforeAll(() => {
+  vi.stubGlobal("window", {
+    setTimeout: globalThis.setTimeout.bind(globalThis),
+    clearTimeout: globalThis.clearTimeout.bind(globalThis),
+  });
+});
+
+afterAll(() => {
+  vi.unstubAllGlobals();
+});
 
 function mockFetch(routes: Record<string, (init?: RequestInit) => Response | Promise<Response>>) {
   return (async (input: RequestInfo | URL, init?: RequestInit) => {

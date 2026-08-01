@@ -125,7 +125,7 @@ export default class KotonohaConsolePlugin extends Plugin {
       await right.setViewState({ type: KOTONOHA_CONSOLE_VIEW, active: true });
       leaf = right;
     }
-    workspace.revealLeaf(leaf);
+    await workspace.revealLeaf(leaf);
   }
 
   async loadSettings(): Promise<void> {

@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.5.1 — Community review fixes
+
+### Changed
+
+- Updated the Community listing manifest metadata for the current review rules.
+- Raised `minAppVersion` to `1.13.0` and declared the plugin desktop-only.
+- Replaced settings headings with Obsidian `Setting#setHeading()` UI.
+- Removed the `builtin-modules` dev dependency by using Node's built-in module list.
+
+### Fixed
+
+- Awaited `workspace.revealLeaf()` so the console view activation settles cleanly.
+- Removed global `fetch` fallback usage from the HTTP client path.
+- Removed a CSS `!important` rule from the busy cursor state.
+
+### Distribution
+
+- Community review release assets are the three supported plugin files only: `main.js`, `manifest.json`, and `styles.css`.
+
 ## v0.5.0 — Review Destination / Publication Handoff
 
 ### Added

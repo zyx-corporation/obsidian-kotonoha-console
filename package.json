@@ -1,8 +1,8 @@
 {
   "name": "obsidian-kotonoha-console",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "private": true,
-  "description": "Kotonoha Console — proposal, RDE audit, and human approval for Obsidian",
+  "description": "Kotonoha Console — proposal, RDE audit, and human approval",
   "license": "Apache-2.0",
   "scripts": {
     "build": "node esbuild.config.mjs production",
@@ -14,7 +14,6 @@
   },
   "devDependencies": {
     "@types/node": "^22.19.19",
-    "builtin-modules": "^5.0.0",
     "esbuild": "^0.25.0",
     "obsidian": "^1.8.7",
     "typescript": "^5.8.3",

@@ -11,6 +11,7 @@ import {
   type StructuralDiffResult,
 } from "../rde/StructuralDiffBuilder";
 import { HttpClient, HttpClientError } from "./http/httpClient";
+import type { HttpFetchFn } from "./http/httpClient";
 import { detectHttpBackend, type HttpBackendKind } from "./http/detectBackend";
 import { parseGatewayContextPack } from "./http/gatewayTools";
 import {
@@ -31,19 +32,19 @@ export interface HttpKotonohaClientOptions {
   endpoint: string;
   apiKey?: string;
   timeoutMs?: number;
-  fetchFn?: typeof fetch;
+  fetchFn: HttpFetchFn;
   /** Skip auto-detect; force backend kind. */
   backendKind?: HttpBackendKind;
 }
 
 export class HttpKotonohaClient implements KotonohaClient {
   private readonly http: HttpClient;
-  private readonly fetchFn: typeof fetch;
+  private readonly fetchFn: HttpFetchFn;
   private backendKind?: HttpBackendKind;
 
   constructor(private readonly options: HttpKotonohaClientOptions) {
     this.http = new HttpClient(options);
-    this.fetchFn = options.fetchFn ?? fetch;
+    this.fetchFn = options.fetchFn;
     this.backendKind = options.backendKind;
   }
 

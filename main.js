@@ -995,6 +995,9 @@ var KotonohaSettingsTab = class extends import_obsidian.PluginSettingTab {
     super(app, plugin);
     this.plugin = plugin;
   }
+  getSettingDefinitions() {
+    return [];
+  }
   /** Called when defaultLanguage changes so labels refresh while tab is open. */
   refreshDisplay() {
     this.display();
@@ -1008,7 +1011,7 @@ var KotonohaSettingsTab = class extends import_obsidian.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h2", { text: this.t("settingsTitle") });
+    new import_obsidian.Setting(containerEl).setName(this.t("settingsTitle")).setHeading();
     containerEl.createEl("p", {
       cls: "kotonoha-console-muted",
       text: consoleMsg(this.lang(), "settingsDiagnostic", {
@@ -1034,7 +1037,7 @@ var KotonohaSettingsTab = class extends import_obsidian.PluginSettingTab {
       })
     );
     if (this.plugin.settings.backendMode === "http") {
-      containerEl.createEl("h3", { text: this.t("settingsHttpSection") });
+      new import_obsidian.Setting(containerEl).setName(this.t("settingsHttpSection")).setHeading();
       containerEl.createEl("p", {
         cls: "kotonoha-console-muted",
         text: this.t("settingsHttpEndpointPortNote")
@@ -1059,7 +1062,7 @@ var KotonohaSettingsTab = class extends import_obsidian.PluginSettingTab {
       );
     }
     if (this.plugin.settings.backendMode === "cli") {
-      containerEl.createEl("h3", { text: this.t("settingsCliSection") });
+      new import_obsidian.Setting(containerEl).setName(this.t("settingsCliSection")).setHeading();
       containerEl.createEl("p", {
         cls: "kotonoha-console-muted kotonoha-console-warn",
         text: this.t("settingsCliRuntimeWarning")
@@ -3830,7 +3833,7 @@ var HttpClient = class {
     this.base = normalizeBase(options.endpoint);
     this.apiKey = options.apiKey;
     this.timeoutMs = options.timeoutMs ?? 3e4;
-    this.fetchFn = options.fetchFn ?? fetch;
+    this.fetchFn = options.fetchFn;
   }
   get baseUrl() {
     return this.base;
@@ -3843,7 +3846,7 @@ var HttpClient = class {
   }
   async requestJson(method, path, body) {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    const timer = window.setTimeout(() => controller.abort(), this.timeoutMs);
     try {
       const res = await this.fetchFn(`${this.base}${path}`, {
         method,
@@ -3872,7 +3875,7 @@ var HttpClient = class {
       }
       throw new HttpClientError(e instanceof Error ? e.message : String(e));
     } finally {
-      clearTimeout(timer);
+      window.clearTimeout(timer);
     }
   }
 };
@@ -3988,7 +3991,7 @@ var HttpKotonohaClient = class {
   constructor(options) {
     this.options = options;
     this.http = new HttpClient(options);
-    this.fetchFn = options.fetchFn ?? fetch;
+    this.fetchFn = options.fetchFn;
     this.backendKind = options.backendKind;
   }
   http;
@@ -4281,9 +4284,9 @@ function createObsidianFetch() {
     const url = typeof input === "string" ? input : input.toString();
     const res = await (0, import_obsidian5.requestUrl)({
       url,
-      method: init?.method ?? "GET",
-      headers: init?.headers,
-      body: typeof init?.body === "string" ? init.body : void 0,
+      method: init?.method?.toString() ?? "GET",
+      headers: normalizeHeaders(init?.headers),
+      body: typeof init?.body === "string" || init?.body instanceof ArrayBuffer ? init.body : void 0,
       throw: false
     });
     return new Response(res.text || (res.json != null ? JSON.stringify(res.json) : ""), {
@@ -4295,6 +4298,18 @@ function createObsidianFetch() {
       )
     });
   };
+}
+function normalizeHeaders(headers) {
+  if (!headers) return void 0;
+  if (headers instanceof Headers) {
+    const normalized = {};
+    headers.forEach((value, key) => {
+      normalized[key] = value;
+    });
+    return normalized;
+  }
+  if (Array.isArray(headers)) return Object.fromEntries(headers);
+  return { ...headers };
 }
 
 // src/client/createClient.ts
@@ -4414,7 +4429,7 @@ var KotonohaConsolePlugin = class extends import_obsidian6.Plugin {
       await right.setViewState({ type: KOTONOHA_CONSOLE_VIEW, active: true });
       leaf = right;
     }
-    workspace.revealLeaf(leaf);
+    await workspace.revealLeaf(leaf);
   }
   async loadSettings() {
     const raw = await this.loadData();

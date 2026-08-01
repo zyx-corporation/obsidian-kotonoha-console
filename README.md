@@ -8,7 +8,7 @@ Kotonoha UI plugin for Obsidian (proposal · RDE audit · human approval).
 
 ## Install
 
-Manual install from [GitHub Release v0.5.0](https://github.com/zyx-corporation/obsidian-kotonoha-console/releases/tag/v0.5.0):
+Manual install from [GitHub Release 0.5.1](https://github.com/zyx-corporation/obsidian-kotonoha-console/releases/tag/0.5.1):
 
 ```text
 <vault>/.obsidian/plugins/kotonoha-console/
@@ -17,7 +17,7 @@ Manual install from [GitHub Release v0.5.0](https://github.com/zyx-corporation/o
 └── styles.css
 ```
 
-Download `obsidian-kotonoha-console-v0.5.0.zip`, unzip into `.obsidian/plugins/`, then enable the plugin (turn off Restricted mode first).
+Download `main.js`, `manifest.json`, and `styles.css`, place them in the plugin folder above, then enable the plugin (turn off Restricted mode first).
 
 Full steps: [`docs/install.ja.md`](docs/install.ja.md) · [`docs/backend-setup.ja.md`](docs/backend-setup.ja.md) · [kotonoha-docs tutorial](https://github.com/zyx-corporation/kotonoha-docs/blob/main/ja/manual/install_obsidian_kotonoha_console.md)
 
@@ -38,7 +38,7 @@ Full guide: [`docs/backend-setup.ja.md`](docs/backend-setup.ja.md)
 
 ## Current status
 
-`obsidian-kotonoha-console` **v0.5.0** is the Review Destination / Publication Handoff release.
+`obsidian-kotonoha-console` **v0.5.1** is the Community review fix release for Review Destination / Publication Handoff.
 
 It focuses on:
 
@@ -49,6 +49,8 @@ It focuses on:
 - PR summary text for publication handoff.
 
 The plugin remains Git-aware but not Git-owning. It does not commit, pull, push, stage, or synchronize repositories.
+
+The public listing build is desktop-only because CLI and read-only Git context features rely on desktop runtime capabilities.
 
 `/v1/proposals/generate` is experimental. `orchestrator /v1/rde/evaluate` is treated as the stable adapter path when orchestrator is detected.
 
