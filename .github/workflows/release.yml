@@ -1,0 +1,74 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version, for example 0.5.3"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Validate release metadata
+        run: |
+          node <<'NODE'
+          const fs = require("node:fs");
+          const version = process.env.RELEASE_VERSION;
+          const manifest = JSON.parse(fs.readFileSync("manifest.json", "utf8"));
+          const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+          const versions = JSON.parse(fs.readFileSync("versions.json", "utf8"));
+
+          if (!/^\d+\.\d+\.\d+$/.test(version)) {
+            throw new Error(`Release version must be x.y.z, got ${version}`);
+          }
+          if (manifest.version !== version) {
+            throw new Error(`manifest.json version ${manifest.version} does not match ${version}`);
+          }
+          if (pkg.version !== version) {
+            throw new Error(`package.json version ${pkg.version} does not match ${version}`);
+          }
+          if (versions[version] !== manifest.minAppVersion) {
+            throw new Error(`versions.json must map ${version} to ${manifest.minAppVersion}`);
+          }
+          NODE
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: Generate artifact attestations
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            main.js
+            manifest.json
+            styles.css
+      - name: Create GitHub release
+        run: |
+          gh release create "$RELEASE_VERSION" \
+            main.js manifest.json styles.css \
+            --target "$GITHUB_SHA" \
+            --title "$RELEASE_VERSION - Attested Community release" \
+            --notes "Attested Community release for Kotonoha Console.
+
+          Validation:
+          - npm run typecheck
+          - npm test
+          - npm run build
+
+          Release assets are generated and attested by GitHub Actions, and intentionally include only main.js, manifest.json, and styles.css."
