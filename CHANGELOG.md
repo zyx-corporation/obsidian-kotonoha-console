@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.5.4 — Obsidian confirmation modals
+
+### Changed
+
+- Replaced native `confirm()` prompts with Obsidian modal confirmations for apply, stale-audit, Git HEAD drift, source hash drift, and metadata-write prompts.
+
 ## v0.5.3 — Attested Community release
 
 ### Added

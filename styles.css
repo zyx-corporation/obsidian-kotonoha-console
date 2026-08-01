@@ -23,6 +23,13 @@
   opacity: 0.75;
 }
 
+.kotonoha-console-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
 .kotonoha-console-header {
   flex-shrink: 0;
 }
