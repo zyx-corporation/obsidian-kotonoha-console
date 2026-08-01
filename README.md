@@ -8,7 +8,7 @@ Kotonoha UI plugin for Obsidian (proposal · RDE audit · human approval).
 
 ## Install
 
-Manual install from [GitHub Release 0.5.3](https://github.com/zyx-corporation/obsidian-kotonoha-console/releases/tag/0.5.3):
+Manual install from [GitHub Release 0.5.4](https://github.com/zyx-corporation/obsidian-kotonoha-console/releases/tag/0.5.4):
 
 ```text
 <vault>/.obsidian/plugins/kotonoha-console/
@@ -38,7 +38,7 @@ Full guide: [`docs/backend-setup.ja.md`](docs/backend-setup.ja.md)
 
 ## Current status
 
-`obsidian-kotonoha-console` **v0.5.3** is the attested Community release for Review Destination / Publication Handoff.
+`obsidian-kotonoha-console` **v0.5.4** replaces native confirmation prompts with Obsidian modals.
 
 It focuses on:
 

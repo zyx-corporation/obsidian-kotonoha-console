@@ -37,6 +37,7 @@ import {
   parseGitHubReference,
   type ReviewHandoffReferences,
 } from "../reviewDestination/reviewHandoff";
+import { confirmConsoleAction } from "./ConfirmActionModal";
 
 export const KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
 
@@ -407,7 +408,7 @@ export class KotonohaConsoleView extends ItemView {
     if (
       sourceHashMismatch(this.sourceHashAtGeneration, current?.sourceHash)
     ) {
-      const ok = confirm(consoleMsg(lang, "confirmSourceChanged"));
+      const ok = await confirmConsoleAction(this.app, lang, consoleMsg(lang, "confirmSourceChanged"));
       if (!ok) return;
     }
 
@@ -418,7 +419,7 @@ export class KotonohaConsoleView extends ItemView {
         this.plugin.settings.gitMode,
       );
       if (gitNow?.commit && gitNow.commit !== this.gitCommitAtGeneration) {
-        const ok = confirm(consoleMsg(lang, "confirmGitHeadChanged"));
+        const ok = await confirmConsoleAction(this.app, lang, consoleMsg(lang, "confirmGitHeadChanged"));
         if (!ok) return;
       }
     }
@@ -434,11 +435,13 @@ export class KotonohaConsoleView extends ItemView {
         Boolean(this.bundle.audit),
       )
     ) {
-      const ok = confirm(consoleMsg(lang, "confirmRevisionAuditStale"));
+      const ok = await confirmConsoleAction(this.app, lang, consoleMsg(lang, "confirmRevisionAuditStale"));
       if (!ok) return;
     }
 
-    const okApply = confirm(
+    const okApply = await confirmConsoleAction(
+      this.app,
+      lang,
       consoleMsg(
         lang,
         applyScope.kind === "selection"
@@ -516,7 +519,10 @@ export class KotonohaConsoleView extends ItemView {
       this.plugin.settings.gitMode,
     );
     if (!shouldWriteMetadata(effective)) return content;
-    if (effective === "prompt" && !confirm(consoleMsg(lang, "confirmWriteMetadata"))) {
+    if (
+      effective === "prompt" &&
+      !(await confirmConsoleAction(this.app, lang, consoleMsg(lang, "confirmWriteMetadata")))
+    ) {
       return content;
     }
     if (!this.bundle) return content;

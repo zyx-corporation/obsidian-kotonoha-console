@@ -1,6 +1,6 @@
 {
   "name": "obsidian-kotonoha-console",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "private": true,
   "description": "Kotonoha Console — proposal, RDE audit, and human approval",
   "license": "Apache-2.0",

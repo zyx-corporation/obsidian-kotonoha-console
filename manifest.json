@@ -1,7 +1,7 @@
 {
   "id": "kotonoha-console",
   "name": "Kotonoha Console",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "minAppVersion": "1.7.2",
   "description": "Proposal, RDE audit, and human approval for Kotonoha semantic lineage.",
   "author": "zyx-corporation",

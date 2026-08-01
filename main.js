@@ -27,7 +27,7 @@ __export(main_exports, {
   default: () => KotonohaConsolePlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian6 = require("obsidian");
+var import_obsidian7 = require("obsidian");
 
 // src/cli/runKotonoha.ts
 var import_child_process = require("child_process");
@@ -365,6 +365,9 @@ var MSGS2 = {
     btnApplyRevision: "Apply revision",
     btnReAudit: "Re-audit",
     btnCancelRevise: "Cancel revise",
+    confirmDialogTitle: "Confirm action",
+    confirmDialogCancel: "Cancel",
+    confirmDialogContinue: "Continue",
     opRdeAudit: "RDE audit",
     opSummarize: "Summarize",
     opRewrite: "Rewrite",
@@ -537,6 +540,9 @@ var MSGS2 = {
     btnApplyRevision: "\u6539\u8A02\u3092\u9069\u7528",
     btnReAudit: "\u518D\u76E3\u67FB",
     btnCancelRevise: "\u6539\u8A02\u3092\u30AD\u30E3\u30F3\u30BB\u30EB",
+    confirmDialogTitle: "\u64CD\u4F5C\u306E\u78BA\u8A8D",
+    confirmDialogCancel: "\u30AD\u30E3\u30F3\u30BB\u30EB",
+    confirmDialogContinue: "\u7D9A\u884C",
     opRdeAudit: "RDE \u76E3\u67FB",
     opSummarize: "\u8981\u7D04",
     opRewrite: "\u66F8\u304D\u63DB\u3048",
@@ -709,6 +715,9 @@ var MSGS2 = {
     btnApplyRevision: "\u5E94\u7528\u4FEE\u8BA2",
     btnReAudit: "\u91CD\u65B0\u5BA1\u8BA1",
     btnCancelRevise: "\u53D6\u6D88\u4FEE\u8BA2",
+    confirmDialogTitle: "\u786E\u8BA4\u64CD\u4F5C",
+    confirmDialogCancel: "\u53D6\u6D88",
+    confirmDialogContinue: "\u7EE7\u7EED",
     opRdeAudit: "RDE \u5BA1\u8BA1",
     opSummarize: "\u6458\u8981",
     opRewrite: "\u6539\u5199",
@@ -1172,7 +1181,7 @@ var KotonohaSettingsTab = class extends import_obsidian.PluginSettingTab {
 };
 
 // src/ui/KotonohaConsoleView.ts
-var import_obsidian2 = require("obsidian");
+var import_obsidian3 = require("obsidian");
 
 // src/ui/rdeAuditPolicyMessages.ts
 var LOW_CONFIDENCE_THRESHOLD = 0.55;
@@ -2280,9 +2289,51 @@ function excerpt(text) {
 \u2026`;
 }
 
+// src/ui/ConfirmActionModal.ts
+var import_obsidian2 = require("obsidian");
+function confirmConsoleAction(app, lang, message2) {
+  return new Promise((resolve) => {
+    new ConfirmActionModal(app, lang, message2, resolve).open();
+  });
+}
+var ConfirmActionModal = class extends import_obsidian2.Modal {
+  constructor(app, lang, message2, resolve) {
+    super(app);
+    this.lang = lang;
+    this.message = message2;
+    this.resolve = resolve;
+  }
+  resolved = false;
+  onOpen() {
+    this.titleEl.setText(consoleMsg(this.lang, "confirmDialogTitle"));
+    this.contentEl.empty();
+    this.contentEl.createEl("p", { text: this.message });
+    const actions = this.contentEl.createDiv({
+      cls: "kotonoha-console-modal-actions"
+    });
+    new import_obsidian2.ButtonComponent(actions).setButtonText(consoleMsg(this.lang, "confirmDialogCancel")).onClick(() => {
+      this.finish(false);
+    });
+    new import_obsidian2.ButtonComponent(actions).setButtonText(consoleMsg(this.lang, "confirmDialogContinue")).setCta().onClick(() => {
+      this.finish(true);
+    });
+  }
+  onClose() {
+    this.finish(false, false);
+  }
+  finish(confirmed, closeModal = true) {
+    if (this.resolved) return;
+    this.resolved = true;
+    this.resolve(confirmed);
+    if (closeModal) {
+      this.close();
+    }
+  }
+};
+
 // src/ui/KotonohaConsoleView.ts
 var KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
-var KotonohaConsoleView = class extends import_obsidian2.ItemView {
+var KotonohaConsoleView = class extends import_obsidian3.ItemView {
   constructor(leaf, plugin) {
     super(leaf);
     this.plugin = plugin;
@@ -2430,12 +2481,12 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       this.targetFilePath,
       (p) => {
         const f = this.app.vault.getAbstractFileByPath(p);
-        return f instanceof import_obsidian2.TFile;
+        return f instanceof import_obsidian3.TFile;
       }
     );
     if (!path) return null;
     const file = this.app.vault.getAbstractFileByPath(path);
-    return file instanceof import_obsidian2.TFile ? file : null;
+    return file instanceof import_obsidian3.TFile ? file : null;
   }
   uiLang() {
     return this.plugin.settings.defaultLanguage;
@@ -2464,7 +2515,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       this.bundle = null;
       this.proposalHost?.empty();
       this.auditHost?.empty();
-      new import_obsidian2.Notice(consoleMsg(lang, "noticeNoNote"));
+      new import_obsidian3.Notice(consoleMsg(lang, "noticeNoNote"));
       return;
     }
     const operation = this.operationSelect.value;
@@ -2512,9 +2563,9 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
         engineLine: this.bundle?.audit ? formatAuditEngineNoticeLine(lang, this.bundle.audit) : consoleMsg(lang, "auditEngineLocal"),
         saved: operation === "rde_audit" ? saved : ""
       }) : consoleMsg(lang, "noticeProposalReady");
-      new import_obsidian2.Notice(msg);
+      new import_obsidian3.Notice(msg);
     } catch (e) {
-      new import_obsidian2.Notice(consoleMsg(lang, "noticeFailed", { msg: message(e) }));
+      new import_obsidian3.Notice(consoleMsg(lang, "noticeFailed", { msg: message(e) }));
     }
   }
   renderBundle() {
@@ -2575,12 +2626,12 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     if (!this.bundle) return;
     const lang = this.uiLang();
     if (this.lastOperation === "rde_audit") {
-      new import_obsidian2.Notice(consoleMsg(lang, "noticeAuditNoApply"));
+      new import_obsidian3.Notice(consoleMsg(lang, "noticeAuditNoApply"));
       return;
     }
     const applyScope = this.currentApplyScope();
     if (!isApplyScopeSupported(applyScope)) {
-      new import_obsidian2.Notice(
+      new import_obsidian3.Notice(
         consoleMsg(lang, "noticeApplyScopeUnsupported", {
           reason: applyScope.reason
         })
@@ -2589,7 +2640,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     }
     const file = this.resolveTargetFile();
     if (!file) {
-      new import_obsidian2.Notice(consoleMsg(lang, "noticeNoNote"));
+      new import_obsidian3.Notice(consoleMsg(lang, "noticeNoNote"));
       return;
     }
     const current = await this.plugin.activeNoteReader.readNoteContextForFile(
@@ -2597,7 +2648,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       this.lastRequest?.context.selectionText
     );
     if (sourceHashMismatch(this.sourceHashAtGeneration, current?.sourceHash)) {
-      const ok = confirm(consoleMsg(lang, "confirmSourceChanged"));
+      const ok = await confirmConsoleAction(this.app, lang, consoleMsg(lang, "confirmSourceChanged"));
       if (!ok) return;
     }
     if (this.plugin.settings.gitMode === "obsidian-git-aware" && this.gitCommitAtGeneration) {
@@ -2607,7 +2658,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
         this.plugin.settings.gitMode
       );
       if (gitNow?.commit && gitNow.commit !== this.gitCommitAtGeneration) {
-        const ok = confirm(consoleMsg(lang, "confirmGitHeadChanged"));
+        const ok = await confirmConsoleAction(this.app, lang, consoleMsg(lang, "confirmGitHeadChanged"));
         if (!ok) return;
       }
     }
@@ -2618,10 +2669,12 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       this.auditedProposalText,
       Boolean(this.bundle.audit)
     )) {
-      const ok = confirm(consoleMsg(lang, "confirmRevisionAuditStale"));
+      const ok = await confirmConsoleAction(this.app, lang, consoleMsg(lang, "confirmRevisionAuditStale"));
       if (!ok) return;
     }
-    const okApply = confirm(
+    const okApply = await confirmConsoleAction(
+      this.app,
+      lang,
       consoleMsg(
         lang,
         applyScope.kind === "selection" ? "confirmApplySelection" : "confirmApplyWholeNote"
@@ -2631,7 +2684,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     await this.withBusy(async () => {
       const file2 = this.resolveTargetFile();
       if (!file2) {
-        new import_obsidian2.Notice(
+        new import_obsidian3.Notice(
           consoleMsg(lang, "noticeTargetFileMissing", {
             path: this.targetFilePath ?? "?"
           })
@@ -2645,7 +2698,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
         selectionText: this.lastRequest?.context.selectionText
       });
       if (composed.kind === "selection_not_found") {
-        new import_obsidian2.Notice(consoleMsg(lang, "noticeSelectionNotFound"));
+        new import_obsidian3.Notice(consoleMsg(lang, "noticeSelectionNotFound"));
         return;
       }
       await this.plugin.markdownWriter.replaceNoteContent(file2, composed.content);
@@ -2666,7 +2719,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       if (withLineage !== afterApply) {
         await this.plugin.markdownWriter.replaceNoteContent(file2, withLineage);
       }
-      new import_obsidian2.Notice(
+      new import_obsidian3.Notice(
         decision.decision === "partially_applied" ? consoleMsg(lang, "noticeAppliedRevised") : consoleMsg(lang, "noticeApplied")
       );
       this.clearResults();
@@ -2678,7 +2731,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       this.plugin.settings.gitMode
     );
     if (!shouldWriteMetadata(effective)) return content;
-    if (effective === "prompt" && !confirm(consoleMsg(lang, "confirmWriteMetadata"))) {
+    if (effective === "prompt" && !await confirmConsoleAction(this.app, lang, consoleMsg(lang, "confirmWriteMetadata"))) {
       return content;
     }
     if (!this.bundle) return content;
@@ -2766,7 +2819,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     const input = this.currentHandoffInput();
     if (!input) return;
     await navigator.clipboard.writeText(buildReviewSummaryBlock(input));
-    new import_obsidian2.Notice(consoleMsg(this.uiLang(), "noticeCopied"));
+    new import_obsidian3.Notice(consoleMsg(this.uiLang(), "noticeCopied"));
   }
   async insertReviewSummary() {
     const input = this.currentHandoffInput();
@@ -2774,7 +2827,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     const file = this.resolveTargetFile();
     const lang = this.uiLang();
     if (!file) {
-      new import_obsidian2.Notice(consoleMsg(lang, "noticeNoNote"));
+      new import_obsidian3.Notice(consoleMsg(lang, "noticeNoNote"));
       return;
     }
     const original = await this.app.vault.read(file);
@@ -2784,19 +2837,19 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       `${original}${suffix}${buildReviewSummaryBlock(input)}
 `
     );
-    new import_obsidian2.Notice(consoleMsg(lang, "noticeReviewSummaryInserted"));
+    new import_obsidian3.Notice(consoleMsg(lang, "noticeReviewSummaryInserted"));
   }
   async copyIssueDraft() {
     const input = this.currentHandoffInput();
     if (!input) return;
     await navigator.clipboard.writeText(buildIssueDraft(input));
-    new import_obsidian2.Notice(consoleMsg(this.uiLang(), "noticeCopied"));
+    new import_obsidian3.Notice(consoleMsg(this.uiLang(), "noticeCopied"));
   }
   async copyPrSummary() {
     const input = this.currentHandoffInput();
     if (!input) return;
     await navigator.clipboard.writeText(buildPrSummary(input));
-    new import_obsidian2.Notice(consoleMsg(this.uiLang(), "noticeCopied"));
+    new import_obsidian3.Notice(consoleMsg(this.uiLang(), "noticeCopied"));
   }
   async rejectProposal() {
     if (!this.bundle) return;
@@ -2805,7 +2858,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       const decision = this.plugin.approval.reject(this.bundle.proposal);
       await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
       await this.saveReviewSidecar(decision);
-      new import_obsidian2.Notice(
+      new import_obsidian3.Notice(
         this.lastOperation === "rde_audit" ? consoleMsg(lang, "noticeAuditDismissed") : consoleMsg(lang, "noticeRejected")
       );
       this.clearResults();
@@ -2815,7 +2868,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     if (!this.bundle) return;
     const text = this.reviseMode ? this.editedText : this.bundle.proposal.proposedText;
     await navigator.clipboard.writeText(text);
-    new import_obsidian2.Notice(consoleMsg(this.uiLang(), "noticeCopied"));
+    new import_obsidian3.Notice(consoleMsg(this.uiLang(), "noticeCopied"));
   }
   async startRevise() {
     if (!this.bundle || this.lastOperation === "rde_audit") return;
@@ -2830,7 +2883,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       await this.plugin.auditLog.logDecision(decision, this.bundle.audit);
       await this.saveReviewSidecar(decision);
     });
-    new import_obsidian2.Notice(consoleMsg(lang, "noticeReviseMode"));
+    new import_obsidian3.Notice(consoleMsg(lang, "noticeReviseMode"));
     this.renderBundle();
   }
   cancelRevise() {
@@ -2857,7 +2910,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
           { projectId: this.plugin.settings.projectId }
         );
       }
-      new import_obsidian2.Notice(
+      new import_obsidian3.Notice(
         consoleMsg(this.uiLang(), "noticeRdeAuditWithEngine", {
           engineLine: formatAuditEngineNoticeLine(this.uiLang(), audit),
           saved: ""
@@ -2884,7 +2937,7 @@ function message(e) {
 }
 
 // src/obsidian/ActiveNoteReader.ts
-var import_obsidian3 = require("obsidian");
+var import_obsidian4 = require("obsidian");
 
 // src/util/hash.ts
 async function sha256Hex(text) {
@@ -2942,7 +2995,7 @@ var ActiveNoteReader = class {
   }
   /** Editor selection for `file`, including when another view (e.g. Console) is focused. */
   readSelectionForFile(file) {
-    const active = this.app.workspace.getActiveViewOfType(import_obsidian3.MarkdownView);
+    const active = this.app.workspace.getActiveViewOfType(import_obsidian4.MarkdownView);
     if (active?.file?.path === file.path && active.editor) {
       return readSelection(active.editor);
     }
@@ -3506,7 +3559,7 @@ async function hash(text) {
 }
 
 // src/client/http/obsidianHttp.ts
-var import_obsidian4 = require("obsidian");
+var import_obsidian5 = require("obsidian");
 
 // src/client/http/httpEndpoint.ts
 function endpointCandidates(endpoint) {
@@ -3522,7 +3575,7 @@ function endpointCandidates(endpoint) {
 
 // src/client/http/obsidianHttp.ts
 async function obsidianHttpRequest(url, init) {
-  const res = await (0, import_obsidian4.requestUrl)({
+  const res = await (0, import_obsidian5.requestUrl)({
     url,
     method: init?.method ?? "GET",
     headers: init?.headers,
@@ -4277,11 +4330,11 @@ var MockKotonohaClient = class {
 };
 
 // src/client/http/obsidianFetch.ts
-var import_obsidian5 = require("obsidian");
+var import_obsidian6 = require("obsidian");
 function createObsidianFetch() {
   return async (input, init) => {
     const url = typeof input === "string" ? input : input.toString();
-    const res = await (0, import_obsidian5.requestUrl)({
+    const res = await (0, import_obsidian6.requestUrl)({
       url,
       method: init?.method?.toString() ?? "GET",
       headers: normalizeHeaders(init?.headers),
@@ -4350,7 +4403,7 @@ function createKotonohaClient(settings, app) {
 }
 
 // src/main.ts
-var KotonohaConsolePlugin = class extends import_obsidian6.Plugin {
+var KotonohaConsolePlugin = class extends import_obsidian7.Plugin {
   settings = { ...DEFAULT_SETTINGS };
   activeNoteReader;
   markdownWriter;
@@ -4462,13 +4515,13 @@ var KotonohaConsolePlugin = class extends import_obsidian6.Plugin {
     const plugins = this.app.plugins;
     await plugins.disablePlugin(id2);
     await plugins.enablePlugin(id2);
-    new import_obsidian6.Notice(consoleMsg(this.settings.defaultLanguage, "noticePluginReloaded", { version }));
+    new import_obsidian7.Notice(consoleMsg(this.settings.defaultLanguage, "noticePluginReloaded", { version }));
   }
   async testBackendConnection() {
     const lang = this.settings.defaultLanguage;
     switch (this.settings.backendMode) {
       case "mock":
-        new import_obsidian6.Notice(formatMockProbeNotice(lang));
+        new import_obsidian7.Notice(formatMockProbeNotice(lang));
         return;
       case "cli":
         await this.testCliVersion();
@@ -4488,10 +4541,10 @@ var KotonohaConsolePlugin = class extends import_obsidian6.Plugin {
         await this.saveSettings();
         this.refreshClient();
       }
-      new import_obsidian6.Notice(formatHttpProbeNotice(lang, result));
+      new import_obsidian7.Notice(formatHttpProbeNotice(lang, result));
     } catch (e) {
       const detail = e instanceof HttpProbeError ? e.message : e instanceof Error ? e.message : String(e);
-      new import_obsidian6.Notice(
+      new import_obsidian7.Notice(
         consoleMsg(lang, "noticeHttpFailed", {
           msg: detail,
           endpoint
@@ -4512,11 +4565,11 @@ var KotonohaConsolePlugin = class extends import_obsidian6.Plugin {
       });
       const check = checkKotonohaCliVersion(result);
       if (check.ok) {
-        new import_obsidian6.Notice(formatCliProbeNotice(lang, check.line, check.version));
+        new import_obsidian7.Notice(formatCliProbeNotice(lang, check.line, check.version));
         return;
       }
       const msgKey = check.reason === "too_old" ? "noticeCliVersionTooOld" : check.reason === "unparseable" ? "noticeCliVersionUnparseable" : "noticeCliError";
-      new import_obsidian6.Notice(
+      new import_obsidian7.Notice(
         consoleMsg(lang, msgKey, {
           msg: check.detail,
           line: check.line ?? "",
@@ -4528,7 +4581,7 @@ var KotonohaConsolePlugin = class extends import_obsidian6.Plugin {
     } catch (e) {
       const err = e instanceof Error ? e.message : String(e);
       const isNotFound = /ENOENT|not found/i.test(err);
-      new import_obsidian6.Notice(
+      new import_obsidian7.Notice(
         consoleMsg(lang, isNotFound ? "noticeCliCommandNotFound" : "noticeCliSpawnFailed", {
           msg: err,
           bin,
