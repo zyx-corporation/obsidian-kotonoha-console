@@ -1,6 +1,6 @@
 # v0.5.0 Release Checklist
 
-Status: PR-ready. GitHub Release pending after merge.
+Status: complete. GitHub Release: <https://github.com/zyx-corporation/obsidian-kotonoha-console/releases/tag/v0.5.0>
 
 - [x] Version bumped in `manifest.json`
 - [x] Version bumped in `package.json`
@@ -14,5 +14,5 @@ Status: PR-ready. GitHub Release pending after merge.
 - [x] `npm run typecheck`
 - [x] `npm run build`
 - [x] `npm run link:dev-vault`
-- [ ] Release zip uses `kotonoha-console/` folder and `obsidian-kotonoha-console-v0.5.0.zip`
-- [ ] GitHub Release v0.5.0 assets uploaded
+- [x] Release zip uses `kotonoha-console/` folder and `obsidian-kotonoha-console-v0.5.0.zip`
+- [x] GitHub Release v0.5.0 assets uploaded
