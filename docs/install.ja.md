@@ -1,6 +1,6 @@
 # Obsidian Kotonoha Console — インストール
 
-**プラグイン:** `obsidian-kotonoha-console` **v0.5.1**\
+**プラグイン:** `obsidian-kotonoha-console` **v0.5.2**\
 **manifest id:** `kotonoha-console`  
 **English:** [`install.md`](install.md)  
 **Backend setup:** [`backend-setup.ja.md`](backend-setup.ja.md)（Mock / CLI / HTTP orchestrator）
@@ -11,8 +11,8 @@
 
 | 項目 | 要件 |
 | --- | --- |
-| Obsidian | **1.13.0+**（`manifest.json` の `minAppVersion`） |
-| 配布形態 | [GitHub Release 0.5.1](https://github.com/zyx-corporation/obsidian-kotonoha-console/releases/tag/0.5.1) |
+| Obsidian | **1.7.2+**（`manifest.json` の `minAppVersion`） |
+| 配布形態 | [GitHub Release 0.5.2](https://github.com/zyx-corporation/obsidian-kotonoha-console/releases/tag/0.5.2) |
 | CLI backend を使う場合 | [`kotonoha-cli >= 0.3.1`](https://github.com/zyx-corporation/kotonoha-docs/blob/main/ja/tutorials/install_kotonoha_cli.md) |
 | mock / http backend | CLI 不要（HTTP 要約には [orchestrator](backend-setup.ja.md#mode-c-http-orchestrator-backend) 起動が必要） |
 

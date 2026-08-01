@@ -995,9 +995,6 @@ var KotonohaSettingsTab = class extends import_obsidian.PluginSettingTab {
     super(app, plugin);
     this.plugin = plugin;
   }
-  getSettingDefinitions() {
-    return [];
-  }
   /** Called when defaultLanguage changes so labels refresh while tab is open. */
   refreshDisplay() {
     this.display();
@@ -1616,10 +1613,12 @@ function scanMvpGuardrails(source, proposal, options, driftRisks, categories) {
   }
   const linkTargets = new Set(options?.sourceLinks ?? []);
   for (const m of source.matchAll(/\[\[([^\]|#]+)/g)) {
-    linkTargets.add(m[1]);
+    const target = m[1];
+    if (target) linkTargets.add(target);
   }
   for (const m of source.matchAll(/\]\(([^)]+)\)/g)) {
-    linkTargets.add(m[1]);
+    const target = m[1];
+    if (target) linkTargets.add(target);
   }
   for (const target of linkTargets) {
     const needle = target.replace(/^\[\[/, "").replace(/\]\]$/, "");

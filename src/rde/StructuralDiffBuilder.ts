@@ -212,10 +212,12 @@ function scanMvpGuardrails(
 
   const linkTargets = new Set<string>(options?.sourceLinks ?? []);
   for (const m of source.matchAll(/\[\[([^\]|#]+)/g)) {
-    linkTargets.add(m[1]!);
+    const target = m[1];
+    if (target) linkTargets.add(target);
   }
   for (const m of source.matchAll(/\]\(([^)]+)\)/g)) {
-    linkTargets.add(m[1]!);
+    const target = m[1];
+    if (target) linkTargets.add(target);
   }
   for (const target of linkTargets) {
     const needle = target.replace(/^\[\[/, "").replace(/\]\]$/, "");
