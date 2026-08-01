@@ -76,6 +76,8 @@ const MSGS = {
       "Export correlation: project {projectId} · commit {commit} · {path}",
     exportCorrelationMissing:
       "Export correlation: local sidecar only ({reason} unavailable)",
+    reviewDestinationLocalOnly:
+      "Review destination: Local only — sidecar/note history is the Kotonoha record; GitHub handoff is explicit.",
     confirmSourceChanged:
       "Source has changed. Re-audit or explicit override is required. Continue?",
     confirmGitHeadChanged:
@@ -267,6 +269,8 @@ const MSGS = {
       "Export 相関: project {projectId} · commit {commit} · {path}",
     exportCorrelationMissing:
       "Export 相関: local sidecar のみ（{reason} 不明）",
+    reviewDestinationLocalOnly:
+      "レビュー先: Local only — sidecar / ノート履歴が Kotonoha の記録です。GitHub への引き渡しは明示操作です。",
     confirmSourceChanged:
       "ソースが変更されています。再監査または明示的な上書きが必要です。続行しますか？",
     confirmGitHeadChanged:
@@ -459,6 +463,8 @@ const MSGS = {
       "Export 关联：project {projectId} · commit {commit} · {path}",
     exportCorrelationMissing:
       "Export 关联：仅 local sidecar（{reason} 不可用）",
+    reviewDestinationLocalOnly:
+      "Review destination：Local only — sidecar/笔记历史是 Kotonoha 记录；GitHub 交接需显式操作。",
     confirmSourceChanged:
       "源已更改。需要重新审计或明确覆盖。是否继续？",
     confirmGitHeadChanged:

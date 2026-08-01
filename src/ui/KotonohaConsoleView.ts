@@ -25,6 +25,10 @@ import {
   isApplyScopeSupported,
   type ApplyScope,
 } from "../obsidian/applyScope";
+import {
+  DEFAULT_REVIEW_DESTINATION,
+  getReviewDestination,
+} from "../reviewDestination/reviewDestination";
 
 export const KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
 
@@ -330,6 +334,7 @@ export class KotonohaConsoleView extends ItemView {
         ? undefined
         : this.formatApplyScopeWarningText(lang),
       exportCorrelationText: this.formatExportCorrelationText(lang),
+      reviewDestinationText: this.formatReviewDestinationText(lang),
       language: lang,
       reviseMode: this.reviseMode,
       editedText: this.editedText,
@@ -542,6 +547,11 @@ export class KotonohaConsoleView extends ItemView {
             ? "projectId"
             : "gitCommit",
     });
+  }
+
+  private formatReviewDestinationText(lang: RdeLang): string {
+    const destination = getReviewDestination(DEFAULT_REVIEW_DESTINATION);
+    return consoleMsg(lang, destination.boundaryMessageKey);
   }
 
   private async rejectProposal(): Promise<void> {

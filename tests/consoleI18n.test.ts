@@ -27,4 +27,10 @@ describe("consoleI18n", () => {
     expect(consoleMsg("en", "cmdOpenConsole")).toBe("Open Kotonoha Console");
     expect(consoleMsg("zh_CN", "cmdRunRdeAudit")).toBe("运行 RDE 审计（活动笔记）");
   });
+
+  it("review destination boundary labels", () => {
+    expect(consoleMsg("en", "reviewDestinationLocalOnly")).toContain("Local only");
+    expect(consoleMsg("ja", "reviewDestinationLocalOnly")).toContain("Local only");
+    expect(consoleMsg("zh_CN", "reviewDestinationLocalOnly")).toContain("GitHub");
+  });
 });
