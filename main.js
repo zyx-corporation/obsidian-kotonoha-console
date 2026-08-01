@@ -401,6 +401,20 @@ var MSGS2 = {
     exportCorrelationAvailable: "Export correlation: project {projectId} \xB7 commit {commit} \xB7 {path}",
     exportCorrelationMissing: "Export correlation: local sidecar only ({reason} unavailable)",
     reviewDestinationLocalOnly: "Review destination: Local only \u2014 sidecar/note history is the Kotonoha record; GitHub handoff is explicit.",
+    reviewHandoffTitle: "Review handoff",
+    reviewIssueRefLabel: "Existing Issue",
+    reviewIssueRefPlaceholder: "https://github.com/org/repo/issues/123 or #123",
+    reviewPrRefLabel: "Existing PR",
+    reviewPrRefPlaceholder: "https://github.com/org/repo/pull/123 or !123",
+    reviewIssueRefInvalid: "Issue reference is not recognized.",
+    reviewPrRefInvalid: "PR reference is not recognized.",
+    reviewIssueRefLinked: "Linked Issue: {ref}",
+    reviewPrRefLinked: "Linked PR: {ref}",
+    btnCopyReviewSummary: "Copy summary block",
+    btnInsertReviewSummary: "Insert into note",
+    btnCopyIssueDraft: "Copy Issue draft",
+    btnCopyPrSummary: "Copy PR summary",
+    noticeReviewSummaryInserted: "Review summary inserted into note",
     confirmSourceChanged: "Source has changed. Re-audit or explicit override is required. Continue?",
     confirmGitHeadChanged: "Git HEAD changed since generation (Obsidian Git may have synced). Re-audit recommended. Continue?",
     confirmRevisionAuditStale: "The revised text changed after the last audit. Re-audit is recommended. Continue anyway?",
@@ -559,6 +573,20 @@ var MSGS2 = {
     exportCorrelationAvailable: "Export \u76F8\u95A2: project {projectId} \xB7 commit {commit} \xB7 {path}",
     exportCorrelationMissing: "Export \u76F8\u95A2: local sidecar \u306E\u307F\uFF08{reason} \u4E0D\u660E\uFF09",
     reviewDestinationLocalOnly: "\u30EC\u30D3\u30E5\u30FC\u5148: Local only \u2014 sidecar / \u30CE\u30FC\u30C8\u5C65\u6B74\u304C Kotonoha \u306E\u8A18\u9332\u3067\u3059\u3002GitHub \u3078\u306E\u5F15\u304D\u6E21\u3057\u306F\u660E\u793A\u64CD\u4F5C\u3067\u3059\u3002",
+    reviewHandoffTitle: "\u30EC\u30D3\u30E5\u30FC\u5F15\u304D\u6E21\u3057",
+    reviewIssueRefLabel: "\u65E2\u5B58 Issue",
+    reviewIssueRefPlaceholder: "https://github.com/org/repo/issues/123 \u307E\u305F\u306F #123",
+    reviewPrRefLabel: "\u65E2\u5B58 PR",
+    reviewPrRefPlaceholder: "https://github.com/org/repo/pull/123 \u307E\u305F\u306F !123",
+    reviewIssueRefInvalid: "Issue \u53C2\u7167\u3068\u3057\u3066\u8A8D\u8B58\u3067\u304D\u307E\u305B\u3093\u3002",
+    reviewPrRefInvalid: "PR \u53C2\u7167\u3068\u3057\u3066\u8A8D\u8B58\u3067\u304D\u307E\u305B\u3093\u3002",
+    reviewIssueRefLinked: "\u30EA\u30F3\u30AF\u6E08\u307F Issue: {ref}",
+    reviewPrRefLinked: "\u30EA\u30F3\u30AF\u6E08\u307F PR: {ref}",
+    btnCopyReviewSummary: "summary block \u3092\u30B3\u30D4\u30FC",
+    btnInsertReviewSummary: "\u30CE\u30FC\u30C8\u3078\u633F\u5165",
+    btnCopyIssueDraft: "Issue draft \u3092\u30B3\u30D4\u30FC",
+    btnCopyPrSummary: "PR summary \u3092\u30B3\u30D4\u30FC",
+    noticeReviewSummaryInserted: "\u30EC\u30D3\u30E5\u30FC summary \u3092\u30CE\u30FC\u30C8\u3078\u633F\u5165\u3057\u307E\u3057\u305F",
     confirmSourceChanged: "\u30BD\u30FC\u30B9\u304C\u5909\u66F4\u3055\u308C\u3066\u3044\u307E\u3059\u3002\u518D\u76E3\u67FB\u307E\u305F\u306F\u660E\u793A\u7684\u306A\u4E0A\u66F8\u304D\u304C\u5FC5\u8981\u3067\u3059\u3002\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F",
     confirmGitHeadChanged: "\u751F\u6210\u5F8C\u306B Git HEAD \u304C\u5909\u308F\u3063\u3066\u3044\u307E\u3059\uFF08Obsidian Git \u306E\u540C\u671F\u306E\u53EF\u80FD\u6027\uFF09\u3002\u518D\u76E3\u67FB\u3092\u63A8\u5968\u3057\u307E\u3059\u3002\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F",
     confirmRevisionAuditStale: "\u6700\u5F8C\u306E\u76E3\u67FB\u5F8C\u306B\u6539\u8A02\u30C6\u30AD\u30B9\u30C8\u304C\u5909\u66F4\u3055\u308C\u3066\u3044\u307E\u3059\u3002\u518D\u76E3\u67FB\u3092\u63A8\u5968\u3057\u307E\u3059\u3002\u3053\u306E\u307E\u307E\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F",
@@ -717,6 +745,20 @@ var MSGS2 = {
     exportCorrelationAvailable: "Export \u5173\u8054\uFF1Aproject {projectId} \xB7 commit {commit} \xB7 {path}",
     exportCorrelationMissing: "Export \u5173\u8054\uFF1A\u4EC5 local sidecar\uFF08{reason} \u4E0D\u53EF\u7528\uFF09",
     reviewDestinationLocalOnly: "Review destination\uFF1ALocal only \u2014 sidecar/\u7B14\u8BB0\u5386\u53F2\u662F Kotonoha \u8BB0\u5F55\uFF1BGitHub \u4EA4\u63A5\u9700\u663E\u5F0F\u64CD\u4F5C\u3002",
+    reviewHandoffTitle: "Review handoff",
+    reviewIssueRefLabel: "Existing Issue",
+    reviewIssueRefPlaceholder: "https://github.com/org/repo/issues/123 \u6216 #123",
+    reviewPrRefLabel: "Existing PR",
+    reviewPrRefPlaceholder: "https://github.com/org/repo/pull/123 \u6216 !123",
+    reviewIssueRefInvalid: "\u65E0\u6CD5\u8BC6\u522B Issue \u5F15\u7528\u3002",
+    reviewPrRefInvalid: "\u65E0\u6CD5\u8BC6\u522B PR \u5F15\u7528\u3002",
+    reviewIssueRefLinked: "\u5DF2\u94FE\u63A5 Issue\uFF1A{ref}",
+    reviewPrRefLinked: "\u5DF2\u94FE\u63A5 PR\uFF1A{ref}",
+    btnCopyReviewSummary: "\u590D\u5236 summary block",
+    btnInsertReviewSummary: "\u63D2\u5165\u7B14\u8BB0",
+    btnCopyIssueDraft: "\u590D\u5236 Issue draft",
+    btnCopyPrSummary: "\u590D\u5236 PR summary",
+    noticeReviewSummaryInserted: "Review summary \u5DF2\u63D2\u5165\u7B14\u8BB0",
     confirmSourceChanged: "\u6E90\u5DF2\u66F4\u6539\u3002\u9700\u8981\u91CD\u65B0\u5BA1\u8BA1\u6216\u660E\u786E\u8986\u76D6\u3002\u662F\u5426\u7EE7\u7EED\uFF1F",
     confirmGitHeadChanged: "\u751F\u6210\u540E Git HEAD \u5DF2\u53D8\u5316\uFF08\u53EF\u80FD\u7531 Obsidian Git \u540C\u6B65\u5F15\u8D77\uFF09\u3002\u5EFA\u8BAE\u91CD\u65B0\u5BA1\u8BA1\u3002\u662F\u5426\u7EE7\u7EED\uFF1F",
     confirmRevisionAuditStale: "\u4FEE\u8BA2\u6587\u672C\u5728\u4E0A\u6B21\u5BA1\u8BA1\u540E\u5DF2\u66F4\u6539\u3002\u5EFA\u8BAE\u91CD\u65B0\u5BA1\u8BA1\u3002\u4ECD\u8981\u7EE7\u7EED\u5417\uFF1F",
@@ -1191,6 +1233,68 @@ var ProposalView = class {
         text: actions.reviewDestinationText
       });
     }
+    if (actions.onCopyReviewSummary) {
+      const handoff = host.createDiv({ cls: "kotonoha-console-review-handoff" });
+      handoff.createEl("h4", {
+        cls: "kotonoha-console-subsection-title",
+        text: consoleMsg(lang, "reviewHandoffTitle")
+      });
+      const issueLabel = handoff.createEl("label", {
+        cls: "kotonoha-console-handoff-label",
+        text: consoleMsg(lang, "reviewIssueRefLabel")
+      });
+      const issueInput = handoff.createEl("input", {
+        cls: "kotonoha-console-handoff-input",
+        attr: {
+          type: "text",
+          placeholder: consoleMsg(lang, "reviewIssueRefPlaceholder")
+        }
+      });
+      issueLabel.appendChild(issueInput);
+      issueInput.value = actions.issueReferenceValue ?? "";
+      issueInput.addEventListener("input", () => {
+        actions.onIssueReferenceChange?.(issueInput.value);
+      });
+      if (actions.issueReferenceStatusText) {
+        handoff.createEl("p", {
+          cls: "kotonoha-console-muted",
+          text: actions.issueReferenceStatusText
+        });
+      }
+      const prLabel = handoff.createEl("label", {
+        cls: "kotonoha-console-handoff-label",
+        text: consoleMsg(lang, "reviewPrRefLabel")
+      });
+      const prInput = handoff.createEl("input", {
+        cls: "kotonoha-console-handoff-input",
+        attr: {
+          type: "text",
+          placeholder: consoleMsg(lang, "reviewPrRefPlaceholder")
+        }
+      });
+      prLabel.appendChild(prInput);
+      prInput.value = actions.prReferenceValue ?? "";
+      prInput.addEventListener("input", () => {
+        actions.onPrReferenceChange?.(prInput.value);
+      });
+      if (actions.prReferenceStatusText) {
+        handoff.createEl("p", {
+          cls: "kotonoha-console-muted",
+          text: actions.prReferenceStatusText
+        });
+      }
+      const handoffBar = handoff.createDiv({ cls: "kotonoha-console-actions" });
+      handoffBar.createEl("button", { text: consoleMsg(lang, "btnCopyReviewSummary") }).addEventListener("click", actions.onCopyReviewSummary);
+      if (actions.onInsertReviewSummary) {
+        handoffBar.createEl("button", { text: consoleMsg(lang, "btnInsertReviewSummary") }).addEventListener("click", actions.onInsertReviewSummary);
+      }
+      if (actions.onCopyIssueDraft) {
+        handoffBar.createEl("button", { text: consoleMsg(lang, "btnCopyIssueDraft") }).addEventListener("click", actions.onCopyIssueDraft);
+      }
+      if (actions.onCopyPrSummary) {
+        handoffBar.createEl("button", { text: consoleMsg(lang, "btnCopyPrSummary") }).addEventListener("click", actions.onCopyPrSummary);
+      }
+    }
     if (actions.reviseMode) {
       const textarea = host.createEl("textarea", {
         cls: "kotonoha-console-revise",
@@ -1636,7 +1740,7 @@ function recommendDecision(categories, driftRisks) {
 // src/rde/enrichAuditFromSource.ts
 function enrichAuditFromSource(audit, request) {
   const lang = normalizeRdeLang(request.language);
-  const excerpt2 = request.context.sourceText.slice(0, 200).replace(/\n/g, " ") + (request.context.sourceText.length > 200 ? "\u2026" : "");
+  const excerpt3 = request.context.sourceText.slice(0, 200).replace(/\n/g, " ") + (request.context.sourceText.length > 200 ? "\u2026" : "");
   const unresolvedElements = [...audit.unresolvedElements];
   if (!request.context.git) {
     unresolvedElements.push(rdeMsg(lang, "nonGitVault"));
@@ -1646,7 +1750,7 @@ function enrichAuditFromSource(audit, request) {
     preservedElements: [
       `path:${request.context.filePath}`,
       `source_hash:${request.context.sourceHash.slice(0, 16)}\u2026`,
-      excerpt2,
+      excerpt3,
       ...audit.preservedElements
     ],
     unresolvedElements
@@ -1998,6 +2102,182 @@ function getReviewDestination(kind = DEFAULT_REVIEW_DESTINATION) {
   return REVIEW_DESTINATION_OPTIONS.find((option) => option.kind === kind) ?? REVIEW_DESTINATION_OPTIONS[0];
 }
 
+// src/reviewDestination/reviewHandoff.ts
+function parseGitHubReference(raw, expectedKind) {
+  const input = raw.trim();
+  if (!input) return null;
+  const urlMatch = input.match(
+    /^https:\/\/github\.com\/([^/\s]+)\/([^/\s]+)\/(issues|pull)\/(\d+)(?:[/?#].*)?$/i
+  );
+  if (urlMatch) {
+    const kind = urlMatch[3].toLowerCase() === "pull" ? "pr" : "issue";
+    if (kind !== expectedKind) return null;
+    return {
+      kind,
+      owner: urlMatch[1],
+      repo: urlMatch[2],
+      number: Number(urlMatch[4]),
+      url: `https://github.com/${urlMatch[1]}/${urlMatch[2]}/${urlMatch[3].toLowerCase()}/${urlMatch[4]}`,
+      raw: input
+    };
+  }
+  const ownerRepoMatch = input.match(/^([^/\s#]+)\/([^/\s#!]+)([#|!])(\d+)$/);
+  if (ownerRepoMatch) {
+    const kind = ownerRepoMatch[3] === "!" ? "pr" : "issue";
+    if (kind !== expectedKind) return null;
+    const path = kind === "pr" ? "pull" : "issues";
+    return {
+      kind,
+      owner: ownerRepoMatch[1],
+      repo: ownerRepoMatch[2],
+      number: Number(ownerRepoMatch[4]),
+      url: `https://github.com/${ownerRepoMatch[1]}/${ownerRepoMatch[2]}/${path}/${ownerRepoMatch[4]}`,
+      raw: input
+    };
+  }
+  const shortMatch = input.match(/^(#|!)(\d+)$/);
+  if (shortMatch) {
+    const kind = shortMatch[1] === "!" ? "pr" : "issue";
+    if (kind !== expectedKind) return null;
+    return {
+      kind,
+      number: Number(shortMatch[2]),
+      raw: input
+    };
+  }
+  return null;
+}
+function formatReference(ref) {
+  if (ref.url) return ref.url;
+  return `${ref.kind === "pr" ? "PR" : "Issue"} #${ref.number}`;
+}
+function buildReviewSummaryBlock(input) {
+  const lang = normalizeRdeLang(input.request.language);
+  const audit = input.audit;
+  const lines = [
+    "<!-- kotonoha review-handoff v0.5 -->",
+    "",
+    `## Kotonoha RDE review handoff`,
+    "",
+    `- File: \`${input.request.context.filePath}\``,
+    `- Proposal: \`${input.proposal.id}\``,
+    `- Source hash: \`${input.request.context.sourceHash.slice(0, 16)}\u2026\``,
+    "- Review destination: Local only / explicit publication handoff",
+    "- Canonical Kotonoha record: local sidecar and note history"
+  ];
+  appendReferences(lines, input.references);
+  if (audit) {
+    lines.push(
+      `- Recommended decision: ${formatDecision(lang, audit.recommendedDecision)}`,
+      `- Categories: ${formatCategories(lang, audit)}`
+    );
+    appendItems(lines, "Preserved", audit.preservedElements);
+    appendItems(lines, "Transformed", audit.transformedElements);
+    appendItems(lines, "Inferred", audit.inferredExtensions);
+    appendItems(lines, "Unresolved", audit.unresolvedElements);
+    appendItems(lines, "Drift risks", audit.driftRisks);
+  } else {
+    lines.push("- RDE audit: not attached to this proposal");
+  }
+  lines.push(
+    "",
+    "### Proposed text excerpt",
+    "",
+    excerpt(input.proposal.proposedText)
+  );
+  return lines.join("\n");
+}
+function buildIssueDraft(input) {
+  const audit = input.audit;
+  const categorySlug = audit?.categories.join(", ") || "review";
+  const lines = [
+    `Title: Kotonoha RDE review: ${input.request.context.title || input.request.context.filePath}`,
+    "",
+    "Body:",
+    "",
+    "## Review context",
+    "",
+    `- File: \`${input.request.context.filePath}\``,
+    `- Proposal: \`${input.proposal.id}\``,
+    `- Source hash: \`${input.request.context.sourceHash.slice(0, 16)}\u2026\``,
+    `- Category: ${categorySlug}`,
+    "",
+    "## Boundary",
+    "",
+    "This Issue is a publication/review handoff. Kotonoha's canonical record remains the local sidecar and note history.",
+    "",
+    "## Review summary",
+    "",
+    buildReviewSummaryBlock(input)
+  ];
+  return lines.join("\n");
+}
+function buildPrSummary(input) {
+  const lang = normalizeRdeLang(input.request.language);
+  const audit = input.audit;
+  const lines = [
+    "## Summary",
+    "",
+    "- Prepared from Kotonoha RDE review output.",
+    `- File: \`${input.request.context.filePath}\``,
+    `- Proposal: \`${input.proposal.id}\``
+  ];
+  appendReferences(lines, input.references);
+  lines.push(
+    "",
+    "## Semantic review",
+    ""
+  );
+  if (audit) {
+    lines.push(
+      `- Recommended decision: ${formatDecision(lang, audit.recommendedDecision)}`,
+      `- Categories: ${formatCategories(lang, audit)}`
+    );
+    appendItems(lines, "Drift risks", audit.driftRisks);
+    appendItems(lines, "Unresolved", audit.unresolvedElements);
+  } else {
+    lines.push("- RDE audit: not attached to this proposal");
+  }
+  lines.push(
+    "",
+    "## Boundary",
+    "",
+    "- GitHub is a review/correlation/publication surface.",
+    "- The Kotonoha-owned semantic record remains local sidecars and note history.",
+    "- Human review is still required before treating the change as accepted lineage.",
+    "",
+    "## Verification",
+    "",
+    "- [ ] Confirm the PR diff matches the reviewed note/proposal scope.",
+    "- [ ] Confirm RDE risks are accepted, revised, or explicitly rejected."
+  );
+  return lines.join("\n");
+}
+function appendReferences(lines, references) {
+  if (references?.issue) {
+    lines.push(`- Existing Issue: ${formatReference(references.issue)}`);
+  }
+  if (references?.pr) {
+    lines.push(`- Existing PR: ${formatReference(references.pr)}`);
+  }
+}
+function appendItems(lines, title, items) {
+  if (items.length === 0) return;
+  lines.push("", `### ${title}`, "");
+  for (const item of items) {
+    lines.push(`- ${item}`);
+  }
+}
+function formatCategories(lang, audit) {
+  return audit.categories.map((category) => formatCategory(lang, category)).join(", ") || rdeMsg(lang, "categoryNone");
+}
+function excerpt(text) {
+  const trimmed = text.trim();
+  if (trimmed.length <= 1200) return trimmed;
+  return `${trimmed.slice(0, 1200)}
+\u2026`;
+}
+
 // src/ui/KotonohaConsoleView.ts
 var KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
 var KotonohaConsoleView = class extends import_obsidian2.ItemView {
@@ -2014,6 +2294,8 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
   auditedProposalText = null;
   reviseMode = false;
   editedText = "";
+  issueReferenceText = "";
+  prReferenceText = "";
   proposalHost;
   auditHost;
   instructionInput;
@@ -2133,6 +2415,8 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     this.auditedProposalText = null;
     this.reviseMode = false;
     this.editedText = "";
+    this.issueReferenceText = "";
+    this.prReferenceText = "";
     this.proposalHost?.empty();
     this.auditHost?.empty();
   }
@@ -2258,6 +2542,22 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       applyScopeWarningText: isAuditReport ? void 0 : this.formatApplyScopeWarningText(lang),
       exportCorrelationText: this.formatExportCorrelationText(lang),
       reviewDestinationText: this.formatReviewDestinationText(lang),
+      issueReferenceValue: this.issueReferenceText,
+      issueReferenceStatusText: this.formatReferenceStatusText("issue", lang),
+      prReferenceValue: this.prReferenceText,
+      prReferenceStatusText: this.formatReferenceStatusText("pr", lang),
+      onIssueReferenceChange: (value) => {
+        this.issueReferenceText = value;
+        this.renderBundle();
+      },
+      onPrReferenceChange: (value) => {
+        this.prReferenceText = value;
+        this.renderBundle();
+      },
+      onCopyReviewSummary: () => void this.copyReviewSummary(),
+      onInsertReviewSummary: () => void this.insertReviewSummary(),
+      onCopyIssueDraft: () => void this.copyIssueDraft(),
+      onCopyPrSummary: () => void this.copyPrSummary(),
       language: lang,
       reviseMode: this.reviseMode,
       editedText: this.editedText,
@@ -2430,6 +2730,71 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
   formatReviewDestinationText(lang) {
     const destination = getReviewDestination(DEFAULT_REVIEW_DESTINATION);
     return consoleMsg(lang, destination.boundaryMessageKey);
+  }
+  currentHandoffReferences() {
+    return {
+      issue: parseGitHubReference(this.issueReferenceText, "issue") ?? void 0,
+      pr: parseGitHubReference(this.prReferenceText, "pr") ?? void 0
+    };
+  }
+  formatReferenceStatusText(kind, lang) {
+    const raw = kind === "issue" ? this.issueReferenceText : this.prReferenceText;
+    if (!raw.trim()) return void 0;
+    const ref = parseGitHubReference(raw, kind);
+    if (!ref) {
+      return consoleMsg(
+        lang,
+        kind === "issue" ? "reviewIssueRefInvalid" : "reviewPrRefInvalid"
+      );
+    }
+    return consoleMsg(lang, kind === "issue" ? "reviewIssueRefLinked" : "reviewPrRefLinked", {
+      ref: formatReference(ref)
+    });
+  }
+  currentHandoffInput() {
+    if (!this.bundle || !this.lastRequest) return null;
+    return {
+      request: this.lastRequest,
+      proposal: this.bundle.proposal,
+      audit: this.bundle.audit,
+      references: this.currentHandoffReferences()
+    };
+  }
+  async copyReviewSummary() {
+    const input = this.currentHandoffInput();
+    if (!input) return;
+    await navigator.clipboard.writeText(buildReviewSummaryBlock(input));
+    new import_obsidian2.Notice(consoleMsg(this.uiLang(), "noticeCopied"));
+  }
+  async insertReviewSummary() {
+    const input = this.currentHandoffInput();
+    if (!input) return;
+    const file = this.resolveTargetFile();
+    const lang = this.uiLang();
+    if (!file) {
+      new import_obsidian2.Notice(consoleMsg(lang, "noticeNoNote"));
+      return;
+    }
+    const original = await this.app.vault.read(file);
+    const suffix = original.endsWith("\n") ? "\n" : "\n\n";
+    await this.plugin.markdownWriter.replaceNoteContent(
+      file,
+      `${original}${suffix}${buildReviewSummaryBlock(input)}
+`
+    );
+    new import_obsidian2.Notice(consoleMsg(lang, "noticeReviewSummaryInserted"));
+  }
+  async copyIssueDraft() {
+    const input = this.currentHandoffInput();
+    if (!input) return;
+    await navigator.clipboard.writeText(buildIssueDraft(input));
+    new import_obsidian2.Notice(consoleMsg(this.uiLang(), "noticeCopied"));
+  }
+  async copyPrSummary() {
+    const input = this.currentHandoffInput();
+    if (!input) return;
+    await navigator.clipboard.writeText(buildPrSummary(input));
+    new import_obsidian2.Notice(consoleMsg(this.uiLang(), "noticeCopied"));
   }
   async rejectProposal() {
     if (!this.bundle) return;
@@ -2750,7 +3115,7 @@ var AuditLogService = class {
       proposalId: proposal.id,
       createdAt: proposal.createdAt,
       proposalHash: await sha256Hex(proposal.proposedText),
-      sourceExcerpt: excerpt(sourceExcerpt, this.mode),
+      sourceExcerpt: excerpt2(sourceExcerpt, this.mode),
       summary: proposal.summary
     };
     await this.append(entry);
@@ -2780,7 +3145,7 @@ var AuditLogService = class {
 function isoFileStamp() {
   return (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
 }
-function excerpt(text, mode) {
+function excerpt2(text, mode) {
   if (mode === "hash_only") return "";
   const max = mode === "summary" ? 200 : 4e3;
   return text.length <= max ? text : `${text.slice(0, max)}\u2026`;

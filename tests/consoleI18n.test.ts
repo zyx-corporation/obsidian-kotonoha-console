@@ -32,5 +32,6 @@ describe("consoleI18n", () => {
     expect(consoleMsg("en", "reviewDestinationLocalOnly")).toContain("Local only");
     expect(consoleMsg("ja", "reviewDestinationLocalOnly")).toContain("Local only");
     expect(consoleMsg("zh_CN", "reviewDestinationLocalOnly")).toContain("GitHub");
+    expect(consoleMsg("ja", "btnCopyIssueDraft")).toContain("Issue draft");
   });
 });

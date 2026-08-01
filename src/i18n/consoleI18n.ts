@@ -78,6 +78,20 @@ const MSGS = {
       "Export correlation: local sidecar only ({reason} unavailable)",
     reviewDestinationLocalOnly:
       "Review destination: Local only — sidecar/note history is the Kotonoha record; GitHub handoff is explicit.",
+    reviewHandoffTitle: "Review handoff",
+    reviewIssueRefLabel: "Existing Issue",
+    reviewIssueRefPlaceholder: "https://github.com/org/repo/issues/123 or #123",
+    reviewPrRefLabel: "Existing PR",
+    reviewPrRefPlaceholder: "https://github.com/org/repo/pull/123 or !123",
+    reviewIssueRefInvalid: "Issue reference is not recognized.",
+    reviewPrRefInvalid: "PR reference is not recognized.",
+    reviewIssueRefLinked: "Linked Issue: {ref}",
+    reviewPrRefLinked: "Linked PR: {ref}",
+    btnCopyReviewSummary: "Copy summary block",
+    btnInsertReviewSummary: "Insert into note",
+    btnCopyIssueDraft: "Copy Issue draft",
+    btnCopyPrSummary: "Copy PR summary",
+    noticeReviewSummaryInserted: "Review summary inserted into note",
     confirmSourceChanged:
       "Source has changed. Re-audit or explicit override is required. Continue?",
     confirmGitHeadChanged:
@@ -271,6 +285,20 @@ const MSGS = {
       "Export 相関: local sidecar のみ（{reason} 不明）",
     reviewDestinationLocalOnly:
       "レビュー先: Local only — sidecar / ノート履歴が Kotonoha の記録です。GitHub への引き渡しは明示操作です。",
+    reviewHandoffTitle: "レビュー引き渡し",
+    reviewIssueRefLabel: "既存 Issue",
+    reviewIssueRefPlaceholder: "https://github.com/org/repo/issues/123 または #123",
+    reviewPrRefLabel: "既存 PR",
+    reviewPrRefPlaceholder: "https://github.com/org/repo/pull/123 または !123",
+    reviewIssueRefInvalid: "Issue 参照として認識できません。",
+    reviewPrRefInvalid: "PR 参照として認識できません。",
+    reviewIssueRefLinked: "リンク済み Issue: {ref}",
+    reviewPrRefLinked: "リンク済み PR: {ref}",
+    btnCopyReviewSummary: "summary block をコピー",
+    btnInsertReviewSummary: "ノートへ挿入",
+    btnCopyIssueDraft: "Issue draft をコピー",
+    btnCopyPrSummary: "PR summary をコピー",
+    noticeReviewSummaryInserted: "レビュー summary をノートへ挿入しました",
     confirmSourceChanged:
       "ソースが変更されています。再監査または明示的な上書きが必要です。続行しますか？",
     confirmGitHeadChanged:
@@ -465,6 +493,20 @@ const MSGS = {
       "Export 关联：仅 local sidecar（{reason} 不可用）",
     reviewDestinationLocalOnly:
       "Review destination：Local only — sidecar/笔记历史是 Kotonoha 记录；GitHub 交接需显式操作。",
+    reviewHandoffTitle: "Review handoff",
+    reviewIssueRefLabel: "Existing Issue",
+    reviewIssueRefPlaceholder: "https://github.com/org/repo/issues/123 或 #123",
+    reviewPrRefLabel: "Existing PR",
+    reviewPrRefPlaceholder: "https://github.com/org/repo/pull/123 或 !123",
+    reviewIssueRefInvalid: "无法识别 Issue 引用。",
+    reviewPrRefInvalid: "无法识别 PR 引用。",
+    reviewIssueRefLinked: "已链接 Issue：{ref}",
+    reviewPrRefLinked: "已链接 PR：{ref}",
+    btnCopyReviewSummary: "复制 summary block",
+    btnInsertReviewSummary: "插入笔记",
+    btnCopyIssueDraft: "复制 Issue draft",
+    btnCopyPrSummary: "复制 PR summary",
+    noticeReviewSummaryInserted: "Review summary 已插入笔记",
     confirmSourceChanged:
       "源已更改。需要重新审计或明确覆盖。是否继续？",
     confirmGitHeadChanged:

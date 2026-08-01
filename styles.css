@@ -64,6 +64,38 @@
   font-size: var(--font-ui-smaller);
 }
 
+.kotonoha-console-review-destination {
+  margin: 0.2rem 0;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.kotonoha-console-review-handoff {
+  margin: 0.45rem 0;
+  padding: 0.45rem 0.5rem;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  background: var(--background-secondary);
+}
+
+.kotonoha-console-subsection-title {
+  margin: 0 0 0.25rem;
+  font-size: var(--font-ui-smaller);
+}
+
+.kotonoha-console-handoff-label {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.kotonoha-console-handoff-input {
+  width: 100%;
+  margin-top: 0.15rem;
+  box-sizing: border-box;
+}
+
 .kotonoha-console-meta {
   margin: 0.25rem 0 0.5rem;
   padding: 0.35rem 0.5rem;

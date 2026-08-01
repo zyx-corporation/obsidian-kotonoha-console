@@ -29,6 +29,14 @@ import {
   DEFAULT_REVIEW_DESTINATION,
   getReviewDestination,
 } from "../reviewDestination/reviewDestination";
+import {
+  buildIssueDraft,
+  buildPrSummary,
+  buildReviewSummaryBlock,
+  formatReference,
+  parseGitHubReference,
+  type ReviewHandoffReferences,
+} from "../reviewDestination/reviewHandoff";
 
 export const KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
 
@@ -42,6 +50,8 @@ export class KotonohaConsoleView extends ItemView {
   private auditedProposalText: string | null = null;
   private reviseMode = false;
   private editedText = "";
+  private issueReferenceText = "";
+  private prReferenceText = "";
   private proposalHost!: HTMLElement;
   private auditHost!: HTMLElement;
   private instructionInput!: HTMLTextAreaElement;
@@ -187,6 +197,8 @@ export class KotonohaConsoleView extends ItemView {
     this.auditedProposalText = null;
     this.reviseMode = false;
     this.editedText = "";
+    this.issueReferenceText = "";
+    this.prReferenceText = "";
     this.proposalHost?.empty();
     this.auditHost?.empty();
   }
@@ -335,6 +347,22 @@ export class KotonohaConsoleView extends ItemView {
         : this.formatApplyScopeWarningText(lang),
       exportCorrelationText: this.formatExportCorrelationText(lang),
       reviewDestinationText: this.formatReviewDestinationText(lang),
+      issueReferenceValue: this.issueReferenceText,
+      issueReferenceStatusText: this.formatReferenceStatusText("issue", lang),
+      prReferenceValue: this.prReferenceText,
+      prReferenceStatusText: this.formatReferenceStatusText("pr", lang),
+      onIssueReferenceChange: (value) => {
+        this.issueReferenceText = value;
+        this.renderBundle();
+      },
+      onPrReferenceChange: (value) => {
+        this.prReferenceText = value;
+        this.renderBundle();
+      },
+      onCopyReviewSummary: () => void this.copyReviewSummary(),
+      onInsertReviewSummary: () => void this.insertReviewSummary(),
+      onCopyIssueDraft: () => void this.copyIssueDraft(),
+      onCopyPrSummary: () => void this.copyPrSummary(),
       language: lang,
       reviseMode: this.reviseMode,
       editedText: this.editedText,
@@ -552,6 +580,80 @@ export class KotonohaConsoleView extends ItemView {
   private formatReviewDestinationText(lang: RdeLang): string {
     const destination = getReviewDestination(DEFAULT_REVIEW_DESTINATION);
     return consoleMsg(lang, destination.boundaryMessageKey);
+  }
+
+  private currentHandoffReferences(): ReviewHandoffReferences {
+    return {
+      issue: parseGitHubReference(this.issueReferenceText, "issue") ?? undefined,
+      pr: parseGitHubReference(this.prReferenceText, "pr") ?? undefined,
+    };
+  }
+
+  private formatReferenceStatusText(
+    kind: "issue" | "pr",
+    lang: RdeLang,
+  ): string | undefined {
+    const raw = kind === "issue" ? this.issueReferenceText : this.prReferenceText;
+    if (!raw.trim()) return undefined;
+    const ref = parseGitHubReference(raw, kind);
+    if (!ref) {
+      return consoleMsg(
+        lang,
+        kind === "issue" ? "reviewIssueRefInvalid" : "reviewPrRefInvalid",
+      );
+    }
+    return consoleMsg(lang, kind === "issue" ? "reviewIssueRefLinked" : "reviewPrRefLinked", {
+      ref: formatReference(ref),
+    });
+  }
+
+  private currentHandoffInput() {
+    if (!this.bundle || !this.lastRequest) return null;
+    return {
+      request: this.lastRequest,
+      proposal: this.bundle.proposal,
+      audit: this.bundle.audit,
+      references: this.currentHandoffReferences(),
+    };
+  }
+
+  private async copyReviewSummary(): Promise<void> {
+    const input = this.currentHandoffInput();
+    if (!input) return;
+    await navigator.clipboard.writeText(buildReviewSummaryBlock(input));
+    new Notice(consoleMsg(this.uiLang(), "noticeCopied"));
+  }
+
+  private async insertReviewSummary(): Promise<void> {
+    const input = this.currentHandoffInput();
+    if (!input) return;
+    const file = this.resolveTargetFile();
+    const lang = this.uiLang();
+    if (!file) {
+      new Notice(consoleMsg(lang, "noticeNoNote"));
+      return;
+    }
+    const original = await this.app.vault.read(file);
+    const suffix = original.endsWith("\n") ? "\n" : "\n\n";
+    await this.plugin.markdownWriter.replaceNoteContent(
+      file,
+      `${original}${suffix}${buildReviewSummaryBlock(input)}\n`,
+    );
+    new Notice(consoleMsg(lang, "noticeReviewSummaryInserted"));
+  }
+
+  private async copyIssueDraft(): Promise<void> {
+    const input = this.currentHandoffInput();
+    if (!input) return;
+    await navigator.clipboard.writeText(buildIssueDraft(input));
+    new Notice(consoleMsg(this.uiLang(), "noticeCopied"));
+  }
+
+  private async copyPrSummary(): Promise<void> {
+    const input = this.currentHandoffInput();
+    if (!input) return;
+    await navigator.clipboard.writeText(buildPrSummary(input));
+    new Notice(consoleMsg(this.uiLang(), "noticeCopied"));
   }
 
   private async rejectProposal(): Promise<void> {
