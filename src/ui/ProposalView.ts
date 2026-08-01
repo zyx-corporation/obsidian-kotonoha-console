@@ -17,6 +17,16 @@ export interface ProposalViewActions {
   applyScopeWarningText?: string;
   exportCorrelationText?: string;
   reviewDestinationText?: string;
+  issueReferenceValue?: string;
+  issueReferenceStatusText?: string;
+  prReferenceValue?: string;
+  prReferenceStatusText?: string;
+  onIssueReferenceChange?: (value: string) => void;
+  onPrReferenceChange?: (value: string) => void;
+  onCopyReviewSummary?: () => void;
+  onInsertReviewSummary?: () => void;
+  onCopyIssueDraft?: () => void;
+  onCopyPrSummary?: () => void;
   reviseMode?: boolean;
   editedText?: string;
   onEditedTextChange?: (text: string) => void;
@@ -75,6 +85,78 @@ export class ProposalView {
         cls: "kotonoha-console-review-destination",
         text: actions.reviewDestinationText,
       });
+    }
+    if (actions.onCopyReviewSummary) {
+      const handoff = host.createDiv({ cls: "kotonoha-console-review-handoff" });
+      handoff.createEl("h4", {
+        cls: "kotonoha-console-subsection-title",
+        text: consoleMsg(lang, "reviewHandoffTitle"),
+      });
+      const issueLabel = handoff.createEl("label", {
+        cls: "kotonoha-console-handoff-label",
+        text: consoleMsg(lang, "reviewIssueRefLabel"),
+      });
+      const issueInput = handoff.createEl("input", {
+        cls: "kotonoha-console-handoff-input",
+        attr: {
+          type: "text",
+          placeholder: consoleMsg(lang, "reviewIssueRefPlaceholder"),
+        },
+      });
+      issueLabel.appendChild(issueInput);
+      issueInput.value = actions.issueReferenceValue ?? "";
+      issueInput.addEventListener("input", () => {
+        actions.onIssueReferenceChange?.(issueInput.value);
+      });
+      if (actions.issueReferenceStatusText) {
+        handoff.createEl("p", {
+          cls: "kotonoha-console-muted",
+          text: actions.issueReferenceStatusText,
+        });
+      }
+
+      const prLabel = handoff.createEl("label", {
+        cls: "kotonoha-console-handoff-label",
+        text: consoleMsg(lang, "reviewPrRefLabel"),
+      });
+      const prInput = handoff.createEl("input", {
+        cls: "kotonoha-console-handoff-input",
+        attr: {
+          type: "text",
+          placeholder: consoleMsg(lang, "reviewPrRefPlaceholder"),
+        },
+      });
+      prLabel.appendChild(prInput);
+      prInput.value = actions.prReferenceValue ?? "";
+      prInput.addEventListener("input", () => {
+        actions.onPrReferenceChange?.(prInput.value);
+      });
+      if (actions.prReferenceStatusText) {
+        handoff.createEl("p", {
+          cls: "kotonoha-console-muted",
+          text: actions.prReferenceStatusText,
+        });
+      }
+
+      const handoffBar = handoff.createDiv({ cls: "kotonoha-console-actions" });
+      handoffBar
+        .createEl("button", { text: consoleMsg(lang, "btnCopyReviewSummary") })
+        .addEventListener("click", actions.onCopyReviewSummary);
+      if (actions.onInsertReviewSummary) {
+        handoffBar
+          .createEl("button", { text: consoleMsg(lang, "btnInsertReviewSummary") })
+          .addEventListener("click", actions.onInsertReviewSummary);
+      }
+      if (actions.onCopyIssueDraft) {
+        handoffBar
+          .createEl("button", { text: consoleMsg(lang, "btnCopyIssueDraft") })
+          .addEventListener("click", actions.onCopyIssueDraft);
+      }
+      if (actions.onCopyPrSummary) {
+        handoffBar
+          .createEl("button", { text: consoleMsg(lang, "btnCopyPrSummary") })
+          .addEventListener("click", actions.onCopyPrSummary);
+      }
     }
 
     if (actions.reviseMode) {

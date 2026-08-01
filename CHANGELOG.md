@@ -1,5 +1,33 @@
 # Changelog
 
+## v0.5.0 — Review Destination / Publication Handoff
+
+### Added
+
+- Review Destination model with `Local only` as the visible default.
+- Review handoff panel for copying a Kotonoha RDE summary block.
+- Insert action for appending a review summary block into the current note.
+- Copy-ready GitHub Issue draft text generated from proposal / RDE audit context.
+- Existing GitHub Issue / PR reference parsing for correlation metadata.
+- Copy-ready PR summary text for publication handoff.
+- `docs/v0.5-dogfood-record.ja.md` records Phase 1–6 evidence.
+
+### Changed
+
+- Proposal / audit UI now states that sidecar and note history remain the Kotonoha-owned record surface.
+- GitHub is presented as an explicit review/correlation/publication handoff, not as semantic authority.
+
+### Distribution
+
+- Release zip folder name remains `kotonoha-console/` (manifest id).
+- Release asset: `obsidian-kotonoha-console-v0.5.0.zip` (folder `kotonoha-console/`).
+
+### Boundaries
+
+- No automatic GitHub Issue / PR publishing is introduced.
+- Existing GitHub links are correlation metadata only.
+- Local sidecars and note history remain the Kotonoha-owned record surface.
+
 ## v0.4.0 — Integration depth
 
 ### Added
