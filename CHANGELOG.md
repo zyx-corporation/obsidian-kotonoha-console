@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.5.3 — Attested Community release
+
+### Added
+
+- GitHub Actions release workflow that validates metadata, runs typecheck / tests / build, generates GitHub artifact attestations, and publishes the three Community-supported release assets.
+
 ## v0.5.2 — Community warning trim
 
 ### Changed
