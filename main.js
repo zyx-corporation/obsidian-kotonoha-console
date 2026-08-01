@@ -400,6 +400,7 @@ var MSGS2 = {
     applyScopeUnsupported: "Apply scope unavailable: {reason}",
     exportCorrelationAvailable: "Export correlation: project {projectId} \xB7 commit {commit} \xB7 {path}",
     exportCorrelationMissing: "Export correlation: local sidecar only ({reason} unavailable)",
+    reviewDestinationLocalOnly: "Review destination: Local only \u2014 sidecar/note history is the Kotonoha record; GitHub handoff is explicit.",
     confirmSourceChanged: "Source has changed. Re-audit or explicit override is required. Continue?",
     confirmGitHeadChanged: "Git HEAD changed since generation (Obsidian Git may have synced). Re-audit recommended. Continue?",
     confirmRevisionAuditStale: "The revised text changed after the last audit. Re-audit is recommended. Continue anyway?",
@@ -557,6 +558,7 @@ var MSGS2 = {
     applyScopeUnsupported: "\u9069\u7528\u7BC4\u56F2\u3092\u78BA\u5B9A\u3067\u304D\u307E\u305B\u3093: {reason}",
     exportCorrelationAvailable: "Export \u76F8\u95A2: project {projectId} \xB7 commit {commit} \xB7 {path}",
     exportCorrelationMissing: "Export \u76F8\u95A2: local sidecar \u306E\u307F\uFF08{reason} \u4E0D\u660E\uFF09",
+    reviewDestinationLocalOnly: "\u30EC\u30D3\u30E5\u30FC\u5148: Local only \u2014 sidecar / \u30CE\u30FC\u30C8\u5C65\u6B74\u304C Kotonoha \u306E\u8A18\u9332\u3067\u3059\u3002GitHub \u3078\u306E\u5F15\u304D\u6E21\u3057\u306F\u660E\u793A\u64CD\u4F5C\u3067\u3059\u3002",
     confirmSourceChanged: "\u30BD\u30FC\u30B9\u304C\u5909\u66F4\u3055\u308C\u3066\u3044\u307E\u3059\u3002\u518D\u76E3\u67FB\u307E\u305F\u306F\u660E\u793A\u7684\u306A\u4E0A\u66F8\u304D\u304C\u5FC5\u8981\u3067\u3059\u3002\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F",
     confirmGitHeadChanged: "\u751F\u6210\u5F8C\u306B Git HEAD \u304C\u5909\u308F\u3063\u3066\u3044\u307E\u3059\uFF08Obsidian Git \u306E\u540C\u671F\u306E\u53EF\u80FD\u6027\uFF09\u3002\u518D\u76E3\u67FB\u3092\u63A8\u5968\u3057\u307E\u3059\u3002\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F",
     confirmRevisionAuditStale: "\u6700\u5F8C\u306E\u76E3\u67FB\u5F8C\u306B\u6539\u8A02\u30C6\u30AD\u30B9\u30C8\u304C\u5909\u66F4\u3055\u308C\u3066\u3044\u307E\u3059\u3002\u518D\u76E3\u67FB\u3092\u63A8\u5968\u3057\u307E\u3059\u3002\u3053\u306E\u307E\u307E\u7D9A\u884C\u3057\u307E\u3059\u304B\uFF1F",
@@ -714,6 +716,7 @@ var MSGS2 = {
     applyScopeUnsupported: "\u65E0\u6CD5\u786E\u5B9A\u5E94\u7528\u8303\u56F4\uFF1A{reason}",
     exportCorrelationAvailable: "Export \u5173\u8054\uFF1Aproject {projectId} \xB7 commit {commit} \xB7 {path}",
     exportCorrelationMissing: "Export \u5173\u8054\uFF1A\u4EC5 local sidecar\uFF08{reason} \u4E0D\u53EF\u7528\uFF09",
+    reviewDestinationLocalOnly: "Review destination\uFF1ALocal only \u2014 sidecar/\u7B14\u8BB0\u5386\u53F2\u662F Kotonoha \u8BB0\u5F55\uFF1BGitHub \u4EA4\u63A5\u9700\u663E\u5F0F\u64CD\u4F5C\u3002",
     confirmSourceChanged: "\u6E90\u5DF2\u66F4\u6539\u3002\u9700\u8981\u91CD\u65B0\u5BA1\u8BA1\u6216\u660E\u786E\u8986\u76D6\u3002\u662F\u5426\u7EE7\u7EED\uFF1F",
     confirmGitHeadChanged: "\u751F\u6210\u540E Git HEAD \u5DF2\u53D8\u5316\uFF08\u53EF\u80FD\u7531 Obsidian Git \u540C\u6B65\u5F15\u8D77\uFF09\u3002\u5EFA\u8BAE\u91CD\u65B0\u5BA1\u8BA1\u3002\u662F\u5426\u7EE7\u7EED\uFF1F",
     confirmRevisionAuditStale: "\u4FEE\u8BA2\u6587\u672C\u5728\u4E0A\u6B21\u5BA1\u8BA1\u540E\u5DF2\u66F4\u6539\u3002\u5EFA\u8BAE\u91CD\u65B0\u5BA1\u8BA1\u3002\u4ECD\u8981\u7EE7\u7EED\u5417\uFF1F",
@@ -1180,6 +1183,12 @@ var ProposalView = class {
       host.createEl("p", {
         cls: "kotonoha-console-export-correlation",
         text: actions.exportCorrelationText
+      });
+    }
+    if (actions.reviewDestinationText) {
+      host.createEl("p", {
+        cls: "kotonoha-console-review-destination",
+        text: actions.reviewDestinationText
       });
     }
     if (actions.reviseMode) {
@@ -1939,6 +1948,56 @@ function isApplyScopeSupported(scope) {
   return scope.kind !== "unsupported_partial";
 }
 
+// src/reviewDestination/reviewDestination.ts
+var DEFAULT_REVIEW_DESTINATION = "local_only";
+var REVIEW_DESTINATION_OPTIONS = [
+  {
+    kind: "local_only",
+    availability: "available",
+    externalSurface: "none",
+    boundaryMessageKey: "reviewDestinationLocalOnly",
+    canonicalRecord: "local_sidecar"
+  },
+  {
+    kind: "existing_issue",
+    availability: "planned",
+    externalSurface: "github_issue",
+    boundaryMessageKey: "reviewDestinationLocalOnly",
+    canonicalRecord: "local_sidecar"
+  },
+  {
+    kind: "issue_draft",
+    availability: "planned",
+    externalSurface: "github_issue",
+    boundaryMessageKey: "reviewDestinationLocalOnly",
+    canonicalRecord: "local_sidecar"
+  },
+  {
+    kind: "existing_pr",
+    availability: "planned",
+    externalSurface: "github_pr",
+    boundaryMessageKey: "reviewDestinationLocalOnly",
+    canonicalRecord: "local_sidecar"
+  },
+  {
+    kind: "pr_summary",
+    availability: "planned",
+    externalSurface: "github_pr",
+    boundaryMessageKey: "reviewDestinationLocalOnly",
+    canonicalRecord: "local_sidecar"
+  },
+  {
+    kind: "commit_annotation_future",
+    availability: "planned",
+    externalSurface: "git_commit",
+    boundaryMessageKey: "reviewDestinationLocalOnly",
+    canonicalRecord: "local_sidecar"
+  }
+];
+function getReviewDestination(kind = DEFAULT_REVIEW_DESTINATION) {
+  return REVIEW_DESTINATION_OPTIONS.find((option) => option.kind === kind) ?? REVIEW_DESTINATION_OPTIONS[0];
+}
+
 // src/ui/KotonohaConsoleView.ts
 var KOTONOHA_CONSOLE_VIEW = "kotonoha-console-view";
 var KotonohaConsoleView = class extends import_obsidian2.ItemView {
@@ -2198,6 +2257,7 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
       applyScopeText: isAuditReport ? void 0 : this.formatApplyScopeText(lang),
       applyScopeWarningText: isAuditReport ? void 0 : this.formatApplyScopeWarningText(lang),
       exportCorrelationText: this.formatExportCorrelationText(lang),
+      reviewDestinationText: this.formatReviewDestinationText(lang),
       language: lang,
       reviseMode: this.reviseMode,
       editedText: this.editedText,
@@ -2366,6 +2426,10 @@ var KotonohaConsoleView = class extends import_obsidian2.ItemView {
     return consoleMsg(lang, "exportCorrelationMissing", {
       reason: !commit && !projectId ? "projectId / gitCommit" : !projectId ? "projectId" : "gitCommit"
     });
+  }
+  formatReviewDestinationText(lang) {
+    const destination = getReviewDestination(DEFAULT_REVIEW_DESTINATION);
+    return consoleMsg(lang, destination.boundaryMessageKey);
   }
   async rejectProposal() {
     if (!this.bundle) return;
