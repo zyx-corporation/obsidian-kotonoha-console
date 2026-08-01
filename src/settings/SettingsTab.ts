@@ -16,6 +16,10 @@ export class KotonohaSettingsTab extends PluginSettingTab {
     super(app, plugin);
   }
 
+  getSettingDefinitions(): [] {
+    return [];
+  }
+
   /** Called when defaultLanguage changes so labels refresh while tab is open. */
   refreshDisplay(): void {
     this.display();
@@ -32,7 +36,7 @@ export class KotonohaSettingsTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h2", { text: this.t("settingsTitle") });
+    new Setting(containerEl).setName(this.t("settingsTitle")).setHeading();
     containerEl.createEl("p", {
       cls: "kotonoha-console-muted",
       text: consoleMsg(this.lang(), "settingsDiagnostic", {
@@ -71,7 +75,7 @@ export class KotonohaSettingsTab extends PluginSettingTab {
       );
 
     if (this.plugin.settings.backendMode === "http") {
-      containerEl.createEl("h3", { text: this.t("settingsHttpSection") });
+      new Setting(containerEl).setName(this.t("settingsHttpSection")).setHeading();
 
       containerEl.createEl("p", {
         cls: "kotonoha-console-muted",
@@ -113,7 +117,7 @@ export class KotonohaSettingsTab extends PluginSettingTab {
     }
 
     if (this.plugin.settings.backendMode === "cli") {
-      containerEl.createEl("h3", { text: this.t("settingsCliSection") });
+      new Setting(containerEl).setName(this.t("settingsCliSection")).setHeading();
 
       containerEl.createEl("p", {
         cls: "kotonoha-console-muted kotonoha-console-warn",

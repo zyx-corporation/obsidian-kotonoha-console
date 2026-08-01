@@ -9,13 +9,16 @@ export class HttpClientError extends Error {
   }
 }
 
-export type HttpFetchFn = typeof fetch;
+export type HttpFetchFn = (
+  input: RequestInfo | URL,
+  init?: RequestInit,
+) => Promise<Response>;
 
 export interface HttpClientOptions {
   endpoint: string;
   apiKey?: string;
   timeoutMs?: number;
-  fetchFn?: HttpFetchFn;
+  fetchFn: HttpFetchFn;
 }
 
 function normalizeBase(endpoint: string): string {
@@ -37,7 +40,7 @@ export class HttpClient {
     this.base = normalizeBase(options.endpoint);
     this.apiKey = options.apiKey;
     this.timeoutMs = options.timeoutMs ?? 30_000;
-    this.fetchFn = options.fetchFn ?? fetch;
+    this.fetchFn = options.fetchFn;
   }
 
   get baseUrl(): string {
@@ -58,7 +61,7 @@ export class HttpClient {
     body?: unknown,
   ): Promise<T> {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    const timer = window.setTimeout(() => controller.abort(), this.timeoutMs);
     try {
       const res = await this.fetchFn(`${this.base}${path}`, {
         method,
@@ -88,7 +91,7 @@ export class HttpClient {
       }
       throw new HttpClientError(e instanceof Error ? e.message : String(e));
     } finally {
-      clearTimeout(timer);
+      window.clearTimeout(timer);
     }
   }
 }

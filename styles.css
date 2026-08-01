@@ -15,7 +15,7 @@
 
 .kotonoha-console-root.kotonoha-console-busy,
 .kotonoha-console-root.kotonoha-console-busy * {
-  cursor: wait !important;
+  cursor: wait;
 }
 
 .kotonoha-console-root.kotonoha-console-busy button {
