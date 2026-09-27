@@ -100,7 +100,7 @@ HTTP orchestrator backend は、LLM 要約・提案生成・orchestrator `/v1/rd
 ### 必要
 
 - [`kotonoha-orchestrator`](https://github.com/zyx-corporation/kotonoha-orchestrator)（API サーバー起動）
-- 任意: `OPENAI_API_KEY`（live LLM 利用時）
+- 任意: provider API key（live LLM 利用時）
 
 ### 起動例
 
@@ -108,20 +108,36 @@ HTTP orchestrator backend は、LLM 要約・提案生成・orchestrator `/v1/rd
 git clone https://github.com/zyx-corporation/kotonoha-orchestrator.git
 cd kotonoha-orchestrator/orchestrator
 pip install -e ./api -e ./rde-engine
-cp .env.example .env   # OPENAI_API_KEY 等を編集
+cp .env.example .env   # KOTONOHA_LLM_PROVIDER と provider 認証情報を編集
 
-export OPENAI_API_KEY=sk-...          # 任意
+# OpenAI-compatible default
+export KOTONOHA_LLM_PROVIDER=openai
+export OPENAI_API_KEY=sk-...          # 任意。未設定時は local draft にフォールバック
 export OPENAI_BASE_URL=https://api.openai.com/v1
 export OPENAI_MODEL=gpt-4o-mini
 
-uvicorn kotonoha_orchestrator_api.main:app --app-dir api/src --port 8001
+# 他に対応する provider:
+#   claude      ANTHROPIC_API_KEY / ANTHROPIC_MODEL
+#   kimi        KIMI_API_KEY / KIMI_MODEL
+#   local_gemma OLLAMA_BASE_URL / LOCAL_GEMMA_MODEL
+
+uvicorn kotonoha_orchestrator_api.main:app --app-dir api/src --port 18081
 ```
+
+Provider 例:
+
+| Provider | 最小 env |
+| --- | --- |
+| OpenAI | `KOTONOHA_LLM_PROVIDER=openai`, `OPENAI_API_KEY=...` |
+| Claude | `KOTONOHA_LLM_PROVIDER=claude`, `ANTHROPIC_API_KEY=...`, `ANTHROPIC_MODEL=claude-sonnet-4-5` |
+| Kimi | `KOTONOHA_LLM_PROVIDER=kimi`, `KIMI_API_KEY=...`, `KIMI_MODEL=moonshot-v1-8k` |
+| Local Gemma | `KOTONOHA_LLM_PROVIDER=local_gemma`, `OLLAMA_BASE_URL=http://127.0.0.1:11434/v1`, `LOCAL_GEMMA_MODEL=gemma3:4b` |
 
 ### 疎通確認
 
 ```bash
-curl http://127.0.0.1:8001/health
-curl http://127.0.0.1:8001/v1/agents
+curl http://127.0.0.1:18081/health
+curl http://127.0.0.1:18081/v1/agents
 ```
 
 期待: `{"status":"ok"}` など（`/health` の JSON）
@@ -131,12 +147,12 @@ curl http://127.0.0.1:8001/v1/agents
 | 設定 | 推奨 |
 | --- | --- |
 | Backend mode | `http` |
-| HTTP endpoint | `http://127.0.0.1:8001` |
+| HTTP endpoint | `http://127.0.0.1:18081` |
 | HTTP API key | 空欄（orchestrator で認証を有効にした場合のみ） |
 | Enable RDE audit panel | on |
 | Require human approval before apply | on |
 
-プラグイン既定の HTTP endpoint は `http://127.0.0.1:8000` です。dogfood では **8001** を使用している場合は Settings で明示的に変更してください。
+プラグイン既定の HTTP endpoint は `http://127.0.0.1:18081` です。
 
 ### できること
 
@@ -181,9 +197,9 @@ curl http://127.0.0.1:8001/v1/agents
 
 1. Plugin を配置
 2. `kotonoha-orchestrator` を起動（上記 Mode C）
-3. `curl http://127.0.0.1:8001/health`
+3. `curl http://127.0.0.1:18081/health`
 4. Backend mode: `http`
-5. HTTP endpoint: `http://127.0.0.1:8001`
+5. HTTP endpoint: `http://127.0.0.1:18081`
 6. 操作: 要約 / 書き換え / 拡張
 
 ---

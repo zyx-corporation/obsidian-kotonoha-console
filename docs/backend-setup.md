@@ -103,7 +103,7 @@ HTTP orchestrator backend uses LLM summarize / proposal generation and orchestra
 ### Requirements
 
 - [`kotonoha-orchestrator`](https://github.com/zyx-corporation/kotonoha-orchestrator) (API server running)
-- Optional: `OPENAI_API_KEY` (for live LLM)
+- Optional: provider API key (for live LLM)
 
 ### Start example
 
@@ -111,20 +111,36 @@ HTTP orchestrator backend uses LLM summarize / proposal generation and orchestra
 git clone https://github.com/zyx-corporation/kotonoha-orchestrator.git
 cd kotonoha-orchestrator/orchestrator
 pip install -e ./api -e ./rde-engine
-cp .env.example .env   # edit OPENAI_API_KEY etc.
+cp .env.example .env   # edit KOTONOHA_LLM_PROVIDER and provider credentials
 
-export OPENAI_API_KEY=sk-...          # optional
+# OpenAI-compatible default
+export KOTONOHA_LLM_PROVIDER=openai
+export OPENAI_API_KEY=sk-...          # optional; unset falls back to local draft
 export OPENAI_BASE_URL=https://api.openai.com/v1
 export OPENAI_MODEL=gpt-4o-mini
 
-uvicorn kotonoha_orchestrator_api.main:app --app-dir api/src --port 8001
+# Other supported providers:
+#   claude      ANTHROPIC_API_KEY / ANTHROPIC_MODEL
+#   kimi        KIMI_API_KEY / KIMI_MODEL
+#   local_gemma OLLAMA_BASE_URL / LOCAL_GEMMA_MODEL
+
+uvicorn kotonoha_orchestrator_api.main:app --app-dir api/src --port 18081
 ```
+
+Provider examples:
+
+| Provider | Minimal env |
+| --- | --- |
+| OpenAI | `KOTONOHA_LLM_PROVIDER=openai`, `OPENAI_API_KEY=...` |
+| Claude | `KOTONOHA_LLM_PROVIDER=claude`, `ANTHROPIC_API_KEY=...`, `ANTHROPIC_MODEL=claude-sonnet-4-5` |
+| Kimi | `KOTONOHA_LLM_PROVIDER=kimi`, `KIMI_API_KEY=...`, `KIMI_MODEL=moonshot-v1-8k` |
+| Local Gemma | `KOTONOHA_LLM_PROVIDER=local_gemma`, `OLLAMA_BASE_URL=http://127.0.0.1:11434/v1`, `LOCAL_GEMMA_MODEL=gemma3:4b` |
 
 ### Probe
 
 ```bash
-curl http://127.0.0.1:8001/health
-curl http://127.0.0.1:8001/v1/agents
+curl http://127.0.0.1:18081/health
+curl http://127.0.0.1:18081/v1/agents
 ```
 
 Expected: JSON such as `{"status":"ok"}` from `/health`.
@@ -134,12 +150,12 @@ Expected: JSON such as `{"status":"ok"}` from `/health`.
 | Setting | Recommended |
 | --- | --- |
 | Backend mode | `http` |
-| HTTP endpoint | `http://127.0.0.1:8001` |
+| HTTP endpoint | `http://127.0.0.1:18081` |
 | HTTP API key | empty (only when orchestrator auth is enabled) |
 | Enable RDE audit panel | on |
 | Require human approval before apply | on |
 
-The plugin default HTTP endpoint is `http://127.0.0.1:8000`. Change it in Settings when using port **8001** (dogfood default).
+The plugin default HTTP endpoint is `http://127.0.0.1:18081`.
 
 ### Capabilities
 
@@ -184,9 +200,9 @@ Boundary: [orchestrator API stability boundary](https://github.com/zyx-corporati
 
 1. Install plugin
 2. Start `kotonoha-orchestrator` (Mode C above)
-3. `curl http://127.0.0.1:8001/health`
+3. `curl http://127.0.0.1:18081/health`
 4. Backend mode: `http`
-5. HTTP endpoint: `http://127.0.0.1:8001`
+5. HTTP endpoint: `http://127.0.0.1:18081`
 6. Use summarize / rewrite / expand
 
 ---

@@ -139,7 +139,7 @@ const MSGS = {
     settingsHttpProposalExperimentalWarning:
       "/v1/proposals/generate is experimental and best-effort. Do not treat generated proposals as accepted lineage.",
     settingsHttpEndpointPortNote:
-      "Default example: http://127.0.0.1:8000 — dogfood/local dev may use http://127.0.0.1:8001.",
+      "Default local orchestrator endpoint: http://127.0.0.1:18081.",
     noticeHttpCapabilitiesStable: "Stable: {line}",
     noticeHttpCapabilitiesExperimental: "Experimental: {line}",
     settingsCliSection: "CLI (kotonoha ≥ 0.3.1)",
@@ -193,8 +193,8 @@ const MSGS = {
     settingsHttpSection: "HTTP (orchestrator / gateway / LLM proxy)",
     settingsHttpEndpointName: "HTTP endpoint",
     settingsHttpEndpointDesc:
-      "Orchestrator (default :8000), Gateway (:8787), or console LLM proxy. Auto-detects backend.",
-    settingsHttpEndpointPlaceholder: "http://127.0.0.1:8000",
+      "Orchestrator (default :18081), Gateway (:8787), or console LLM proxy. Auto-detects backend.",
+    settingsHttpEndpointPlaceholder: "http://127.0.0.1:18081",
     settingsHttpApiKeyName: "HTTP API key (optional)",
     settingsHttpApiKeyDesc: "Bearer token when gateway/orchestrator auth is enabled",
     settingsBtnTestHttp: "Test connection",
@@ -350,7 +350,7 @@ const MSGS = {
     settingsHttpProposalExperimentalWarning:
       "/v1/proposals/generate は experimental / best-effort です。生成 proposal を承認済み lineage として扱ってはいけません。",
     settingsHttpEndpointPortNote:
-      "既定例: http://127.0.0.1:8000 — dogfood / local dev では http://127.0.0.1:8001 を使う場合があります。",
+      "ローカル orchestrator の既定エンドポイント: http://127.0.0.1:18081。",
     noticeHttpCapabilitiesStable: "Stable: {line}",
     noticeHttpCapabilitiesExperimental: "Experimental: {line}",
     settingsCliSection: "CLI（kotonoha ≥ 0.3.1）",
@@ -404,8 +404,8 @@ const MSGS = {
     settingsHttpSection: "HTTP（orchestrator / gateway / LLM proxy）",
     settingsHttpEndpointName: "HTTP エンドポイント",
     settingsHttpEndpointDesc:
-      "Orchestrator（既定 :8000）、Gateway（:8787）、または console LLM proxy。バックエンド自動検出。",
-    settingsHttpEndpointPlaceholder: "http://127.0.0.1:8000",
+      "Orchestrator（既定 :18081）、Gateway（:8787）、または console LLM proxy。バックエンド自動検出。",
+    settingsHttpEndpointPlaceholder: "http://127.0.0.1:18081",
     settingsHttpApiKeyName: "HTTP API キー（任意）",
     settingsHttpApiKeyDesc: "gateway/orchestrator 認証有効時の Bearer トークン",
     settingsBtnTestHttp: "接続テスト",
@@ -559,7 +559,7 @@ const MSGS = {
     settingsHttpProposalExperimentalWarning:
       "/v1/proposals/generate 为 experimental / best-effort。勿将生成 proposal 视为已接受 lineage。",
     settingsHttpEndpointPortNote:
-      "默认示例: http://127.0.0.1:8000 — dogfood/本地开发可能使用 http://127.0.0.1:8001。",
+      "本地 orchestrator 默认端点: http://127.0.0.1:18081。",
     noticeHttpCapabilitiesStable: "Stable: {line}",
     noticeHttpCapabilitiesExperimental: "Experimental: {line}",
     settingsCliSection: "CLI（kotonoha ≥ 0.3.1）",
@@ -612,8 +612,8 @@ const MSGS = {
     settingsHttpSection: "HTTP（orchestrator / gateway / LLM proxy）",
     settingsHttpEndpointName: "HTTP 端点",
     settingsHttpEndpointDesc:
-      "Orchestrator（默认 :8000）、Gateway（:8787）或 console LLM 代理。自动检测后端。",
-    settingsHttpEndpointPlaceholder: "http://127.0.0.1:8000",
+      "Orchestrator（默认 :18081）、Gateway（:8787）或 console LLM 代理。自动检测后端。",
+    settingsHttpEndpointPlaceholder: "http://127.0.0.1:18081",
     settingsHttpApiKeyName: "HTTP API 密钥（可选）",
     settingsHttpApiKeyDesc: "启用 gateway/orchestrator 认证时的 Bearer 令牌",
     settingsBtnTestHttp: "测试连接",

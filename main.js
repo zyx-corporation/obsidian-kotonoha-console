@@ -446,7 +446,7 @@ var MSGS2 = {
     settingsHttpExperimentalGateway: "generative rewrite via external orchestrator; RDE: local rule-based guardrails only",
     settingsHttpExperimentalConsole: "proposal generation may be available; RDE may fall back to local guardrails",
     settingsHttpProposalExperimentalWarning: "/v1/proposals/generate is experimental and best-effort. Do not treat generated proposals as accepted lineage.",
-    settingsHttpEndpointPortNote: "Default example: http://127.0.0.1:8000 \u2014 dogfood/local dev may use http://127.0.0.1:8001.",
+    settingsHttpEndpointPortNote: "Default local orchestrator endpoint: http://127.0.0.1:18081.",
     noticeHttpCapabilitiesStable: "Stable: {line}",
     noticeHttpCapabilitiesExperimental: "Experimental: {line}",
     settingsCliSection: "CLI (kotonoha \u2265 0.3.1)",
@@ -491,8 +491,8 @@ var MSGS2 = {
     cliUncertaintyExportFailed: "Git-aware context export failed; using path + source_hash anchors.",
     settingsHttpSection: "HTTP (orchestrator / gateway / LLM proxy)",
     settingsHttpEndpointName: "HTTP endpoint",
-    settingsHttpEndpointDesc: "Orchestrator (default :8000), Gateway (:8787), or console LLM proxy. Auto-detects backend.",
-    settingsHttpEndpointPlaceholder: "http://127.0.0.1:8000",
+    settingsHttpEndpointDesc: "Orchestrator (default :18081), Gateway (:8787), or console LLM proxy. Auto-detects backend.",
+    settingsHttpEndpointPlaceholder: "http://127.0.0.1:18081",
     settingsHttpApiKeyName: "HTTP API key (optional)",
     settingsHttpApiKeyDesc: "Bearer token when gateway/orchestrator auth is enabled",
     settingsBtnTestHttp: "Test connection",
@@ -621,7 +621,7 @@ var MSGS2 = {
     settingsHttpExperimentalGateway: "\u751F\u6210\u7CFB rewrite \u306F\u5916\u90E8 orchestrator \u7D4C\u7531\uFF1BRDE \u306F local rule-based guardrails \u306E\u307F",
     settingsHttpExperimentalConsole: "proposal \u751F\u6210\u304C\u5229\u7528\u53EF\u80FD\u306A\u5834\u5408\u3042\u308A\uFF1BRDE \u306F local guardrails \u306B\u30D5\u30A9\u30FC\u30EB\u30D0\u30C3\u30AF\u53EF",
     settingsHttpProposalExperimentalWarning: "/v1/proposals/generate \u306F experimental / best-effort \u3067\u3059\u3002\u751F\u6210 proposal \u3092\u627F\u8A8D\u6E08\u307F lineage \u3068\u3057\u3066\u6271\u3063\u3066\u306F\u3044\u3051\u307E\u305B\u3093\u3002",
-    settingsHttpEndpointPortNote: "\u65E2\u5B9A\u4F8B: http://127.0.0.1:8000 \u2014 dogfood / local dev \u3067\u306F http://127.0.0.1:8001 \u3092\u4F7F\u3046\u5834\u5408\u304C\u3042\u308A\u307E\u3059\u3002",
+    settingsHttpEndpointPortNote: "\u30ED\u30FC\u30AB\u30EB orchestrator \u306E\u65E2\u5B9A\u30A8\u30F3\u30C9\u30DD\u30A4\u30F3\u30C8: http://127.0.0.1:18081\u3002",
     noticeHttpCapabilitiesStable: "Stable: {line}",
     noticeHttpCapabilitiesExperimental: "Experimental: {line}",
     settingsCliSection: "CLI\uFF08kotonoha \u2265 0.3.1\uFF09",
@@ -666,8 +666,8 @@ var MSGS2 = {
     cliUncertaintyExportFailed: "Git \u9023\u643A context export \u5931\u6557\u3002path + source_hash \u30A2\u30F3\u30AB\u30FC\u3092\u4F7F\u7528\u3002",
     settingsHttpSection: "HTTP\uFF08orchestrator / gateway / LLM proxy\uFF09",
     settingsHttpEndpointName: "HTTP \u30A8\u30F3\u30C9\u30DD\u30A4\u30F3\u30C8",
-    settingsHttpEndpointDesc: "Orchestrator\uFF08\u65E2\u5B9A :8000\uFF09\u3001Gateway\uFF08:8787\uFF09\u3001\u307E\u305F\u306F console LLM proxy\u3002\u30D0\u30C3\u30AF\u30A8\u30F3\u30C9\u81EA\u52D5\u691C\u51FA\u3002",
-    settingsHttpEndpointPlaceholder: "http://127.0.0.1:8000",
+    settingsHttpEndpointDesc: "Orchestrator\uFF08\u65E2\u5B9A :18081\uFF09\u3001Gateway\uFF08:8787\uFF09\u3001\u307E\u305F\u306F console LLM proxy\u3002\u30D0\u30C3\u30AF\u30A8\u30F3\u30C9\u81EA\u52D5\u691C\u51FA\u3002",
+    settingsHttpEndpointPlaceholder: "http://127.0.0.1:18081",
     settingsHttpApiKeyName: "HTTP API \u30AD\u30FC\uFF08\u4EFB\u610F\uFF09",
     settingsHttpApiKeyDesc: "gateway/orchestrator \u8A8D\u8A3C\u6709\u52B9\u6642\u306E Bearer \u30C8\u30FC\u30AF\u30F3",
     settingsBtnTestHttp: "\u63A5\u7D9A\u30C6\u30B9\u30C8",
@@ -796,7 +796,7 @@ var MSGS2 = {
     settingsHttpExperimentalGateway: "\u751F\u6210\u5F0F rewrite \u9700\u5916\u90E8 orchestrator\uFF1BRDE \u4EC5 local rule-based guardrails",
     settingsHttpExperimentalConsole: "\u53EF\u80FD\u63D0\u4F9B proposal \u751F\u6210\uFF1BRDE \u53EF\u80FD\u56DE\u9000\u5230 local guardrails",
     settingsHttpProposalExperimentalWarning: "/v1/proposals/generate \u4E3A experimental / best-effort\u3002\u52FF\u5C06\u751F\u6210 proposal \u89C6\u4E3A\u5DF2\u63A5\u53D7 lineage\u3002",
-    settingsHttpEndpointPortNote: "\u9ED8\u8BA4\u793A\u4F8B: http://127.0.0.1:8000 \u2014 dogfood/\u672C\u5730\u5F00\u53D1\u53EF\u80FD\u4F7F\u7528 http://127.0.0.1:8001\u3002",
+    settingsHttpEndpointPortNote: "\u672C\u5730 orchestrator \u9ED8\u8BA4\u7AEF\u70B9: http://127.0.0.1:18081\u3002",
     noticeHttpCapabilitiesStable: "Stable: {line}",
     noticeHttpCapabilitiesExperimental: "Experimental: {line}",
     settingsCliSection: "CLI\uFF08kotonoha \u2265 0.3.1\uFF09",
@@ -841,8 +841,8 @@ var MSGS2 = {
     cliUncertaintyExportFailed: "Git \u611F\u77E5 context export \u5931\u8D25\uFF1B\u4F7F\u7528 path + source_hash \u951A\u70B9\u3002",
     settingsHttpSection: "HTTP\uFF08orchestrator / gateway / LLM proxy\uFF09",
     settingsHttpEndpointName: "HTTP \u7AEF\u70B9",
-    settingsHttpEndpointDesc: "Orchestrator\uFF08\u9ED8\u8BA4 :8000\uFF09\u3001Gateway\uFF08:8787\uFF09\u6216 console LLM \u4EE3\u7406\u3002\u81EA\u52A8\u68C0\u6D4B\u540E\u7AEF\u3002",
-    settingsHttpEndpointPlaceholder: "http://127.0.0.1:8000",
+    settingsHttpEndpointDesc: "Orchestrator\uFF08\u9ED8\u8BA4 :18081\uFF09\u3001Gateway\uFF08:8787\uFF09\u6216 console LLM \u4EE3\u7406\u3002\u81EA\u52A8\u68C0\u6D4B\u540E\u7AEF\u3002",
+    settingsHttpEndpointPlaceholder: "http://127.0.0.1:18081",
     settingsHttpApiKeyName: "HTTP API \u5BC6\u94A5\uFF08\u53EF\u9009\uFF09",
     settingsHttpApiKeyDesc: "\u542F\u7528 gateway/orchestrator \u8BA4\u8BC1\u65F6\u7684 Bearer \u4EE4\u724C",
     settingsBtnTestHttp: "\u6D4B\u8BD5\u8FDE\u63A5",
@@ -918,7 +918,7 @@ var DEFAULT_SETTINGS = {
   metadataWriteMode: "prompt",
   sidecarMode: true,
   cliCommand: "kotonoha",
-  httpEndpoint: "http://127.0.0.1:8000"
+  httpEndpoint: "http://127.0.0.1:18081"
 };
 
 // src/settings/SettingsTab.ts
@@ -4393,7 +4393,7 @@ function createKotonohaClient(settings, app) {
       return new MockKotonohaClient();
     case "http":
       return new HttpKotonohaClient({
-        endpoint: settings.httpEndpoint?.trim() || "http://127.0.0.1:8000",
+        endpoint: settings.httpEndpoint?.trim() || "http://127.0.0.1:18081",
         apiKey: settings.httpApiKey,
         fetchFn: createObsidianFetch()
       });
@@ -4533,7 +4533,7 @@ var KotonohaConsolePlugin = class extends import_obsidian7.Plugin {
   }
   async testHttpConnection() {
     const lang = this.settings.defaultLanguage;
-    const endpoint = this.settings.httpEndpoint?.trim() || "http://127.0.0.1:8000";
+    const endpoint = this.settings.httpEndpoint?.trim() || "http://127.0.0.1:18081";
     try {
       const result = await probeHttpBackend(endpoint, this.settings.httpApiKey);
       if (result.endpoint !== endpoint.replace(/\/+$/, "")) {

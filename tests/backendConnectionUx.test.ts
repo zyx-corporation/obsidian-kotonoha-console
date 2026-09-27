@@ -18,7 +18,7 @@ describe("backendConnectionUx", () => {
 
   it("orchestrator HTTP probe includes stable and experimental distinction", () => {
     const msg = formatHttpProbeNotice("en", {
-      endpoint: "http://127.0.0.1:8001",
+      endpoint: "http://127.0.0.1:18081",
       health: "ok",
       backend: "orchestrator",
     });

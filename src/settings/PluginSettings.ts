@@ -39,5 +39,5 @@ export const DEFAULT_SETTINGS: KotonohaConsoleSettings = {
   metadataWriteMode: "prompt",
   sidecarMode: true,
   cliCommand: "kotonoha",
-  httpEndpoint: "http://127.0.0.1:8000",
+  httpEndpoint: "http://127.0.0.1:18081",
 };

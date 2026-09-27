@@ -88,7 +88,7 @@ Generative rewrite still requires `/v1/proposals/generate` or CLI/orchestrator L
 
 | Setting | Default |
 | --- | --- |
-| `httpEndpoint` | `http://127.0.0.1:8000` (orchestrator) |
+| `httpEndpoint` | `http://127.0.0.1:18081` (orchestrator) |
 | Gateway example | `http://127.0.0.1:8787` |
 
 ## Health
@@ -99,16 +99,17 @@ Generative rewrite still requires `/v1/proposals/generate` or CLI/orchestrator L
 
 Set environment variables before starting uvicorn:
 
-| Variable | Default | Description |
+| Provider | Env | Default |
 | --- | --- | --- |
-| `OPENAI_API_KEY` | (unset) | When set, `POST /v1/proposals/generate` calls OpenAI-compatible chat completions |
-| `OPENAI_BASE_URL` | `https://api.openai.com/v1` | Compatible API base (Azure, local proxy, etc.) |
-| `OPENAI_MODEL` | `gpt-4o-mini` | Model id |
+| OpenAI | `KOTONOHA_LLM_PROVIDER=openai`, `OPENAI_API_KEY`, `OPENAI_MODEL` | `https://api.openai.com/v1`, `gpt-4o-mini` |
+| Claude | `KOTONOHA_LLM_PROVIDER=claude`, `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | `https://api.anthropic.com`, `claude-sonnet-4-5` |
+| Kimi | `KOTONOHA_LLM_PROVIDER=kimi`, `KIMI_API_KEY`, `KIMI_MODEL` | `https://api.moonshot.ai/v1`, `moonshot-v1-8k` |
+| Local Gemma | `KOTONOHA_LLM_PROVIDER=local_gemma`, `OLLAMA_BASE_URL`, `LOCAL_GEMMA_MODEL` | `http://127.0.0.1:11434/v1`, `gemma3:4b` |
 
 ```bash
 export OPENAI_API_KEY=sk-...
 cd kotonoha-orchestrator/orchestrator
-uvicorn kotonoha_orchestrator_api.main:app --app-dir api/src
+uvicorn kotonoha_orchestrator_api.main:app --app-dir api/src --port 18081
 ```
 
-Without `OPENAI_API_KEY`, the endpoint returns a **rule-based local draft** (same anchor pattern as CLI local mode). Obsidian Console shows `[orchestrator/local]` in the proposal summary.
+Without a usable provider configuration, the endpoint returns a **rule-based local draft** (same anchor pattern as CLI local mode). Obsidian Console shows `[orchestrator/local]` in the proposal summary.

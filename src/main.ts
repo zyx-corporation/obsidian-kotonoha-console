@@ -184,7 +184,7 @@ export default class KotonohaConsolePlugin extends Plugin {
 
   async testHttpConnection(): Promise<void> {
     const lang = this.settings.defaultLanguage;
-    const endpoint = this.settings.httpEndpoint?.trim() || "http://127.0.0.1:8000";
+    const endpoint = this.settings.httpEndpoint?.trim() || "http://127.0.0.1:18081";
     try {
       const result = await probeHttpBackend(endpoint, this.settings.httpApiKey);
       if (result.endpoint !== endpoint.replace(/\/+$/, "")) {

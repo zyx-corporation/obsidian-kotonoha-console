@@ -41,7 +41,7 @@ export function createKotonohaClient(
       return new MockKotonohaClient();
     case "http":
       return new HttpKotonohaClient({
-        endpoint: settings.httpEndpoint?.trim() || "http://127.0.0.1:8000",
+        endpoint: settings.httpEndpoint?.trim() || "http://127.0.0.1:18081",
         apiKey: settings.httpApiKey,
         fetchFn: createObsidianFetch(),
       });

@@ -129,7 +129,8 @@
 
 ### Dogfood
 
-- HTTP orchestrator path verified with `http://127.0.0.1:8001`.
+- HTTP orchestrator path verified with `http://127.0.0.1:18081`.
+- HTTP orchestrator LLM proxy now supports OpenAI, Claude, Kimi, and local Gemma provider selection.
 - CLI backend path verified with `kotonoha >= 0.3.1`.
 - `obsidian-git-aware` context display verified.
 - Proposal / audit / review sidecar loop verified.
